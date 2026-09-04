@@ -157,7 +157,7 @@ Restricción: única fila por combinación (sesion_id, miembro_id).
 | numero_serie | int | orden dentro del ejercicio (serie 1, 2, 3...) |
 | repeticiones | int | |
 | peso_kg | float | |
-| nota | string, opcional | texto libre por serie (ej. "con ayuda", "fallo muscular") |
+| nota | string, opcional | chips de la serie: "Con ayuda", "Fallo muscular" (se pueden marcar las dos; se guardan unidas con " · ") |
 | creado_en | timestamp | |
 | actualizado_en | timestamp | se actualiza al editar la serie |
 
@@ -220,7 +220,7 @@ Decisión: el catálogo de EQUIPOS y EJERCICIOS se carga manualmente por el prop
 ### 6.1 Flujo de sesión
 1. Un miembro crea la sesión (fecha + nota opcional).
 2. Checklist de asistencia: se marca presente/ausente para cada miembro, una vez al empezar (no repetido por ejercicio).
-3. Durante el entreno, cada miembro registra sus series: selecciona ejercicio (el grupo muscular se infiere automáticamente) → selecciona equipo → introduce repeticiones y peso con controles +/- grandes (se evita teclado en la medida de lo posible) → nota libre opcional → guarda.
+3. Durante el entreno, cada miembro registra sus series: selecciona ejercicio (el grupo muscular se infiere automáticamente) → selecciona equipo → introduce repeticiones y peso con controles +/- grandes (se evita teclado en la medida de lo posible) → chips opcionales "Con ayuda" / "Fallo muscular" → guarda.
 4. Atajo "repetir última serie" con un tap para series consecutivas iguales (la nota no se copia por defecto; se deja vacía o se confirma si se quiere repetir).
 5. Una serie ya guardada se puede editar (reps, peso, equipo, nota, número de serie) o borrar. Tras borrar, se reordenan los `numero_serie` del mismo ejercicio en esa sesión para ese miembro, para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
@@ -315,7 +315,7 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 | Sin offline-first en v1 | Cola offline con IndexedDB desde el inicio | Se asume conectividad en el gimnasio; se añade solo si se demuestra necesario |
 | Sin rol admin diferenciado en v1 | Rol admin para gestionar catálogo | Grupo cerrado de 1–5 personas, no aporta valor en v1 |
 | Series editables y borrables | Registro append-only | Corregir un peso/reps mal anotados entre series es habitual; el dueño de la fila puede editar o borrar |
-| Nota libre opcional por serie | Modelo solo reps + peso | Captura contexto útil ("con ayuda", "fallo muscular") sin complicar el flujo: el campo es opcional y no bloquea el guardado rápido |
+| Chips "Con ayuda" / "Fallo muscular" por serie | Campo de texto libre | En el gym se elige con un tap; se pueden marcar las dos; no bloquea el guardado |
 | UI mobile-first con targets grandes y barra inferior | Dashboard denso tipo escritorio | El uso real es anotar entre series en el iPhone, no consultar en un portátil |
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
 
@@ -325,6 +325,6 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04:
 
 - Tamaño del grupo: entre 1 y 5 personas.
 - Una serie ya guardada se puede editar y borrar (no es append-only).
-- Nota libre opcional por serie (ej. "con ayuda", "fallo muscular").
+- Nota por serie con chips seleccionables: "Con ayuda" y "Fallo muscular".
 - Diseño moderno, intuitivo y cómodo en iPhone (sec. 6.3–6.4).
 - Tema claro, oscuro o automático, a elección del usuario (sec. 6.5).

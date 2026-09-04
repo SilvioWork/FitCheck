@@ -1,0 +1,89 @@
+:root {
+  color-scheme: light;
+  --bg: #f3f6f2;
+  --surface: #ffffff;
+  --surface-2: #e7eee6;
+  --text: #121714;
+  --text-muted: #5b6a61;
+  --accent: #1f8a4c;
+  --accent-soft: #d7f3e3;
+  --danger: #c43d3d;
+  --success: #1f8a4c;
+  --border: #d4ddd3;
+  --shadow: 0 8px 24px rgba(18, 23, 20, 0.08);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --space: 16px;
+  --tap: 44px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', ui-sans-serif, system-ui, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0c110e;
+  --surface: #161c18;
+  --surface-2: #1e2621;
+  --text: #f1f5f1;
+  --text-muted: #9aaba0;
+  --accent: #3ddc84;
+  --accent-soft: #163524;
+  --danger: #ff6b6b;
+  --success: #3ddc84;
+  --border: #2a342e;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: var(--tap);
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  line-height: normal;
+  padding: 0 2.5rem 0 12px;
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%235b6a61' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+}
+
+html[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%239aaba0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
