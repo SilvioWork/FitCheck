@@ -32,8 +32,6 @@ async function crearSesion() {
       </p>
     </header>
 
-    <p v-if="gym.error" class="err">{{ gym.error }}</p>
-
     <article v-if="!gym.listo" class="card">
       <p>Sincronizando con Supabase…</p>
     </article>
@@ -88,11 +86,6 @@ async function crearSesion() {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.45;
-}
-
-.err {
-  margin: 0;
-  color: var(--danger);
 }
 
 .card {

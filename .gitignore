@@ -40,3 +40,12 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Vercel
+.vercel
+
+# Supabase CLI
+supabase/.temp
+
+# Cursor
+.cursor

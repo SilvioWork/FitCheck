@@ -55,17 +55,46 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     error.value = message
   }
 
+  function limpiarError() {
+    error.value = ''
+  }
+
+  function nombreCatalogo(tabla: 'equipos' | 'ejercicios' | 'grupos_musculares', id: string) {
+    if (tabla === 'equipos') return equipos.value.find((e) => e.id === id)?.nombre ?? 'este equipo'
+    if (tabla === 'ejercicios')
+      return ejercicios.value.find((e) => e.id === id)?.nombre ?? 'este ejercicio'
+    return grupos.value.find((g) => g.id === id)?.nombre ?? 'este grupo'
+  }
+
+  function mensajeCatalogoEnUso(tabla: 'equipos' | 'ejercicios' | 'grupos_musculares', id: string) {
+    const nombre = nombreCatalogo(tabla, id)
+    if (tabla === 'grupos_musculares') {
+      return `No se puede quitar «${nombre}»: hay ejercicios en ese grupo.`
+    }
+    return `No se puede quitar «${nombre}»: ya está en series guardadas.`
+  }
+
+  function esRestriccionUso(err: { message?: string; code?: string } | null) {
+    const code = err?.code ?? ''
+    const message = err?.message ?? ''
+    return code === '23503' || /foreign key|violates/i.test(message)
+  }
+
   function grupoDeEjercicio(ejercicioId: string): string {
     const ej = ejercicios.value.find((e) => e.id === ejercicioId)
     return grupos.value.find((g) => g.id === ej?.grupo_muscular_id)?.nombre ?? ''
   }
 
   async function seedCatalogIfEmpty() {
-    const { count, error: err } = await supabase
-      .from('grupos_musculares')
-      .select('id', { count: 'exact', head: true })
-    if (err) throw err
-    if (count) return
+    const [gCount, eCount, xCount] = await Promise.all([
+      supabase.from('grupos_musculares').select('id', { count: 'exact', head: true }),
+      supabase.from('equipos').select('id', { count: 'exact', head: true }),
+      supabase.from('ejercicios').select('id', { count: 'exact', head: true }),
+    ])
+    const countErr = [gCount, eCount, xCount].find((r) => r.error)?.error
+    if (countErr) throw countErr
+    // Solo sembrar la primera vez. Si el grupo vació el catálogo a propósito, no lo recreamos.
+    if ((gCount.count ?? 0) + (eCount.count ?? 0) + (xCount.count ?? 0) > 0) return
 
     const { data: g, error: gErr } = await supabase
       .from('grupos_musculares')
@@ -253,16 +282,32 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     }
   }
 
+  async function borrarFilaCatalogo(
+    tabla: 'equipos' | 'ejercicios' | 'grupos_musculares',
+    id: string,
+  ): Promise<boolean> {
+    const { data, error: err } = await supabase.from(tabla).delete().eq('id', id).select('id')
+    if (err) {
+      fail(esRestriccionUso(err) ? mensajeCatalogoEnUso(tabla, id) : err.message)
+      return false
+    }
+    // Sin política DELETE, PostgREST responde 200 y 0 filas: la app creía que se borró.
+    if (!data?.length) {
+      fail(
+        'Supabase no dejó borrar el catálogo. En el SQL Editor ejecuta supabase/catalogo_delete.sql.',
+      )
+      return false
+    }
+    return true
+  }
+
   async function borrarEquipo(id: string) {
     if (equipoEnUso(id)) {
-      fail('Ese equipo está en series guardadas. No se puede borrar.')
+      fail(mensajeCatalogoEnUso('equipos', id))
       return
     }
-    const { error: err } = await supabase.from('equipos').delete().eq('id', id)
-    if (err) {
-      fail(err.message)
-      return
-    }
+    if (!(await borrarFilaCatalogo('equipos', id))) return
+    limpiarError()
     equipos.value = equipos.value.filter((e) => e.id !== id)
   }
 
@@ -284,14 +329,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
 
   async function borrarEjercicio(id: string) {
     if (ejercicioEnUso(id)) {
-      fail('Ese ejercicio está en series guardadas. No se puede borrar.')
+      fail(mensajeCatalogoEnUso('ejercicios', id))
       return
     }
-    const { error: err } = await supabase.from('ejercicios').delete().eq('id', id)
-    if (err) {
-      fail(err.message)
-      return
-    }
+    if (!(await borrarFilaCatalogo('ejercicios', id))) return
+    limpiarError()
     ejercicios.value = ejercicios.value.filter((e) => e.id !== id)
   }
 
@@ -310,14 +352,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
 
   async function borrarGrupo(id: string) {
     if (grupoEnUso(id)) {
-      fail('Hay ejercicios en ese grupo. Cámbialos o bórralos antes.')
+      fail(mensajeCatalogoEnUso('grupos_musculares', id))
       return
     }
-    const { error: err } = await supabase.from('grupos_musculares').delete().eq('id', id)
-    if (err) {
-      fail(err.message)
-      return
-    }
+    if (!(await borrarFilaCatalogo('grupos_musculares', id))) return
+    limpiarError()
     grupos.value = grupos.value.filter((g) => g.id !== id)
   }
 
@@ -533,6 +572,63 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     )
   }
 
+  function seriesAgrupadasPorMiembro(sesionId: string) {
+    const mid = miembroActivoId.value
+    const porId = new Map<string, Serie[]>()
+    for (const s of seriesDe(sesionId)) {
+      const list = porId.get(s.miembro_id) ?? []
+      list.push(s)
+      porId.set(s.miembro_id, list)
+    }
+    if (mid && !porId.has(mid)) porId.set(mid, [])
+
+    const rows = [...porId.entries()]
+      .map(([id, list]) => {
+        const miembro = miembros.value.find((m) => m.id === id)
+        if (!miembro) return null
+        return { miembro, series: list, propio: id === mid }
+      })
+      .filter((row): row is { miembro: Miembro; series: Serie[]; propio: boolean } => row !== null)
+
+    rows.sort((a, b) => {
+      if (a.propio !== b.propio) return a.propio ? -1 : 1
+      return a.miembro.nombre.localeCompare(b.miembro.nombre, 'es')
+    })
+    return rows
+  }
+
+  function seriesDeMiembro(
+    miembroId: string,
+    filtros: { grupoId?: string; equipoId?: string; desde?: string; hasta?: string } = {},
+  ) {
+    const fechaDe = (sesionId: string) => sesionPorId(sesionId)?.fecha ?? ''
+    return series.value
+      .filter((s) => {
+        if (s.miembro_id !== miembroId) return false
+        if (filtros.equipoId && s.equipo_id !== filtros.equipoId) return false
+        if (filtros.grupoId) {
+          const ej = ejercicios.value.find((e) => e.id === s.ejercicio_id)
+          if (ej?.grupo_muscular_id !== filtros.grupoId) return false
+        }
+        const fecha = fechaDe(s.sesion_id)
+        if (filtros.desde && fecha < filtros.desde) return false
+        if (filtros.hasta && fecha > filtros.hasta) return false
+        return true
+      })
+      .sort((a, b) => {
+        const fa = fechaDe(a.sesion_id)
+        const fb = fechaDe(b.sesion_id)
+        if (fa !== fb) return fb.localeCompare(fa)
+        if (a.sesion_id !== b.sesion_id) return b.sesion_id.localeCompare(a.sesion_id)
+        if (a.ejercicio_id !== b.ejercicio_id) return a.ejercicio_id.localeCompare(b.ejercicio_id)
+        return a.numero_serie - b.numero_serie
+      })
+  }
+
+  const miembrosOrdenados = computed(() =>
+    [...miembros.value].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+  )
+
   return {
     miembros,
     sesiones,
@@ -542,6 +638,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     ejercicios,
     series,
     error,
+    limpiarError,
     listo,
     enVivo,
     miembroActivoId,
@@ -573,5 +670,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     sinMarcarDe,
     presentesDe,
     noUsaronEquipo,
+    seriesAgrupadasPorMiembro,
+    seriesDeMiembro,
+    miembrosOrdenados,
   }
 })

@@ -1,35 +1,78 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import ConsultasPanel from '@/components/ConsultasPanel.vue'
+import HistorialMiembro from '@/components/HistorialMiembro.vue'
 import { formatFecha } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
 
 const gym = useFitcheckStore()
+const route = useRoute()
+const router = useRouter()
+
 const vacio = computed(() => gym.sesionesOrdenadas.length === 0)
+const vista = computed(() => (route.query.vista === 'miembro' ? 'miembro' : 'sesiones'))
+
+function setVista(next: 'sesiones' | 'miembro') {
+  if (next === 'miembro') {
+    void router.replace({ name: 'historial', query: { vista: 'miembro' } })
+    return
+  }
+  void router.replace({ name: 'historial' })
+}
 </script>
 
 <template>
   <section class="page">
     <header>
       <h1>Historial</h1>
-      <p>Sesiones del grupo y consultas de asistencia y equipos.</p>
+      <p>Sesiones del grupo, por miembro, y consultas de asistencia y equipos.</p>
     </header>
 
-    <ConsultasPanel v-if="!vacio" />
+    <div v-if="!vacio" class="segment" role="tablist" aria-label="Vista de historial">
+      <button
+        type="button"
+        class="seg-btn"
+        role="tab"
+        :aria-selected="vista === 'sesiones'"
+        :class="{ active: vista === 'sesiones' }"
+        @click="setVista('sesiones')"
+      >
+        Sesiones
+      </button>
+      <button
+        type="button"
+        class="seg-btn"
+        role="tab"
+        :aria-selected="vista === 'miembro'"
+        :class="{ active: vista === 'miembro' }"
+        @click="setVista('miembro')"
+      >
+        Por miembro
+      </button>
+    </div>
 
-    <article v-if="vacio" class="empty">
-      <p>Todavía no hay sesiones guardadas.</p>
-    </article>
+    <template v-if="vacio">
+      <article class="empty">
+        <p>Todavía no hay sesiones guardadas.</p>
+      </article>
+    </template>
 
-    <ul v-else>
-      <li v-for="sesion in gym.sesionesOrdenadas" :key="sesion.id">
-        <RouterLink :to="`/historial/${sesion.id}`" class="row">
-          <strong>{{ formatFecha(sesion.fecha) }}</strong>
-          <span>{{ sesion.nota || 'Sin nota' }}</span>
-        </RouterLink>
-      </li>
-    </ul>
+    <template v-else-if="vista === 'miembro'">
+      <HistorialMiembro />
+    </template>
+
+    <template v-else>
+      <ConsultasPanel />
+      <ul>
+        <li v-for="sesion in gym.sesionesOrdenadas" :key="sesion.id">
+          <RouterLink :to="`/historial/${sesion.id}`" class="row">
+            <strong>{{ formatFecha(sesion.fecha) }}</strong>
+            <span>{{ sesion.nota || 'Sin nota' }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>
 
@@ -48,6 +91,30 @@ p {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.45;
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.seg-btn {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.seg-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .empty {

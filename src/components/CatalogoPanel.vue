@@ -98,7 +98,6 @@ async function guardarEdicion() {
     <p class="hint">
       Chips del grupo. Pasa el cursor (o toca en el iPhone) para editar o quitar. Si ya hay series, no se puede borrar.
     </p>
-    <p v-if="gym.error" class="err">{{ gym.error }}</p>
 
     <h3>Equipos</h3>
     <div class="chips">
@@ -230,11 +229,6 @@ h3 {
   color: var(--text-muted);
   font-size: 0.85rem;
   line-height: 1.4;
-}
-
-.err {
-  margin: 0;
-  color: var(--danger);
 }
 
 .chips {

@@ -85,10 +85,13 @@ create policy "propia asistencia upd" on public.asistencia
 
 create policy "catalogo ins grupos" on public.grupos_musculares for insert to authenticated with check (true);
 create policy "catalogo upd grupos" on public.grupos_musculares for update to authenticated using (true);
+create policy "catalogo del grupos" on public.grupos_musculares for delete to authenticated using (true);
 create policy "catalogo ins equipos" on public.equipos for insert to authenticated with check (true);
 create policy "catalogo upd equipos" on public.equipos for update to authenticated using (true);
+create policy "catalogo del equipos" on public.equipos for delete to authenticated using (true);
 create policy "catalogo ins ejercicios" on public.ejercicios for insert to authenticated with check (true);
 create policy "catalogo upd ejercicios" on public.ejercicios for update to authenticated using (true);
+create policy "catalogo del ejercicios" on public.ejercicios for delete to authenticated using (true);
 
 create policy "series ins propias" on public.series
   for insert to authenticated with check (miembro_id = auth.uid());

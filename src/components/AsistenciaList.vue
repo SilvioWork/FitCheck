@@ -24,7 +24,7 @@ const rows = computed(() =>
 <template>
   <article class="card">
     <h2>Asistencia</h2>
-    <p class="hint">Cada uno marca la suya. Cambia de perfil en Ajustes para anotar a otra persona en este móvil.</p>
+    <p class="hint">Cada uno marca la suya en su iPhone. Quien aún no ha elegido aparece como sin marcar.</p>
     <ul>
       <li v-for="row in rows" :key="row.miembro.id">
         <div>

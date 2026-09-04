@@ -27,6 +27,10 @@ watch(
     <main class="main">
       <RouterView />
     </main>
+    <div v-if="gym.error" class="toast" role="alert">
+      <p>{{ gym.error }}</p>
+      <button type="button" class="toast-close" @click="gym.limpiarError()">Cerrar</button>
+    </div>
     <AppNav v-if="route.name !== 'login'" />
   </div>
 </template>
@@ -39,9 +43,42 @@ watch(
   background: var(--bg);
   max-width: 520px;
   margin: 0 auto;
+  position: relative;
 }
 
 .main {
   padding: calc(12px + var(--safe-top)) 16px 16px;
+}
+
+.toast {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  margin: 0 16px 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 16%, var(--surface));
+  color: var(--text);
+  display: grid;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+
+.toast p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--danger);
+}
+
+.toast-close {
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
 }
 </style>

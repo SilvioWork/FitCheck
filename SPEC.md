@@ -154,7 +154,7 @@ Restricción: única fila por combinación (sesion_id, miembro_id).
 | miembro_id | uuid, FK → MIEMBROS | |
 | ejercicio_id | uuid, FK → EJERCICIOS | |
 | equipo_id | uuid, FK → EQUIPOS | |
-| numero_serie | int | orden dentro del ejercicio (serie 1, 2, 3...) |
+| numero_serie | int | orden automático dentro del ejercicio para ese miembro en esa sesión (serie 1, 2, 3…); no se edita a mano |
 | repeticiones | int | |
 | peso_kg | float | |
 | nota | string, opcional | chips de la serie: "Con ayuda", "Fallo muscular" (se pueden marcar las dos; se guardan unidas con " · ") |
@@ -218,17 +218,18 @@ Decisión: el catálogo de EQUIPOS y EJERCICIOS se carga manualmente por el prop
 ## 6. UX — flujos principales
 
 ### 6.1 Flujo de sesión
-1. Un miembro crea la sesión (fecha + nota opcional).
-2. Checklist de asistencia: se marca presente/ausente para cada miembro, una vez al empezar (no repetido por ejercicio).
+1. Un miembro crea la sesión (fecha + nota opcional). Quien la crea queda marcado presente.
+2. Asistencia **auto-declarada**: cada miembro marca su propia presencia o ausencia en su iPhone, una vez al empezar (no repetido por ejercicio). Nadie puede marcar la fila de otro (RLS, sec. 7). Quien aún no ha elegido Sí/No aparece como «sin marcar», distinto de ausente.
 3. Durante el entreno, cada miembro registra sus series: selecciona ejercicio (el grupo muscular se infiere automáticamente) → selecciona equipo → introduce repeticiones y peso con controles +/- grandes (se evita teclado en la medida de lo posible) → chips opcionales "Con ayuda" / "Fallo muscular" → guarda.
 4. Atajo "repetir última serie" con un tap para series consecutivas iguales (la nota no se copia por defecto; se deja vacía o se confirma si se quiere repetir).
-5. Una serie ya guardada se puede editar (reps, peso, equipo, nota, número de serie) o borrar. Tras borrar, se reordenan los `numero_serie` del mismo ejercicio en esa sesión para ese miembro, para que no queden huecos.
+5. Una serie ya guardada se puede editar (reps, peso, equipo, nota) o borrar. El `numero_serie` es automático (1, 2, 3… por ejercicio y miembro en esa sesión): no se edita a mano. Tras borrar, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
 
 ### 6.2 Flujo de consulta
-- Vista por sesión: lista de asistentes/ausentes + todas las series de esa sesión, agrupadas por miembro.
+- Vista por sesión: lista de presentes, ausentes y sin marcar + series de esa sesión, agrupadas por miembro.
+- Consulta negativa de equipo: quién, estando presente, no usó el equipo Y en la sesión X (regla de la sec. 3.3).
 - Vista por miembro: historial de sus series, filtrable por grupo muscular, equipo o rango de fechas.
-- Vista por equipo/grupo muscular: quién lo ha usado y cuándo (consulta base para las preguntas negativas de la sección 2.1).
+- Vista por grupo muscular: quién lo ha trabajado y cuándo; análogo negativo «quién no lo trabajó» (pendiente; ver sec. 9).
 
 ### 6.3 Principios de diseño (v1)
 
@@ -257,7 +258,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, lista de asistencia tipo switch, buscador/filtro compacto en historial, hoja inferior (bottom sheet) para editar una serie sin salir de la sesión.
+Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, lista de asistencia con Sí/No en la fila propia (el resto es solo lectura), buscador/filtro compacto en historial, hoja inferior (bottom sheet) para editar una serie sin salir de la sesión.
 
 ### 6.5 Tema claro y oscuro
 
@@ -289,20 +290,25 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 ## 9. Roadmap / fases
 
 **Fase 1 — MVP**
+
+Hecho:
 1. Esquema SQL en Supabase (tablas de la sección 3) + políticas RLS de la sección 7.
-2. Vue 3 PWA: alta de sesión, checklist de asistencia, registro de series, con el sistema visual y los flujos de la sección 6.
-3. Tema claro / oscuro / automático (sec. 6.5) desde el primer entregable usable.
-4. Vistas de consulta: por sesión, por miembro.
-5. Instalación en los iPhones del grupo vía Safari.
+2. Vue 3 PWA: alta de sesión, asistencia auto-declarada, registro de series, con el sistema visual y los flujos de la sección 6.
+3. Tema claro / oscuro / automático (sec. 6.5).
+4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app.
+5. Consultas: vista por sesión (series agrupadas por miembro); quién no asistió / sin marcar; quién, estando presente, no usó un equipo.
+6. Vista por miembro: historial filtrable por grupo muscular, equipo o rango de fechas.
+
+Pendiente:
+7. Publicación HTTPS e instalación en los iPhones del grupo vía Safari.
 
 **Fase 2 — mejoras**
-6. Vistas de consulta por equipo/grupo muscular (preguntas negativas).
-7. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app (si no se cubrió en fase 1).
-8. Offline-first si la cobertura del gimnasio resulta ser un problema real.
+8. Consulta por grupo muscular (además de equipo).
+9. Offline-first si la cobertura del gimnasio resulta ser un problema real.
 
 **Fase 3 — opcional, bajo demanda**
-9. Build nativo iOS vía Capacitor (App Store) si se necesita distribución más amplia o push notifications.
-10. Métricas de progresión (fuera de alcance v1, ver sección 2.2).
+10. Build nativo iOS vía Capacitor (App Store) si se necesita distribución más amplia o push notifications.
+11. Métricas de progresión (fuera de alcance v1, ver sección 2.2).
 
 ## 10. Registro de decisiones (decision log)
 
@@ -310,11 +316,13 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 |---|---|---|
 | Postgres/Supabase para el modelo de datos | Firestore/NoSQL | El modelo es relacional (FKs, consultas "quién no hizo X"); SQL encaja mejor |
 | ASISTENCIA como tabla propia | Inferir asistencia de la ausencia de SERIES | Ambiguo: no distingue "no asistió" de "asistió pero no usó X" |
+| Asistencia auto-declarada (cada uno marca la suya) | Un miembro marca presente/ausente por todo el grupo | Encaja con RLS (solo tu `miembro_id`); cada uno usa su iPhone; «sin marcar» ≠ ausente |
 | PWA instalable en v1 | App nativa directa | Evita coste/fricción de App Store; Capacitor deja la puerta abierta para después |
 | Catálogo de equipos manual | Integración con API de Fitness Park | No existe API pública de inventario de equipamiento |
 | Sin offline-first en v1 | Cola offline con IndexedDB desde el inicio | Se asume conectividad en el gimnasio; se añade solo si se demuestra necesario |
 | Sin rol admin diferenciado en v1 | Rol admin para gestionar catálogo | Grupo cerrado de 1–5 personas, no aporta valor en v1 |
 | Series editables y borrables | Registro append-only | Corregir un peso/reps mal anotados entre series es habitual; el dueño de la fila puede editar o borrar |
+| `numero_serie` automático, no editable a mano | Control para reordenar series en la hoja de edición | El orden es 1, 2, 3… por ejercicio; al borrar se compacta. Editarlo a mano pelea con esa regla |
 | Chips "Con ayuda" / "Fallo muscular" por serie | Campo de texto libre | En el gym se elige con un tap; se pueden marcar las dos; no bloquea el guardado |
 | UI mobile-first con targets grandes y barra inferior | Dashboard denso tipo escritorio | El uso real es anotar entre series en el iPhone, no consultar en un portátil |
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
@@ -328,3 +336,5 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04:
 - Nota por serie con chips seleccionables: "Con ayuda" y "Fallo muscular".
 - Diseño moderno, intuitivo y cómodo en iPhone (sec. 6.3–6.4).
 - Tema claro, oscuro o automático, a elección del usuario (sec. 6.5).
+- Asistencia auto-declarada: cada miembro marca la suya; no se marca a terceros (sec. 6.1 y 7).
+- `numero_serie` automático: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
