@@ -20,10 +20,12 @@ En Vercel → Project → Settings → Environment Variables, las mismas que en 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-Tras el primer `git push` a `main` (con el proyecto reclamado y enlazado), Vercel construye solo. Hasta entonces: `npx vercel deploy --prod` desde esta carpeta, ya autenticado.
+Tras `git push` a `main`, si el repo está conectado a Vercel, se despliega solo. Si no: `npx vercel deploy --prod` desde esta carpeta (sesión `silviowork89-4758`).
+
+**URL de producción (iPhone):** https://fitcheck-silviowork89-4758.vercel.app
+
+En iPhone: Safari → esa URL → Compartir → Añadir a pantalla de inicio. Entra con usuario y contraseña (sin correo).
 
 El esquema está en `supabase/schema.sql`. Realtime ya está publicado en el proyecto FitCheck; `supabase/realtime.sql` queda como referencia. El borrado de catálogo está en el esquema y en `supabase/catalogo_delete.sql`. Alta de miembros: Edge Function `invitar-miembro`.
-
-En iPhone: abre la URL **https** en Safari → Compartir → Añadir a pantalla de inicio.
 
 La Spec de producto está en `SPEC.md`. El estado de lo implementado y lo pendiente está en `Spec-Status.md`.

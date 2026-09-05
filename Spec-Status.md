@@ -29,7 +29,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 | Historial paginado (fechas + grupo muscular) | Hecho |
 | Alta de grupo e invitación de compañeros | Hecho |
 | Icono PNG + guía Añadir a inicio | Hecho |
-| Publicación en internet | Deploy HTTPS anónimo en Vercel; falta reclamar |
+| Publicación en internet | HTTPS estable: https://fitcheck-silviowork89-4758.vercel.app |
 | Offline-first | Pendiente (fase 2) |
 | Capacitor / App Store / métricas | Fuera de v1 / fase 3 |
 
@@ -99,9 +99,12 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 ### 3.2 Vercel
 
-- Deploy de producción **anónimo** (caduca si no se reclama): `https://temporary-nimble-basin-ycmrd13.vercel.app`
-- El repo local **no está enlazado** a un proyecto Vercel permanente (`vercel link` pendiente).
-- Variables: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+- Proyecto **fitcheck** en la cuenta `silviowork89-4758` (reclamado; ya no es anónimo).
+- Producción: **https://fitcheck-silviowork89-4758.vercel.app** (SSO de Vercel desactivado para poder instalar la PWA).
+- Alias antiguo, mismo deploy: `https://temporary-nimble-basin-ycmrd13.vercel.app`
+- `fitcheck.vercel.app` está ocupado por otro producto ajeno; no usarlo.
+- Local enlazado (`.vercel` gitignored). Auto-deploy desde GitHub: falta Login Connection de GitHub en Vercel; mientras tanto `npx vercel deploy --prod`.
+- Variables de build: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 
 ### 3.3 Dashboard Auth (manual, una vez)
 
@@ -115,11 +118,11 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 ### 4.1 Inmediato (para que el grupo lo use de verdad)
 
-1. En el dashboard: Confirm email off (si no está ya).
-2. Entrar con usuario/contraseña y cambiar la contraseña temporal.
-3. Reclamar el deploy o publicar en cuenta propia para una URL estable.
-4. En Vercel: variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
-5. En el iPhone: Safari → URL HTTPS → Añadir a pantalla de inicio.
+1. Confirm email off — hecho.
+2. Entrar con usuario/contraseña y **cambiar la contraseña temporal**.
+3. URL HTTPS estable — **https://fitcheck-silviowork89-4758.vercel.app**
+4. En el iPhone: Safari → esa URL → Añadir a pantalla de inicio.
+5. Opcional: en Vercel, conectar GitHub (Login Connection) para desplegar con cada `git push`.
 
 ### 4.2 Producto (Spec / roadmap)
 
@@ -144,4 +147,4 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 1. Leer `SPEC.md` para el *qué* y *por qué*.
 2. Leer este archivo para el *dónde estamos*.
-3. Prioridad recomendada: **confirmar login con contraseña en HTTPS** → reclamar Vercel / URL fija → el grupo entra en el gym.
+3. Prioridad recomendada: **instalar la PWA en los iPhones** → cambiar contraseñas temporales → invitar al resto del grupo.

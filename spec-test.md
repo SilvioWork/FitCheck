@@ -64,7 +64,7 @@ Prefijo **`QA-`** en notas de sesión, nombres de catálogo y usuarios invitados
 | Campo | Valor actual |
 |---|---|
 | App local | `http://127.0.0.1:5174` |
-| App HTTPS | `https://temporary-nimble-basin-ycmrd13.vercel.app` (deploy anónimo; puede ir atrasado respecto al repo local) |
+| App HTTPS | **https://fitcheck-silviowork89-4758.vercel.app** (proyecto Vercel `fitcheck`; alias antiguo `temporary-nimble-basin-ycmrd13.vercel.app`) |
 | Supabase | proyecto `zrbbmqowrjfnluzfybuc` |
 | Cuentas conocidas | `silvio`, `armando` (contraseñas **fuera de git**) |
 

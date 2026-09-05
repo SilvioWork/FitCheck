@@ -327,7 +327,7 @@ Hecho:
 8. Historial de sesiones paginado, con filtros de fecha y grupo muscular y recuento de frecuencia.
 
 Pendiente:
-9. Publicación HTTPS estable e instalación en los iPhones del grupo vía Safari.
+9. Instalación en los iPhones del grupo vía Safari (HTTPS ya está en https://fitcheck-silviowork89-4758.vercel.app).
 
 **Fase 2 — mejoras**
 10. Consulta por grupo muscular (además de equipo) a nivel de “quién no lo trabajó”.
