@@ -1,17 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usuarioValido } from '@/lib/usuario'
 
+const router = useRouter()
 const auth = useAuthStore()
+const vacio = ref<boolean | null>(null)
+const modo = ref<'entrar' | 'crear'>('entrar')
 const nombre = ref('')
-const email = ref('')
+const usuario = ref('')
+const password = ref('')
 const enviando = ref(false)
 
+onMounted(async () => {
+  try {
+    vacio.value = await auth.grupoEstaVacio()
+    if (vacio.value) modo.value = 'crear'
+  } catch (err) {
+    auth.error = err instanceof Error ? err.message : 'No se pudo comprobar el grupo'
+    vacio.value = false
+  }
+})
+
+const puedeEnviar = () => {
+  if (!usuarioValido(usuario.value) || password.value.length < 8) return false
+  if (modo.value === 'crear' && !nombre.value.trim()) return false
+  return true
+}
+
 async function enviar() {
-  if (!nombre.value.trim() || !email.value.trim()) return
+  if (!puedeEnviar()) return
   enviando.value = true
-  await auth.sendMagicLink(email.value, nombre.value)
+  const ok =
+    modo.value === 'crear'
+      ? await auth.crearGrupo({
+          nombre: nombre.value,
+          usuario: usuario.value,
+          password: password.value,
+        })
+      : await auth.signIn(usuario.value, password.value)
   enviando.value = false
+  if (ok) await router.replace({ name: 'hoy' })
 }
 </script>
 
@@ -19,26 +49,37 @@ async function enviar() {
   <section class="page">
     <header>
       <p class="eyebrow">FitCheck</p>
-      <h1>Entrar</h1>
-      <p>Te enviamos un enlace al correo. Sin contraseña.</p>
+      <h1>{{ modo === 'crear' ? 'Crear el grupo' : 'Entrar' }}</h1>
+      <p v-if="modo === 'crear'">El primero da de alta la cuenta. Luego invita al resto en Ajustes.</p>
+      <p v-else>Usuario y contraseña. Sin correo.</p>
     </header>
 
-    <article class="card">
-      <label>
-        Nombre
+    <article v-if="vacio === null" class="card">
+      <p>Comprobando el grupo…</p>
+    </article>
+
+    <article v-else class="card">
+      <label v-if="modo === 'crear'">
+        Tu nombre
         <input v-model="nombre" type="text" maxlength="40" autocomplete="name" />
       </label>
       <label>
-        Email
-        <input v-model="email" type="email" autocomplete="email" placeholder="tu@correo.com" />
+        Usuario
+        <input
+          v-model="usuario"
+          type="text"
+          maxlength="24"
+          autocapitalize="off"
+          autocomplete="username"
+          placeholder="silvio"
+        />
       </label>
-      <button
-        class="primary"
-        type="button"
-        :disabled="enviando || !nombre.trim() || !email.trim()"
-        @click="enviar"
-      >
-        {{ enviando ? 'Enviando…' : 'Enviar enlace' }}
+      <label>
+        Contraseña
+        <input v-model="password" type="password" autocomplete="current-password" />
+      </label>
+      <button class="primary" type="button" :disabled="enviando || !puedeEnviar()" @click="enviar">
+        {{ enviando ? 'Un momento…' : modo === 'crear' ? 'Crear grupo' : 'Entrar' }}
       </button>
       <p v-if="auth.aviso" class="ok">{{ auth.aviso }}</p>
       <p v-if="auth.error" class="err">{{ auth.error }}</p>
@@ -66,7 +107,8 @@ h1 {
   font-size: 2rem;
 }
 
-header p:last-child {
+header p:last-child,
+.card p {
   margin: 0;
   color: var(--text-muted);
 }

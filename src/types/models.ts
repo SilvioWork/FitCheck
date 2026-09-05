@@ -1,6 +1,7 @@
 export type Miembro = {
   id: string
   nombre: string
+  usuario: string
   email: string
   creado_en: string
 }

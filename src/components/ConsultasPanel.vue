@@ -5,11 +5,11 @@ import { useFitcheckStore } from '@/stores/fitcheck'
 
 const gym = useFitcheckStore()
 
-const sesionId = ref(gym.sesionesOrdenadas[0]?.id ?? '')
+const sesionId = ref(gym.consultaSesiones[0]?.id ?? '')
 const equipoId = ref(gym.equipos[0]?.id ?? '')
 
 watch(
-  () => gym.sesionesOrdenadas[0]?.id,
+  () => gym.consultaSesiones[0]?.id,
   (id) => {
     if (id && !sesionId.value) sesionId.value = id
   },
@@ -18,6 +18,14 @@ watch(
   () => gym.equipos[0]?.id,
   (id) => {
     if (id && !equipoId.value) equipoId.value = id
+  },
+  { immediate: true },
+)
+
+watch(
+  sesionId,
+  (id) => {
+    if (id) void gym.cargarSesion(id)
   },
   { immediate: true },
 )
@@ -40,7 +48,7 @@ const nombreEquipo = computed(
     <label>
       Sesión
       <select v-model="sesionId">
-        <option v-for="s in gym.sesionesOrdenadas" :key="s.id" :value="s.id">
+        <option v-for="s in gym.consultaSesiones" :key="s.id" :value="s.id">
           {{ formatFecha(s.fecha) }}{{ s.nota ? ` · ${s.nota}` : '' }}
         </option>
       </select>

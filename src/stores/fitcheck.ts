@@ -3,8 +3,11 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
 import { todayISO } from '@/lib/ids'
+import { emailDeUsuario, normalizarUsuario } from '@/lib/usuario'
 import { useAuthStore } from '@/stores/auth'
 import type { Asistencia, Ejercicio, Equipo, GrupoMuscular, Miembro, Serie, Sesion } from '@/types/models'
+
+export const HISTORIAL_PAGE = 15
 
 function asNumber(value: unknown): number {
   return typeof value === 'number' ? value : Number(value)
@@ -22,6 +25,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   const equipos = ref<Equipo[]>([])
   const ejercicios = ref<Ejercicio[]>([])
   const series = ref<Serie[]>([])
+  const historialSesiones = ref<Sesion[]>([])
+  const historialTotal = ref(0)
+  const historialPagina = ref(0)
+  const historialFiltros = ref({ desde: '', hasta: '', grupoId: '' })
+  const consultaSesiones = ref<Sesion[]>([])
   const error = ref('')
   const listo = ref(false)
   const enVivo = ref(false)
@@ -80,6 +88,28 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     return code === '23503' || /foreign key|violates/i.test(message)
   }
 
+  function esNombreDuplicado(err: { message?: string; code?: string } | null) {
+    const code = err?.code ?? ''
+    const message = err?.message ?? ''
+    return code === '23505' || /duplicate key|unique/i.test(message)
+  }
+
+  function mensajeDuplicado(nombre: string) {
+    return `Ya existe «${nombre.trim()}» en el catálogo.`
+  }
+
+  function mergeSesion(row: Sesion) {
+    const next = { ...row, fecha: String(row.fecha).slice(0, 10) }
+    const idx = sesiones.value.findIndex((s) => s.id === next.id)
+    if (idx >= 0) sesiones.value[idx] = next
+    else sesiones.value.push(next)
+  }
+
+  function replaceDatosSesion(sesionId: string, asis: Asistencia[], ser: Serie[]) {
+    asistencia.value = asistencia.value.filter((a) => a.sesion_id !== sesionId).concat(asis)
+    series.value = series.value.filter((s) => s.sesion_id !== sesionId).concat(ser)
+  }
+
   function grupoDeEjercicio(ejercicioId: string): string {
     const ej = ejercicios.value.find((e) => e.id === ejercicioId)
     return grupos.value.find((g) => g.id === ej?.grupo_muscular_id)?.nombre ?? ''
@@ -93,71 +123,171 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     ])
     const countErr = [gCount, eCount, xCount].find((r) => r.error)?.error
     if (countErr) throw countErr
-    // Solo sembrar la primera vez. Si el grupo vació el catálogo a propósito, no lo recreamos.
     if ((gCount.count ?? 0) + (eCount.count ?? 0) + (xCount.count ?? 0) > 0) return
-
-    const { data: g, error: gErr } = await supabase
-      .from('grupos_musculares')
-      .insert([{ nombre: 'Pecho' }, { nombre: 'Espalda' }, { nombre: 'Pierna' }, { nombre: 'Hombro' }])
-      .select()
-    if (gErr || !g) throw gErr ?? new Error('No se pudo crear el catálogo')
-
-    const id = (nombre: string) => g.find((row) => row.nombre === nombre)?.id as string
-
-    const { error: eErr } = await supabase.from('equipos').insert([
-      { nombre: 'Barra' },
-      { nombre: 'Mancuernas' },
-      { nombre: 'Máquina press' },
-      { nombre: 'Polea' },
-    ])
-    if (eErr) throw eErr
-
-    const { error: xErr } = await supabase.from('ejercicios').insert([
-      { nombre: 'Press banca', grupo_muscular_id: id('Pecho') },
-      { nombre: 'Aperturas', grupo_muscular_id: id('Pecho') },
-      { nombre: 'Remo con barra', grupo_muscular_id: id('Espalda') },
-      { nombre: 'Jalón al pecho', grupo_muscular_id: id('Espalda') },
-      { nombre: 'Sentadilla', grupo_muscular_id: id('Pierna') },
-      { nombre: 'Prensa', grupo_muscular_id: id('Pierna') },
-      { nombre: 'Press militar', grupo_muscular_id: id('Hombro') },
-    ])
-    if (xErr) throw xErr
+    const { error: err } = await supabase.rpc('ensure_catalogo')
+    if (err) throw err
   }
 
   async function ensureMiembro() {
     const user = auth.user
     if (!user?.email) return
-    const nombre =
-      (typeof user.user_metadata.nombre === 'string' && user.user_metadata.nombre) ||
+    const { data: existente, error: selErr } = await supabase
+      .from('miembros')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (selErr) throw selErr
+    // El grupo ya está formado: un upsert (INSERT … ON CONFLICT) choca con RLS
+    // aunque la fila exista. Si ya eres miembro, no hay nada que crear.
+    if (existente) return
+    const usuario =
+      (typeof user.user_metadata.usuario === 'string' && normalizarUsuario(user.user_metadata.usuario)) ||
       user.email.split('@')[0] ||
-      'Yo'
-    const { error: err } = await supabase.from('miembros').upsert({
+      'yo'
+    const nombre =
+      (typeof user.user_metadata.nombre === 'string' && user.user_metadata.nombre) || usuario
+    const { error: err } = await supabase.from('miembros').insert({
       id: user.id,
       nombre,
-      email: user.email,
+      usuario,
+      email: user.email.includes('@') ? user.email : emailDeUsuario(usuario),
     })
-    if (err) throw err
+    if (err) throw new Error('No formas parte del grupo. Pide a un compañero que te dé de alta.')
   }
 
-  async function refresh() {
-    const [m, s, a, g, e, x, se] = await Promise.all([
+  async function refreshBase() {
+    const [m, g, e, x] = await Promise.all([
       supabase.from('miembros').select('*'),
-      supabase.from('sesiones').select('*'),
-      supabase.from('asistencia').select('*'),
       supabase.from('grupos_musculares').select('*'),
       supabase.from('equipos').select('*'),
       supabase.from('ejercicios').select('*'),
-      supabase.from('series').select('*'),
     ])
-    const firstErr = [m, s, a, g, e, x, se].find((r) => r.error)?.error
+    const firstErr = [m, g, e, x].find((r) => r.error)?.error
     if (firstErr) throw firstErr
     miembros.value = (m.data ?? []) as Miembro[]
-    sesiones.value = (s.data ?? []) as Sesion[]
-    asistencia.value = (a.data ?? []) as Asistencia[]
     grupos.value = (g.data ?? []) as GrupoMuscular[]
     equipos.value = (e.data ?? []) as Equipo[]
     ejercicios.value = (x.data ?? []) as Ejercicio[]
-    series.value = ((se.data ?? []) as (Serie & { peso_kg: number | string })[]).map(mapSerie)
+  }
+
+  async function cargarSesion(id: string) {
+    const [s, a, se] = await Promise.all([
+      supabase.from('sesiones').select('*').eq('id', id).maybeSingle(),
+      supabase.from('asistencia').select('*').eq('sesion_id', id),
+      supabase.from('series').select('*').eq('sesion_id', id),
+    ])
+    const firstErr = [s, a, se].find((r) => r.error)?.error
+    if (firstErr) throw firstErr
+    if (s.data) mergeSesion(s.data as Sesion)
+    replaceDatosSesion(
+      id,
+      (a.data ?? []) as Asistencia[],
+      ((se.data ?? []) as (Serie & { peso_kg: number | string })[]).map(mapSerie),
+    )
+    return (s.data as Sesion | null) ?? null
+  }
+
+  async function cargarHoy() {
+    const today = todayISO()
+    const { data, error: err } = await supabase
+      .from('sesiones')
+      .select('*')
+      .eq('fecha', today)
+      .order('creado_en', { ascending: false })
+      .limit(1)
+    if (err) throw err
+    const row = (data ?? [])[0] as Sesion | undefined
+    if (!row) return
+    mergeSesion(row)
+    await cargarSesion(row.id)
+  }
+
+  async function listarSesiones(pagina = historialPagina.value) {
+    historialPagina.value = Math.max(pagina, 0)
+    const filtros = historialFiltros.value
+    const { data, error: err } = await supabase.rpc('listar_sesiones', {
+      p_desde: filtros.desde || null,
+      p_hasta: filtros.hasta || null,
+      p_grupo_id: filtros.grupoId || null,
+      p_offset: historialPagina.value * HISTORIAL_PAGE,
+      p_limit: HISTORIAL_PAGE,
+    })
+    if (err) {
+      fail(err.message)
+      return
+    }
+    const payload = data as { total?: number; sesiones?: Sesion[] } | null
+    historialTotal.value = payload?.total ?? 0
+    historialSesiones.value = payload?.sesiones ?? []
+    for (const row of historialSesiones.value) mergeSesion(row)
+  }
+
+  async function cargarConsultaSesiones() {
+    const { data, error: err } = await supabase.rpc('listar_sesiones', {
+      p_desde: null,
+      p_hasta: null,
+      p_grupo_id: null,
+      p_offset: 0,
+      p_limit: 40,
+    })
+    if (err) {
+      fail(err.message)
+      return
+    }
+    const payload = data as { sesiones?: Sesion[] } | null
+    consultaSesiones.value = payload?.sesiones ?? []
+    for (const row of consultaSesiones.value) mergeSesion(row)
+  }
+
+  async function fetchSeriesDeMiembro(
+    miembroId: string,
+    filtros: { grupoId?: string; equipoId?: string; desde?: string; hasta?: string } = {},
+  ) {
+    const select = filtros.grupoId
+      ? '*, sesiones!inner(id, fecha, nota, creado_en), ejercicios!inner(grupo_muscular_id)'
+      : '*, sesiones!inner(id, fecha, nota, creado_en)'
+    let q = supabase
+      .from('series')
+      .select(select)
+      .eq('miembro_id', miembroId)
+      .order('creado_en', { ascending: false })
+      .limit(80)
+    if (filtros.equipoId) q = q.eq('equipo_id', filtros.equipoId)
+    if (filtros.desde) q = q.gte('sesiones.fecha', filtros.desde)
+    if (filtros.hasta) q = q.lte('sesiones.fecha', filtros.hasta)
+    if (filtros.grupoId) q = q.eq('ejercicios.grupo_muscular_id', filtros.grupoId)
+    const { data, error: err } = await q
+    if (err) {
+      fail(err.message)
+      return [] as { sesion: Sesion; series: Serie[] }[]
+    }
+    type Row = Serie & { peso_kg: number | string; sesiones: Sesion }
+    const rows = (data ?? []) as unknown as Row[]
+    const bySesion = new Map<string, { sesion: Sesion; series: Serie[] }>()
+    for (const row of rows) {
+      const mapped = mapSerie(row)
+      mergeSesion(row.sesiones)
+      const block = bySesion.get(row.sesion_id)
+      if (block) block.series.push(mapped)
+      else bySesion.set(row.sesion_id, { sesion: row.sesiones, series: [mapped] })
+    }
+    return [...bySesion.values()].sort((a, b) => {
+      if (a.sesion.fecha === b.sesion.fecha) return b.sesion.creado_en.localeCompare(a.sesion.creado_en)
+      return b.sesion.fecha.localeCompare(a.sesion.fecha)
+    })
+  }
+
+  async function refresh() {
+    await refreshBase()
+    const ids = new Set<string>([
+      ...series.value.map((s) => s.sesion_id),
+      ...sesiones.value.map((s) => s.id),
+    ])
+    await cargarHoy()
+    await Promise.all([...ids].map((id) => cargarSesion(id)))
+    if (historialSesiones.value.length || historialFiltros.value.grupoId || historialFiltros.value.desde) {
+      await listarSesiones()
+    }
   }
 
   function stopRealtime() {
@@ -196,9 +326,27 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     })
   }
 
+  async function reset() {
+    stopRealtime()
+    miembros.value = []
+    sesiones.value = []
+    asistencia.value = []
+    grupos.value = []
+    equipos.value = []
+    ejercicios.value = []
+    series.value = []
+    historialSesiones.value = []
+    historialTotal.value = 0
+    historialPagina.value = 0
+    historialFiltros.value = { desde: '', hasta: '', grupoId: '' }
+    consultaSesiones.value = []
+    error.value = ''
+    listo.value = false
+  }
+
   async function load() {
     if (!auth.user) {
-      stopRealtime()
+      reset()
       listo.value = true
       return
     }
@@ -206,7 +354,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     try {
       await ensureMiembro()
       await seedCatalogIfEmpty()
-      await refresh()
+      await refreshBase()
+      await cargarHoy()
       listenRealtime()
     } catch (err) {
       fail(err instanceof Error ? err.message : 'No se pudo cargar FitCheck')
@@ -222,7 +371,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(err?.message ?? 'No se pudo crear el equipo')
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el equipo'))
       return
     }
     equipos.value.push(data as Equipo)
@@ -235,7 +384,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(err?.message ?? 'No se pudo crear el ejercicio')
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el ejercicio'))
       return
     }
     ejercicios.value.push(data as Ejercicio)
@@ -248,22 +397,26 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(err?.message ?? 'No se pudo crear el grupo muscular')
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el grupo muscular'))
       return
     }
     grupos.value.push(data as GrupoMuscular)
   }
 
-  function equipoEnUso(id: string) {
-    return series.value.some((s) => s.equipo_id === id)
-  }
-
-  function ejercicioEnUso(id: string) {
-    return series.value.some((s) => s.ejercicio_id === id)
-  }
-
   function grupoEnUso(id: string) {
     return ejercicios.value.some((e) => e.grupo_muscular_id === id)
+  }
+
+  async function serieUsa(columna: 'equipo_id' | 'ejercicio_id', id: string) {
+    const { count, error: err } = await supabase
+      .from('series')
+      .select('id', { count: 'exact', head: true })
+      .eq(columna, id)
+    if (err) {
+      fail(err.message)
+      return true
+    }
+    return (count ?? 0) > 0
   }
 
   async function editarEquipo(id: string, nombre: string, descripcion = '') {
@@ -272,7 +425,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .update({ nombre: nombre.trim(), descripcion: descripcion.trim() || null })
       .eq('id', id)
     if (err) {
-      fail(err.message)
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : err.message)
       return
     }
     const row = equipos.value.find((e) => e.id === id)
@@ -302,7 +455,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   }
 
   async function borrarEquipo(id: string) {
-    if (equipoEnUso(id)) {
+    if (await serieUsa('equipo_id', id)) {
       fail(mensajeCatalogoEnUso('equipos', id))
       return
     }
@@ -317,7 +470,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .update({ nombre: nombre.trim(), grupo_muscular_id: grupoMuscularId })
       .eq('id', id)
     if (err) {
-      fail(err.message)
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : err.message)
       return
     }
     const row = ejercicios.value.find((e) => e.id === id)
@@ -328,7 +481,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   }
 
   async function borrarEjercicio(id: string) {
-    if (ejercicioEnUso(id)) {
+    if (await serieUsa('ejercicio_id', id)) {
       fail(mensajeCatalogoEnUso('ejercicios', id))
       return
     }
@@ -343,7 +496,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .update({ nombre: nombre.trim() })
       .eq('id', id)
     if (err) {
-      fail(err.message)
+      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : err.message)
       return
     }
     const row = grupos.value.find((g) => g.id === id)
@@ -637,6 +790,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     equipos,
     ejercicios,
     series,
+    historialSesiones,
+    historialTotal,
+    historialPagina,
+    historialFiltros,
+    consultaSesiones,
     error,
     limpiarError,
     listo,
@@ -647,7 +805,12 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     sesionesOrdenadas,
     grupoDeEjercicio,
     load,
+    reset,
     refresh,
+    listarSesiones,
+    cargarSesion,
+    cargarConsultaSesiones,
+    fetchSeriesDeMiembro,
     crearSesion,
     sesionPorId,
     marcarAsistencia,

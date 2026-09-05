@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import SerieLinea from '@/components/SerieLinea.vue'
 import { formatFecha } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
+import type { Serie, Sesion } from '@/types/models'
 
 const gym = useFitcheckStore()
 
@@ -15,6 +16,9 @@ const filtros = reactive({
   hasta: '',
 })
 
+const bloques = ref<{ sesion: Sesion; series: Serie[] }[]>([])
+const cargando = ref(false)
+
 watch(
   () => gym.miembroActivoId,
   (id) => {
@@ -22,39 +26,43 @@ watch(
   },
 )
 
-const series = computed(() =>
-  filtros.miembroId
-    ? gym.seriesDeMiembro(filtros.miembroId, {
-        grupoId: filtros.grupoId || undefined,
-        equipoId: filtros.equipoId || undefined,
-        desde: filtros.desde || undefined,
-        hasta: filtros.hasta || undefined,
-      })
-    : [],
-)
-
-const bloques = computed(() => {
-  const bySesion = new Map<string, typeof series.value>()
-  for (const s of series.value) {
-    const list = bySesion.get(s.sesion_id) ?? []
-    list.push(s)
-    bySesion.set(s.sesion_id, list)
-  }
-  return gym.sesionesOrdenadas
-    .filter((sesion) => bySesion.has(sesion.id))
-    .map((sesion) => ({ sesion, series: bySesion.get(sesion.id) ?? [] }))
-})
-
 const hayFiltro = computed(
   () => Boolean(filtros.grupoId || filtros.equipoId || filtros.desde || filtros.hasta),
 )
+
+async function cargar() {
+  if (!filtros.miembroId) {
+    bloques.value = []
+    return
+  }
+  cargando.value = true
+  bloques.value = await gym.fetchSeriesDeMiembro(filtros.miembroId, {
+    grupoId: filtros.grupoId || undefined,
+    equipoId: filtros.equipoId || undefined,
+    desde: filtros.desde || undefined,
+    hasta: filtros.hasta || undefined,
+  })
+  cargando.value = false
+}
 
 function limpiarFiltros() {
   filtros.grupoId = ''
   filtros.equipoId = ''
   filtros.desde = ''
   filtros.hasta = ''
+  void cargar()
 }
+
+onMounted(() => {
+  void cargar()
+})
+
+watch(
+  () => [filtros.miembroId, filtros.grupoId, filtros.equipoId, filtros.desde, filtros.hasta],
+  () => {
+    void cargar()
+  },
+)
 </script>
 
 <template>
@@ -100,6 +108,7 @@ function limpiarFiltros() {
   </article>
 
   <p v-if="!filtros.miembroId" class="empty">No hay miembros en el grupo.</p>
+  <p v-else-if="cargando" class="empty">Cargando series…</p>
   <p v-else-if="!bloques.length" class="empty">
     {{ hayFiltro ? 'Ninguna serie encaja con esos filtros.' : 'Este miembro aún no tiene series.' }}
   </p>

@@ -1,0 +1,2 @@
+[functions.invitar-miembro]
+verify_jwt = true

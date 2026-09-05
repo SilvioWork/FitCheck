@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import AsistenciaList from '@/components/AsistenciaList.vue'
 import RegistroSeries from '@/components/RegistroSeries.vue'
@@ -9,8 +9,21 @@ import { useFitcheckStore } from '@/stores/fitcheck'
 
 const route = useRoute()
 const gym = useFitcheckStore()
+const cargando = ref(true)
 
-const sesion = computed(() => gym.sesionPorId(String(route.params.id)))
+const sesionId = computed(() => String(route.params.id))
+const sesion = computed(() => gym.sesionPorId(sesionId.value))
+
+onMounted(async () => {
+  await gym.cargarSesion(sesionId.value)
+  cargando.value = false
+})
+
+watch(sesionId, async (id) => {
+  cargando.value = true
+  await gym.cargarSesion(id)
+  cargando.value = false
+})
 
 const grupos = computed(() => (sesion.value ? gym.seriesAgrupadasPorMiembro(sesion.value.id) : []))
 
@@ -18,7 +31,8 @@ const otros = computed(() => grupos.value.filter((g) => !g.propio))
 </script>
 
 <template>
-  <section v-if="sesion" class="page">
+  <p v-if="cargando" class="muted">Cargando sesión…</p>
+  <section v-else-if="sesion" class="page">
     <header>
       <RouterLink class="back" to="/historial">Historial</RouterLink>
       <h1>{{ formatFecha(sesion.fecha) }}</h1>

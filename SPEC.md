@@ -1,7 +1,7 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.0 — fuente de la verdad
-**Última actualización:** 2026-09-04
+**Estado:** Borrador v1.1 — fuente de la verdad
+**Última actualización:** 2026-09-05
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
 ---
@@ -19,12 +19,13 @@ Todos los usuarios objetivo usan iPhone. El entregable inicial es una PWA constr
 - Registrar, por sesión, qué miembros asistieron y cuáles no.
 - Registrar series individuales por miembro: ejercicio, grupo muscular (derivado del ejercicio), equipo usado, repeticiones, peso y nota libre opcional.
 - Editar o borrar una serie ya guardada (el registro no es append-only).
-- Consultar el historial: por miembro, por sesión, por grupo muscular, por equipo.
+- Consultar el historial: por miembro, por sesión, por grupo muscular, por equipo. La lista de sesiones está paginada y se filtra por fechas y grupo muscular.
 - Responder preguntas negativas: "¿quién no asistió a la sesión X?", "¿quién no usó el equipo Y en la sesión X?".
 - Sincronización entre todos los perfiles del grupo — un dato guardado por un miembro es visible por el resto sin fricción.
 - UX optimizada para anotar entre series, con el móvil en mano: diseño moderno, muy intuitivo y cómodo en iPhone (una mano, entre series).
 - Tema claro y oscuro, elegible por el usuario y persistido en el dispositivo.
-- Catálogo de ejercicios, grupos musculares y equipos gestionable por el propio grupo.
+- Catálogo de ejercicios, grupos musculares y equipos gestionable por el propio grupo, con un seed inicial único (sin nombres repetidos).
+- Arranque del grupo: un integrante crea su cuenta, da de alta al resto (máx. 5) y el catálogo queda listo para el uso diario.
 
 ### 2.2 Fuera de alcance (v1)
 - Multi-tenant / soporte para grupos de entrenamiento no relacionados entre sí (se asume un único grupo cerrado).
@@ -32,10 +33,18 @@ Todos los usuarios objetivo usan iPhone. El entregable inicial es una PWA constr
 - Planificación/programación de rutinas futuras (esto es un registro histórico, no un planificador).
 - Métricas avanzadas (progresión de fuerza, gráficas de tendencia) — puede añadirse en fase posterior, no es v1.
 - Publicación en App Store (v1 es PWA instalable, no requiere revisión de Apple).
+- Recuperación de contraseña por correo (el grupo se coordina en persona; un miembro puede resetear la de otro desde Ajustes).
 
 ### 2.3 Actores
-- **Miembro (Integrante):** perfil individual del grupo. Puede registrar su propia asistencia y sus propias series. Puede leer el historial de todo el grupo.
-- No hay rol de "administrador" diferenciado en v1 más allá de la gestión del catálogo (ejercicios/equipos/grupos musculares), que cualquier miembro puede editar dado que es un grupo cerrado de confianza.
+- **Miembro (Integrante):** perfil individual del grupo. Entra con usuario y contraseña. Puede registrar su propia asistencia y sus propias series. Puede leer el historial de todo el grupo. Puede dar de alta a otro integrante (hasta 5) y editar el catálogo.
+- No hay rol de "administrador" diferenciado en v1. El primer miembro es especial solo porque el grupo está vacío; después, cualquier miembro puede invitar y gestionar catálogo.
+
+### 2.4 Arranque (una vez) vs uso diario
+
+1. Un integrante crea el grupo (nombre visible, usuario, contraseña).
+2. Desde Ajustes da de alta al resto de compañeros (usuario + contraseña inicial, se comunican en persona).
+3. El seed deja un catálogo inicial (grupos, equipos, ejercicios). El grupo lo amplía o edita si hace falta.
+4. Operativa diaria: cada uno entra con su usuario, abre Hoy y registra su sesión.
 
 ## 3. Modelo de datos
 
@@ -54,6 +63,7 @@ erDiagram
   MIEMBROS {
     uuid id PK
     string nombre
+    string usuario
     string email
     timestamp creado_en
   }
@@ -103,9 +113,10 @@ erDiagram
 **MIEMBROS**
 | Campo | Tipo | Notas |
 |---|---|---|
-| id | uuid, PK | |
-| nombre | string | |
-| email | string, único | usado para autenticación (magic link) |
+| id | uuid, PK | igual a `auth.users.id` |
+| nombre | string | nombre visible en la app |
+| usuario | string, único | apodo de login, minúsculas `[a-z0-9_]{3,24}` |
+| email | string, único | interno de Auth: `{usuario}@fitcheck.local` — no se muestra como correo real |
 | creado_en | timestamp | |
 
 **SESIONES**
@@ -130,20 +141,20 @@ Restricción: única fila por combinación (sesion_id, miembro_id).
 | Campo | Tipo | Notas |
 |---|---|---|
 | id | uuid, PK | |
-| nombre | string | ej. "pecho", "espalda", "pierna" |
+| nombre | string | único ignorando mayúsculas y espacios; ej. "Pecho" |
 
 **EQUIPOS**
 | Campo | Tipo | Notas |
 |---|---|---|
 | id | uuid, PK | |
-| nombre | string | ej. "máquina press banca Technogym" |
+| nombre | string | único ignorando mayúsculas y espacios |
 | descripcion | string, opcional | |
 
 **EJERCICIOS**
 | Campo | Tipo | Notas |
 |---|---|---|
 | id | uuid, PK | |
-| nombre | string | ej. "press banca" |
+| nombre | string | único ignorando mayúsculas y espacios |
 | grupo_muscular_id | uuid, FK → GRUPOS_MUSCULARES | el grupo muscular queda implícito al elegir el ejercicio |
 
 **SERIES** (el registro atómico de trabajo)
@@ -181,7 +192,8 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 ┌───────────────▼───────────────────────────┐
 │  Supabase                                │
 │  - Postgres (modelo de datos de sec. 3)  │
-│  - Auth (magic link por email)           │
+│  - Auth (usuario + contraseña)           │
+│  - Edge Function alta de miembros        │
 │  - Realtime (cambios propagados en vivo) │
 │  - Row Level Security (permisos)         │
 └─────────────────────────────────────────┘
@@ -206,6 +218,7 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 
 - Cada escritura (serie, asistencia) se guarda directamente contra Supabase vía el cliente JS — no hay servidor intermedio propio.
 - Los demás clientes conectados reciben el cambio vía canal realtime de Supabase (WebSocket) y actualizan su vista sin acción del usuario.
+- **Carga:** Hoy trae catálogo, miembros y la sesión de hoy. El historial pide páginas al servidor (no se descarga el histórico entero).
 - **Offline:** v1 asume conexión a internet disponible durante el entreno (gimnasio con wifi/datos). No se implementa cola offline-first en v1; si se detecta que hace falta (mala cobertura en el gimnasio), se añade como mejora de fase 2 usando IndexedDB local + reintento de sync.
 - **Conflictos:** cada serie pertenece a un único miembro. Inserción, edición y borrado los hace el dueño de la fila; el riesgo de escritura concurrente entre personas distintas es bajo. No se requiere resolución de conflictos compleja en v1. Si el mismo miembro edita la misma serie desde dos dispositivos, gana la última escritura (last-write-wins vía `actualizado_en`).
 
@@ -213,9 +226,14 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 
 No existe una API pública de Fitness Park (ni de ninguna cadena de gimnasios habitual) que exponga el inventario de máquinas por club — se confirmó buscando en sus canales oficiales, que solo listan marcas genéricas de equipamiento (Technogym, Eleiko, Hammer Strength, gym80, Nike Strength) sin catálogo consultable.
 
-Decisión: el catálogo de EQUIPOS y EJERCICIOS se carga manualmente por el propio grupo, una sola vez al arrancar el proyecto, mediante una pantalla simple de alta (nombre + descripción opcional). No hay dependencia externa ni sincronización con terceros.
+Decisión: hay un **seed inicial** con un juego correcto (Pecho, Espalda, Pierna, Hombro; Barra, Mancuernas, Máquina press, Polea; Press banca, Aperturas, Remo con barra, Jalón al pecho, Sentadilla, Prensa, Press militar). Ese seed es **idempotente**: nombres únicos (case-insensitive); si dos clientes arrancan a la vez, no se duplica. Después el grupo amplía o edita el catálogo a mano. No hay dependencia externa ni sincronización con terceros.
 
 ## 6. UX — flujos principales
+
+### 6.0 Flujo de cuenta
+1. Si el grupo está vacío: pantalla **Crear el grupo** (nombre, usuario, contraseña).
+2. Si ya hay equipo: pantalla **Entrar** (usuario, contraseña). Sin enlace de correo.
+3. En Ajustes: listar compañeros, invitar (nombre + usuario + contraseña inicial), cambiar la propia contraseña, resetear la de otro si hace falta.
 
 ### 6.1 Flujo de sesión
 1. Un miembro crea la sesión (fecha + nota opcional). Quien la crea queda marcado presente.
@@ -226,10 +244,11 @@ Decisión: el catálogo de EQUIPOS y EJERCICIOS se carga manualmente por el prop
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
 
 ### 6.2 Flujo de consulta
+- Lista de sesiones paginada (p. ej. 15 por página), con filtros de **desde / hasta** y **grupo muscular**. Cabecera de frecuencia: cuántas sesiones del filtro tocan ese grupo en el rango.
 - Vista por sesión: lista de presentes, ausentes y sin marcar + series de esa sesión, agrupadas por miembro.
 - Consulta negativa de equipo: quién, estando presente, no usó el equipo Y en la sesión X (regla de la sec. 3.3).
-- Vista por miembro: historial de sus series, filtrable por grupo muscular, equipo o rango de fechas.
-- Vista por grupo muscular: quién lo ha trabajado y cuándo; análogo negativo «quién no lo trabajó» (pendiente; ver sec. 9).
+- Vista por miembro: historial de sus series, filtrable por grupo muscular, equipo o rango de fechas (consulta al servidor, no un dump en memoria).
+- Vista por grupo muscular: quién lo ha trabajado y cuándo; análogo negativo «quién no lo trabajó» (pendiente; ver sec. 9). El filtro de historial ya cubre frecuencia de sesiones por grupo.
 
 ### 6.3 Principios de diseño (v1)
 
@@ -238,7 +257,7 @@ Contexto de uso: iPhone en el gimnasio, entre series, a menudo con una sola mano
 - **Mobile-first iPhone:** layouts de una columna, safe areas (notch / Dynamic Island / home indicator), tipografía legible a ~40 cm, contraste WCAG AA en claro y en oscuro.
 - **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, repetir última serie, presente/ausente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos.
 - **Jerarquía obvia:** en la pantalla de registro, lo primero que se ve es el ejercicio activo, la serie actual y los controles de reps/peso. Historial, catálogo y ajustes quedan un tap más atrás.
-- **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado solo para notas y altas de catálogo.
+- **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado solo para notas, altas de catálogo y login.
 - **Feedback inmediato:** al guardar/editar/borrar, confirmación visual en < 1 s (toast o estado en la propia tarjeta). Acciones destructivas (borrar serie) piden confirmación breve, no un modal pesado.
 - **Navegación simple:** barra inferior con 3 destinos como máximo (p. ej. **Hoy / Historial / Ajustes**). Sin hamburger menu. Crear sesión y registrar serie no deben estar a más de un tap desde “Hoy”.
 - **Estética moderna, no recargada:** superficies limpias, radios consistentes, sombras suaves, acento único (energía / entrenamiento), iconos reconocibles. Evitar ilustraciones decorativas que restan espacio a los controles.
@@ -273,11 +292,16 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 
 ## 7. Seguridad y permisos
 
-- Autenticación por magic link (email) vía Supabase Auth — sin gestión de contraseñas.
+- Autenticación por **usuario y contraseña** vía Supabase Auth. El usuario es un apodo; internamente Auth usa `{usuario}@fitcheck.local`. No hay magic link en el uso diario (el SMTP integrado limita a ~2 emails/hora y no escala a 5 personas).
+- Confirmación de correo desactivada. El login no envía email.
+- Alta de compañeros: Edge Function con `service_role` (nunca en el cliente). El primer usuario (grupo vacío) puede crearse sin JWT; el resto solo lo invita un miembro autenticado. Tope 5.
+- Un miembro autenticado inserta su fila en `miembros` solo si el grupo está vacío; después las altas van por la función.
+- Lectura y escritura de datos de producto: solo si existe fila en `miembros` para `auth.uid()`.
 - Row Level Security:
-  - Lectura: cualquier miembro autenticado puede leer todas las tablas (grupo cerrado, confianza total en lectura).
+  - Lectura: cualquier **miembro** autenticado puede leer todas las tablas (grupo cerrado, confianza total en lectura).
   - Escritura en SERIES y ASISTENCIA: un miembro solo puede insertar, editar y borrar filas donde `miembro_id` sea el suyo. No puede modificar series de otro miembro.
   - Escritura en catálogo (EQUIPOS, EJERCICIOS, GRUPOS_MUSCULARES): abierta a cualquier miembro autenticado (grupo pequeño, sin necesidad de rol admin diferenciado en v1).
+- Cambio de contraseña: el dueño, logueado, con `updateUser`. Reset de otro: misma Edge Function, por un compañero. No hay “olvidé mi contraseña” por email.
 
 ## 8. Requisitos no funcionales
 
@@ -286,6 +310,7 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 - Tamaño del grupo: **1 a 5 personas**. El diseño (RLS, realtime, catálogo compartido, sin rol admin) se dimensiona para ese rango; no se optimiza para multi-tenant ni para decenas de usuarios concurrentes.
 - Interfaz usable con una mano en iPhone: targets ≥ 44 pt, contraste AA en tema claro y oscuro, respeto de safe areas.
 - Cambio de tema (claro / oscuro / automático) percibido como instantáneo y persistente entre visitas.
+- El historial no carga todas las series del grupo de una vez; las listas de sesiones van paginadas.
 
 ## 9. Roadmap / fases
 
@@ -295,20 +320,22 @@ Hecho:
 1. Esquema SQL en Supabase (tablas de la sección 3) + políticas RLS de la sección 7.
 2. Vue 3 PWA: alta de sesión, asistencia auto-declarada, registro de series, con el sistema visual y los flujos de la sección 6.
 3. Tema claro / oscuro / automático (sec. 6.5).
-4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app.
+4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app; seed inicial idempotente y nombres únicos.
 5. Consultas: vista por sesión (series agrupadas por miembro); quién no asistió / sin marcar; quién, estando presente, no usó un equipo.
 6. Vista por miembro: historial filtrable por grupo muscular, equipo o rango de fechas.
+7. Login usuario / contraseña, alta del grupo e invitación de compañeros.
+8. Historial de sesiones paginado, con filtros de fecha y grupo muscular y recuento de frecuencia.
 
 Pendiente:
-7. Publicación HTTPS e instalación en los iPhones del grupo vía Safari.
+9. Publicación HTTPS estable e instalación en los iPhones del grupo vía Safari.
 
 **Fase 2 — mejoras**
-8. Consulta por grupo muscular (además de equipo).
-9. Offline-first si la cobertura del gimnasio resulta ser un problema real.
+10. Consulta por grupo muscular (además de equipo) a nivel de “quién no lo trabajó”.
+11. Offline-first si la cobertura del gimnasio resulta ser un problema real.
 
 **Fase 3 — opcional, bajo demanda**
-10. Build nativo iOS vía Capacitor (App Store) si se necesita distribución más amplia o push notifications.
-11. Métricas de progresión (fuera de alcance v1, ver sección 2.2).
+12. Build nativo iOS vía Capacitor (App Store) si se necesita distribución más amplia o push notifications.
+13. Métricas de progresión (fuera de alcance v1, ver sección 2.2).
 
 ## 10. Registro de decisiones (decision log)
 
@@ -318,7 +345,7 @@ Pendiente:
 | ASISTENCIA como tabla propia | Inferir asistencia de la ausencia de SERIES | Ambiguo: no distingue "no asistió" de "asistió pero no usó X" |
 | Asistencia auto-declarada (cada uno marca la suya) | Un miembro marca presente/ausente por todo el grupo | Encaja con RLS (solo tu `miembro_id`); cada uno usa su iPhone; «sin marcar» ≠ ausente |
 | PWA instalable en v1 | App nativa directa | Evita coste/fricción de App Store; Capacitor deja la puerta abierta para después |
-| Catálogo de equipos manual | Integración con API de Fitness Park | No existe API pública de inventario de equipamiento |
+| Catálogo de equipos manual + seed inicial único | Integración con API de Fitness Park; seed que se puede repetir | No existe API pública; el juego inicial es útil, las copias no |
 | Sin offline-first en v1 | Cola offline con IndexedDB desde el inicio | Se asume conectividad en el gimnasio; se añade solo si se demuestra necesario |
 | Sin rol admin diferenciado en v1 | Rol admin para gestionar catálogo | Grupo cerrado de 1–5 personas, no aporta valor en v1 |
 | Series editables y borrables | Registro append-only | Corregir un peso/reps mal anotados entre series es habitual; el dueño de la fila puede editar o borrar |
@@ -326,10 +353,12 @@ Pendiente:
 | Chips "Con ayuda" / "Fallo muscular" por serie | Campo de texto libre | En el gym se elige con un tap; se pueden marcar las dos; no bloquea el guardado |
 | UI mobile-first con targets grandes y barra inferior | Dashboard denso tipo escritorio | El uso real es anotar entre series en el iPhone, no consultar en un portátil |
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
+| Usuario + contraseña (email interno `@fitcheck.local`) | Magic link por correo | El SMTP integrado limita a ~2 emails/hora; con hasta 5 personas el login diario no puede depender del correo |
+| Historial paginado con filtros | Cargar todas las sesiones y series al arrancar | A los pocos meses la lista es larga; hace falta buscar por fecha y ver frecuencia por grupo muscular |
 
 ## 11. Preguntas abiertas
 
-Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04:
+Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04 y 2026-09-05:
 
 - Tamaño del grupo: entre 1 y 5 personas.
 - Una serie ya guardada se puede editar y borrar (no es append-only).
@@ -338,3 +367,6 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04:
 - Tema claro, oscuro o automático, a elección del usuario (sec. 6.5).
 - Asistencia auto-declarada: cada miembro marca la suya; no se marca a terceros (sec. 6.1 y 7).
 - `numero_serie` automático: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
+- Login con usuario y contraseña; sin magic link en el uso diario (sec. 7).
+- Seed de catálogo inicial, una sola vez por nombre (sec. 5).
+- Historial de sesiones paginado, filtrable por fechas y grupo muscular (sec. 6.2).

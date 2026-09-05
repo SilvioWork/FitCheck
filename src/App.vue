@@ -16,7 +16,12 @@ onMounted(() => theme.init())
 watch(
   () => [auth.ready, auth.user?.id] as const,
   async ([ready, id]) => {
-    if (ready && id) await gym.load()
+    if (!ready) return
+    if (!id) {
+      gym.reset()
+      return
+    }
+    await gym.load()
   },
   { immediate: true },
 )

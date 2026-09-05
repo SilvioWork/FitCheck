@@ -1,7 +1,7 @@
 # FitCheck — Spec-Status
 
 **Tipo:** estado de desarrollo (no sustituye a `SPEC.md`)
-**Fecha:** 2026-09-04
+**Fecha:** 2026-09-05
 **Repo:** [github.com/SilvioWork/FitCheck](https://github.com/SilvioWork/FitCheck)
 **Carpeta:** `FitCheck/` (producto **FitCheck**; la Spec original vive aquí como `SPEC.md`)
 
@@ -11,25 +11,26 @@
 
 ## 1. Resumen del estado
 
-FitCheck es una PWA Vue 3 conectada a **Supabase** (Postgres, Auth magic link, RLS). Se puede registrar sesión, asistencia y series, consultar historial y preguntas negativas, gestionar catálogo y tema, e instalar en iPhone.
+FitCheck es una PWA Vue 3 conectada a **Supabase** (Postgres, Auth usuario/contraseña, RLS, Edge Function de alta de miembros). Se puede crear el grupo, invitar compañeros, registrar sesión, asistencia y series, consultar historial paginado, gestionar catálogo y tema, e instalar en iPhone.
 
-Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso (2 miembros, 1 sesión, catálogo sembrado). **El login desde la URL pública aún no está validado:** el magic link generado en Vercel no llegó a completar el ciclo (primero redirigía a `127.0.0.1` por Auth; después el correo integrado cortó por rate limit).
+Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link se retiró: el SMTP integrado (~2 emails/hora) no sirve para un grupo de hasta 5.
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho |
+| Spec y decisiones de producto | Hecho (v1.1) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
 | Flujo de sesión (alta, asistencia, series) | Hecho |
 | Chips Con ayuda / Fallo muscular | Hecho |
-| Supabase: esquema, cliente, magic link | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
-| Realtime | Hecho (publicación aplicada en el proyecto) |
-| Catálogo editable (alta / edición / borrado) | Hecho (políticas DELETE aplicadas) |
+| Supabase: esquema, cliente, usuario/contraseña | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
+| Realtime | Hecho |
+| Catálogo editable + seed idempotente + nombres únicos | Hecho |
 | Consultas «quién no asistió / no usó equipo» | Hecho |
+| Historial paginado (fechas + grupo muscular) | Hecho |
+| Alta de grupo e invitación de compañeros | Hecho |
 | Icono PNG + guía Añadir a inicio | Hecho |
-| Publicación en internet | Deploy HTTPS anónimo en Vercel; falta reclamar y validar login |
+| Publicación en internet | Deploy HTTPS anónimo en Vercel; falta reclamar |
 | Offline-first | Pendiente (fase 2) |
-| Historial por sesión y por miembro (filtros) | Hecho |
 | Capacitor / App Store / métricas | Fuera de v1 / fase 3 |
 
 ---
@@ -39,7 +40,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso (2 miembros, 1
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1 en `SPEC.md` (grupo 1–5, series editables, chips, tema, PWA).
+- Spec v1.1 en `SPEC.md` (grupo 1–5, usuario/contraseña, seed único, historial paginado, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -48,73 +49,65 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso (2 miembros, 1
 - Vue 3 + Vite + TypeScript + Vue Router + Pinia.
 - `@supabase/supabase-js`.
 - `vite-plugin-pwa` (standalone, iconos 192/512, `apple-touch-icon` 180).
-- SQL: `supabase/schema.sql` (tablas + RLS + DELETE de catálogo), `supabase/realtime.sql` (publicación realtime), `supabase/catalogo_delete.sql` (idempotente, por si el esquema ya estaba aplicado).
-- Dev: `npm run dev` → `vite --host --port 5174` (localhost y LAN `192.168.1.30`).
+- SQL: `supabase/schema.sql` (tablas + RLS + unique de catálogo + RPCs), `supabase/realtime.sql`, `supabase/catalogo_delete.sql`.
+- Edge Function `invitar-miembro` desplegada (invitar compañero y reset de contraseña; JWT obligatorio).
+- Dev: `npm run dev` → `vite --host --port 5174`.
 - `vercel.json`: rewrite SPA (`/(.*)` → `index.html`).
 
 ### 2.3 Autenticación y datos
 
-- Login por **magic link** (`/entrar`: nombre + email). `emailRedirectTo` = `window.location.origin` (la URL desde la que se pide el enlace).
-- Tras el enlace: upsert en `miembros` (`id` = `auth.uid()`).
-- RLS: lectura de grupo autenticado; cada uno escribe solo su asistencia y sus series; catálogo escribible/borrable por cualquier autenticado.
-- Seed de catálogo la primera vez que hay grupos vacíos.
-- Realtime: canal `fitcheck-live` sobre sesiones, asistencia, series, catálogo y miembros. En Hoy aparece **En vivo** si `SUBSCRIBED`.
+- Login por **usuario + contraseña**. Auth usa el email interno `{usuario}@fitcheck.local`.
+- Primer usuario: `/entrar` en modo crear grupo (Edge Function, grupo vacío).
+- Compañeros: un miembro los da de alta en Ajustes (tope 5).
+- RLS: solo quien tiene fila en `miembros` lee/escribe datos de producto; cada uno escribe solo su asistencia y sus series; catálogo escribible/borrable por cualquier miembro.
+- Seed de catálogo idempotente (`ensure_catalogo`) + índices únicos `lower(trim(nombre))`.
+- Realtime: canal `fitcheck-live`. En Hoy aparece **En vivo** si `SUBSCRIBED`.
 - Persistencia de tema en `localStorage` (`fitcheck-theme`), no en la base.
 
 ### 2.4 Pantallas y flujos
 
-**Entrar** — magic link, sin nav inferior.
+**Entrar** — usuario y contraseña, o crear el grupo si está vacío. Sin nav inferior.
 
-**Hoy** — crear sesión (fecha + nota), asistencia propia (Sí/No), registro de serie (ejercicio, equipo, steppers reps/peso, chips, guardar, repetir última sin copiar chips), lista de series propias, edición/borrado en hoja inferior (borrado con confirmación).
+**Hoy** — crear sesión (fecha + nota), asistencia propia (Sí/No), registro de serie, lista de series propias, edición/borrado.
 
-**Historial** — pestañas Sesiones / Por miembro. Sesiones: panel **Consultas** y lista; detalle `/historial/:id` con asistencia, series propias (editables) y series del resto agrupadas por miembro. Por miembro: historial filtrable por grupo muscular, equipo y fechas.
+**Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
 
-**Ajustes** — perfil y lista del grupo (solo lectura de compañeros), cerrar sesión, **En el iPhone** (pasos Añadir a inicio), catálogo (alta de equipo, ejercicio, grupo muscular), tema Claro / Oscuro / Auto.
+**Ajustes** — perfil (usuario), invitar / resetear compañero, cerrar sesión, **En el iPhone**, catálogo, tema, cambiar contraseña.
 
-**Navegación** — barra inferior Hoy / Historial / Ajustes; toques ≥ 44 pt; tokens CSS; selects con chevron propio.
+**Navegación** — barra inferior Hoy / Historial / Ajustes; toques ≥ 44 pt; tokens CSS.
 
 ### 2.5 Decisiones ya cerradas en código (respecto a la Spec)
 
 - Series no son append-only.
-- Nota de serie = chips «Con ayuda» y/o «Fallo muscular» (se guardan en `nota` unidos con ` · `).
-- Asistencia es auto-declarada (RLS: solo tu fila).
+- Nota de serie = chips «Con ayuda» y/o «Fallo muscular».
+- Asistencia auto-declarada.
 - No hay rol admin.
 - Consulta de «quién no usó X» solo sobre `presente = true`.
+- Login sin correo.
+- Catálogo sin nombres duplicados.
 
 ---
 
-## 3. Estado operativo actual (2026-09-04, noche)
+## 3. Estado operativo actual (2026-09-05)
 
 ### 3.1 Supabase (FitCheck)
 
-- Proyecto `zrbbmqowrjfnluzfybuc`, región `eu-west-2`, estado ACTIVE_HEALTHY.
-- Auth: magic link (email). Panel: [URL Configuration](https://supabase.com/dashboard/project/zrbbmqowrjfnluzfybuc/auth/url-configuration).
-- Datos en vivo: 2 usuarios Auth / 2 miembros, 1 sesión, 2 asistencias, 2 series; catálogo 12 grupos musculares, 12 equipos, 15 ejercicios.
+- Proyecto `zrbbmqowrjfnluzfybuc`, región `eu-west-2`.
+- Auth: usuario/contraseña. Panel: [URL Configuration](https://supabase.com/dashboard/project/zrbbmqowrjfnluzfybuc/auth/url-configuration) y [Providers → Email](https://supabase.com/dashboard/project/zrbbmqowrjfnluzfybuc/auth/providers): **desactivar Confirm email**.
+- Cuentas actuales: `silvio` y `armando` (emails internos `@fitcheck.local`). Contraseña temporal de migración: cambiarla en Ajustes al entrar.
 - Realtime publicado sobre `sesiones`, `asistencia`, `series`, `miembros`, `grupos_musculares`, `equipos`, `ejercicios`.
-- Políticas DELETE de catálogo aplicadas.
 
 ### 3.2 Vercel
 
 - Deploy de producción **anónimo** (caduca si no se reclama): `https://temporary-nimble-basin-ycmrd13.vercel.app`
-- Alias largo: `https://temporary-nimble-basin-ycmrd13-gd2qc1ypw-anon-mu-indol.vercel.app`
-- Estado: Ready. La app se abre; las rutas de Vue las cubre `vercel.json`.
 - El repo local **no está enlazado** a un proyecto Vercel permanente (`vercel link` pendiente).
+- Variables: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 
-### 3.3 Login (lo que falló hoy)
+### 3.3 Dashboard Auth (manual, una vez)
 
-1. Un magic link pedido **desde Vercel** redirigió a `127.0.0.1` (`ERR_CONNECTION_REFUSED`). Causa: Site URL / Redirect URLs de Auth seguían en dev. Si `emailRedirectTo` no está en la allow list, Auth cae a Site URL.
-2. Tras tocar URL Configuration (Auth recargó ~19:40 UTC), los reenvíos desde Vercel devolvieron **`email rate limit exceeded`** (`429 over_email_send_rate_limit`).
-3. El correo integrado (`noreply@mail.app.supabase.io`) limita a **2 emails/hora en todo el proyecto**. No se sube en Rate Limits; hace falta SMTP propio (p. ej. Resend).
-4. Los últimos envíos que sí salieron (~20:25 y ~20:29 hora local) se pidieron desde `127.0.0.1:5174`; esos enlaces no sirven para entrar en Vercel.
-5. Login local sí ha funcionado (sesión creada, series anotadas). Login HTTPS **pendiente de un enlace nuevo** cuando pase la ventana de 1 h.
-
-### 3.4 Cómo entrar cuando el cupo de correo vuelva
-
-- Pedir **un solo** magic link desde la URL HTTPS de Vercel, no desde local.
-- Confirmar antes en Auth:
-  - Site URL: `https://temporary-nimble-basin-ycmrd13.vercel.app`
-  - Redirect: esa URL `/**`, el alias largo `/**`, y las de local (`http://127.0.0.1:5174/**`, LAN).
-- Un correo viejo no se «arregla» recargando: hay que generar otro.
+1. Providers → Email → **Confirm email**: off.
+2. Opcional: desactivar magic link / OTP si el panel lo permite; la app ya no lo llama.
+3. Site URL y Redirect URLs siguen haciendo falta si más adelante se usa recovery; para el login diario no.
 
 ---
 
@@ -122,23 +115,21 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso (2 miembros, 1
 
 ### 4.1 Inmediato (para que el grupo lo use de verdad)
 
-1. Esperar el cupo de correo (~1 h desde el último envío ok) y validar **un** magic link desde Vercel. No reintentar en bucle.
-2. Confirmar Site URL + Redirect URLs HTTPS en Auth (si el dominio cambia al reclamar Vercel, actualizarlos).
-3. Reclamar el deploy o publicar en cuenta propia (`npx vercel login` → `npx vercel --prod` / `vercel link`) para una URL estable tipo `fitcheck.vercel.app`.
-4. En Vercel: variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (las de `.env`).
-5. En el iPhone: Safari → URL HTTPS → magic link → Añadir a pantalla de inicio.
-6. Opcional si el grupo va a pedir varios enlaces: SMTP propio, para salir del límite de 2 emails/hora.
+1. En el dashboard: Confirm email off (si no está ya).
+2. Entrar con usuario/contraseña y cambiar la contraseña temporal.
+3. Reclamar el deploy o publicar en cuenta propia para una URL estable.
+4. En Vercel: variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+5. En el iPhone: Safari → URL HTTPS → Añadir a pantalla de inicio.
 
-### 4.2 Producto (Spec / roadmap, no bloquea el primer uso)
+### 4.2 Producto (Spec / roadmap)
 
-- Consulta por **grupo muscular** (además de equipo).
-- Invitar / onboarding más claro (ahora cada uno se registra solo).
-- Splash / pantallas de arranque iOS (varios tamaños); el icono PNG ya existe.
-- Comprobar PWA en Safari iOS (service worker más restrictivo).
+- Consulta negativa por **grupo muscular** (quién, estando presente, no lo trabajó).
+- Splash / pantallas de arranque iOS (varios tamaños).
+- Comprobar PWA en Safari iOS.
 
 ### 4.3 Fase 2 (Spec)
 
-- Offline-first si la red del gym falla (IndexedDB + reintento).
+- Offline-first si la red del gym falla.
 
 ### 4.4 Fase 3 / fuera de v1 (Spec)
 
@@ -153,4 +144,4 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso (2 miembros, 1
 
 1. Leer `SPEC.md` para el *qué* y *por qué*.
 2. Leer este archivo para el *dónde estamos*.
-3. Prioridad recomendada: **validar magic link en HTTPS** → reclamar Vercel / URL fija → el grupo entra en el gym → pulir consultas/filtros solo si hacen falta.
+3. Prioridad recomendada: **confirmar login con contraseña en HTTPS** → reclamar Vercel / URL fija → el grupo entra en el gym.
