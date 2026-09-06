@@ -6,6 +6,9 @@ import { createHash } from 'node:crypto'
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), '../public')
 
+const GREEN = [31, 138, 76]
+const CREAM = [243, 246, 242]
+
 function crc32(buf) {
   let c = 0xffffffff
   for (const b of buf) {
@@ -25,20 +28,11 @@ function chunk(type, data) {
   return Buffer.concat([len, body, crc])
 }
 
-function png(size, paint) {
-  const raw = Buffer.alloc(size * size * 4, 0)
-  paint((x, y, r, g, b, a = 255) => {
-    if (x < 0 || y < 0 || x >= size || y >= size) return
-    const i = (y * size + x) * 4
-    raw[i] = r
-    raw[i + 1] = g
-    raw[i + 2] = b
-    raw[i + 3] = a
-  })
+function png(size, rgba) {
   const rows = []
   for (let y = 0; y < size; y++) {
     rows.push(Buffer.from([0]))
-    rows.push(raw.subarray(y * size * 4, (y + 1) * size * 4))
+    rows.push(rgba.subarray(y * size * 4, (y + 1) * size * 4))
   }
   const ihdr = Buffer.alloc(13)
   ihdr.writeUInt32BE(size, 0)
@@ -54,37 +48,92 @@ function png(size, paint) {
   ])
 }
 
-function drawIcon(size) {
-  return png(size, (set) => {
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) set(x, y, 31, 138, 76)
-    }
-    const pts = [
-      [0.28, 0.54],
-      [0.42, 0.68],
-      [0.72, 0.34],
-    ].map(([x, y]) => [x * size, y * size])
-    const w = Math.max(2, size * 0.045)
-    const stroke = (x0, y0, x1, y1) => {
-      const steps = Math.hypot(x1 - x0, y1 - y0) * 2
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps
-        const cx = x0 + (x1 - x0) * t
-        const cy = y0 + (y1 - y0) * t
-        const r = Math.ceil(w)
-        for (let dy = -r; dy <= r; dy++) {
-          for (let dx = -r; dx <= r; dx++) {
-            if (dx * dx + dy * dy <= w * w) set(Math.round(cx + dx), Math.round(cy + dy), 243, 246, 242)
-          }
-        }
-      }
-    }
-    stroke(pts[0][0], pts[0][1], pts[1][0], pts[1][1])
-    stroke(pts[1][0], pts[1][1], pts[2][0], pts[2][1])
-  })
+function clamp01(v) {
+  return v < 0 ? 0 : v > 1 ? 1 : v
 }
 
-writeFileSync(join(dir, 'apple-touch-icon.png'), drawIcon(180))
-writeFileSync(join(dir, 'pwa-192.png'), drawIcon(192))
-writeFileSync(join(dir, 'pwa-512.png'), drawIcon(512))
-console.log('ok', createHash('sha1').update(drawIcon(180)).digest('hex').slice(0, 8))
+function coverage(sdf) {
+  return clamp01(0.5 - sdf)
+}
+
+function sdfRoundRect(px, py, cx, cy, hw, hh, r) {
+  const dx = Math.abs(px - cx) - (hw - r)
+  const dy = Math.abs(py - cy) - (hh - r)
+  const ox = Math.max(dx, 0)
+  const oy = Math.max(dy, 0)
+  return Math.hypot(ox, oy) + Math.min(Math.max(dx, dy), 0) - r
+}
+
+function sdfSegment(px, py, ax, ay, bx, by, radius) {
+  const vx = bx - ax
+  const vy = by - ay
+  const len2 = vx * vx + vy * vy
+  const t = len2 === 0 ? 0 : clamp01(((px - ax) * vx + (py - ay) * vy) / len2)
+  return Math.hypot(px - (ax + t * vx), py - (ay + t * vy)) - radius
+}
+
+function mapContent(nx, ny, scale) {
+  return [0.5 + (nx - 0.5) * scale, 0.5 + (ny - 0.5) * scale]
+}
+
+function iconSdf(nx, ny, scale) {
+  const [x, y] = mapContent(nx, ny, scale)
+  const dumbbell = Math.min(
+    sdfRoundRect(x, y, 0.22, 0.5, 0.105, 0.25, 0.045),
+    sdfRoundRect(x, y, 0.315, 0.5, 0.042, 0.15, 0.022),
+    sdfRoundRect(x, y, 0.5, 0.5, 0.205, 0.078, 0.04),
+    sdfRoundRect(x, y, 0.685, 0.5, 0.042, 0.15, 0.022),
+    sdfRoundRect(x, y, 0.78, 0.5, 0.105, 0.25, 0.045),
+  )
+  const check = Math.min(
+    sdfSegment(x, y, 0.705, 0.515, 0.76, 0.575, 0.028),
+    sdfSegment(x, y, 0.76, 0.575, 0.86, 0.4, 0.028),
+  )
+  return { dumbbell, check }
+}
+
+function drawIcon(size, { scale = 1 } = {}) {
+  const raw = Buffer.alloc(size * size * 4)
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const nx = (x + 0.5) / size
+      const ny = (y + 0.5) / size
+      const { dumbbell, check } = iconSdf(nx, ny, scale)
+      const cream = Math.max(0, coverage(dumbbell * size) - coverage(check * size))
+      const i = (y * size + x) * 4
+      raw[i] = Math.round(GREEN[0] + (CREAM[0] - GREEN[0]) * cream)
+      raw[i + 1] = Math.round(GREEN[1] + (CREAM[1] - GREEN[1]) * cream)
+      raw[i + 2] = Math.round(GREEN[2] + (CREAM[2] - GREEN[2]) * cream)
+      raw[i + 3] = 255
+    }
+  }
+  return png(size, raw)
+}
+
+function icoFromPng(pngBuf, size) {
+  const header = Buffer.alloc(22)
+  header.writeUInt16LE(0, 0)
+  header.writeUInt16LE(1, 2)
+  header.writeUInt16LE(1, 4)
+  header[6] = size
+  header[7] = size
+  header.writeUInt16LE(1, 10)
+  header.writeUInt16LE(32, 12)
+  header.writeUInt32LE(pngBuf.length, 14)
+  header.writeUInt32LE(22, 18)
+  return Buffer.concat([header, pngBuf])
+}
+
+const apple = drawIcon(180)
+const pwa192 = drawIcon(192)
+const pwa512 = drawIcon(512)
+const maskable = drawIcon(512, { scale: 0.72 })
+const favicon32 = drawIcon(32)
+
+writeFileSync(join(dir, 'apple-touch-icon.png'), apple)
+writeFileSync(join(dir, 'pwa-192.png'), pwa192)
+writeFileSync(join(dir, 'pwa-512.png'), pwa512)
+writeFileSync(join(dir, 'pwa-512-maskable.png'), maskable)
+writeFileSync(join(dir, 'favicon.ico'), icoFromPng(favicon32, 32))
+
+console.log('ok', createHash('sha1').update(apple).digest('hex').slice(0, 8))
