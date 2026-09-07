@@ -27,7 +27,7 @@ async function crearSesion() {
       <p class="eyebrow">Sesión</p>
       <h1>Hoy</h1>
       <p class="lede">
-        {{ gym.miembroActivo ? `Registras como ${gym.miembroActivo.nombre}.` : 'Cargando perfil…' }}
+        {{ gym.miembroActivo ? `Entraste como ${gym.miembroActivo.nombre}. Puedes anotar a cualquiera.` : 'Cargando perfil…' }}
         <span v-if="gym.enVivo"> · En vivo</span>
       </p>
     </header>

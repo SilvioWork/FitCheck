@@ -193,10 +193,10 @@ create policy "lectura grupo" on public.series for select to authenticated using
 create policy "alta sesion" on public.sesiones for insert to authenticated with check (private.es_miembro());
 create policy "editar sesion" on public.sesiones for update to authenticated using (private.es_miembro());
 
-create policy "propia asistencia ins" on public.asistencia
-  for insert to authenticated with check (miembro_id = (select auth.uid()) and private.es_miembro());
-create policy "propia asistencia upd" on public.asistencia
-  for update to authenticated using (miembro_id = (select auth.uid()));
+create policy "asistencia grupo ins" on public.asistencia
+  for insert to authenticated with check (private.es_miembro());
+create policy "asistencia grupo upd" on public.asistencia
+  for update to authenticated using (private.es_miembro()) with check (private.es_miembro());
 
 create policy "catalogo ins grupos" on public.grupos_musculares for insert to authenticated with check (private.es_miembro());
 create policy "catalogo upd grupos" on public.grupos_musculares for update to authenticated using (private.es_miembro());
@@ -208,12 +208,12 @@ create policy "catalogo ins ejercicios" on public.ejercicios for insert to authe
 create policy "catalogo upd ejercicios" on public.ejercicios for update to authenticated using (private.es_miembro());
 create policy "catalogo del ejercicios" on public.ejercicios for delete to authenticated using (private.es_miembro());
 
-create policy "series ins propias" on public.series
-  for insert to authenticated with check (miembro_id = (select auth.uid()));
-create policy "series upd propias" on public.series
-  for update to authenticated using (miembro_id = (select auth.uid()));
-create policy "series del propias" on public.series
-  for delete to authenticated using (miembro_id = (select auth.uid()));
+create policy "series grupo ins" on public.series
+  for insert to authenticated with check (private.es_miembro());
+create policy "series grupo upd" on public.series
+  for update to authenticated using (private.es_miembro()) with check (private.es_miembro());
+create policy "series grupo del" on public.series
+  for delete to authenticated using (private.es_miembro());
 
 create policy "miembro propio ins" on public.miembros
   for insert to authenticated with check (

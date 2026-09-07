@@ -1,7 +1,7 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.1 — fuente de la verdad
-**Última actualización:** 2026-09-05
+**Estado:** Borrador v1.2 — fuente de la verdad
+**Última actualización:** 2026-09-07
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
 ---
@@ -16,8 +16,8 @@ Todos los usuarios objetivo usan iPhone. El entregable inicial es una PWA constr
 
 ### 2.1 Objetivos (in-scope)
 - Registrar sesiones de entrenamiento grupales, con fecha y nota libre.
-- Registrar, por sesión, qué miembros asistieron y cuáles no.
-- Registrar series individuales por miembro: ejercicio, grupo muscular (derivado del ejercicio), equipo usado, repeticiones, peso y nota libre opcional.
+- Registrar, por sesión, qué miembros asistieron y cuáles no. Cualquier integrante puede marcar la asistencia de cualquier compañero.
+- Registrar series individuales por miembro: ejercicio, grupo muscular (derivado del ejercicio), equipo usado, repeticiones, peso y marcas opcionales (chips). Quien anota elige a qué miembro del grupo se asigna la serie.
 - Editar o borrar una serie ya guardada (el registro no es append-only).
 - Consultar el historial: por miembro, por sesión, por grupo muscular, por equipo. La lista de sesiones está paginada y se filtra por fechas y grupo muscular.
 - Responder preguntas negativas: "¿quién no asistió a la sesión X?", "¿quién no usó el equipo Y en la sesión X?".
@@ -36,7 +36,7 @@ Todos los usuarios objetivo usan iPhone. El entregable inicial es una PWA constr
 - Recuperación de contraseña por correo (el grupo se coordina en persona; un miembro puede resetear la de otro desde Ajustes).
 
 ### 2.3 Actores
-- **Miembro (Integrante):** perfil individual del grupo. Entra con usuario y contraseña. Puede registrar su propia asistencia y sus propias series. Puede leer el historial de todo el grupo. Puede dar de alta a otro integrante (hasta 5) y editar el catálogo.
+- **Miembro (Integrante):** perfil individual del grupo. Entra con usuario y contraseña. Puede registrar asistencia y series de **cualquier** integrante (el login dice *quién anota*; el `miembro_id` de la fila dice *a quién se anota*). Puede leer el historial de todo el grupo. Puede dar de alta a otro integrante (hasta 5) y editar el catálogo.
 - No hay rol de "administrador" diferenciado en v1. El primer miembro es especial solo porque el grupo está vacío; después, cualquier miembro puede invitar y gestionar catálogo.
 
 ### 2.4 Arranque (una vez) vs uso diario
@@ -44,7 +44,7 @@ Todos los usuarios objetivo usan iPhone. El entregable inicial es una PWA constr
 1. Un integrante crea el grupo (nombre visible, usuario, contraseña).
 2. Desde Ajustes da de alta al resto de compañeros (usuario + contraseña inicial, se comunican en persona).
 3. El seed deja un catálogo inicial (grupos, equipos, ejercicios). El grupo lo amplía o edita si hace falta.
-4. Operativa diaria: cada uno entra con su usuario, abre Hoy y registra su sesión.
+4. Operativa diaria: cualquiera entra con su usuario, abre Hoy y registra la sesión del grupo. Puede anotar asistencia y series de todos, o solo las suyas; no hace falta que cada uno lleve el móvil.
 
 ## 3. Modelo de datos
 
@@ -168,7 +168,7 @@ Restricción: única fila por combinación (sesion_id, miembro_id).
 | numero_serie | int | orden automático dentro del ejercicio para ese miembro en esa sesión (serie 1, 2, 3…); no se edita a mano |
 | repeticiones | int | |
 | peso_kg | float | |
-| nota | string, opcional | chips de la serie: "Con ayuda", "Fallo muscular" (se pueden marcar las dos; se guardan unidas con " · ") |
+| nota | string, opcional | chips de la serie, combinables, unidas con " · " en este orden canónico: "Con ayuda", "Fallo muscular", "Rest-pause", "Myo-reps", "Dropset / serie descendente", "Doble dropset", "Repeticiones forzadas", "Repeticiones negativas", "Rest-pause + dropset" |
 | creado_en | timestamp | |
 | actualizado_en | timestamp | se actualiza al editar la serie |
 
@@ -203,7 +203,7 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 
 - El modelo de datos (sección 3) es puramente relacional con múltiples FKs y consultas de tipo "quién no hizo X" — esto encaja mejor en SQL/Postgres que en una base NoSQL tipo Firestore, donde ese tipo de consulta relacional es incómodo.
 - Incluye realtime nativo: cuando un miembro guarda una serie, el resto del grupo la ve sin refrescar la app.
-- Row Level Security permite reglas de permisos a nivel de fila (ej. cada miembro edita solo sus propias series) sin backend propio que mantener.
+- Row Level Security permite reglas de permisos a nivel de fila (solo el grupo cerrado escribe; cualquier integrante puede anotar series y asistencia de cualquiera) sin backend propio que mantener.
 - Capa gratuita cubre de sobra el volumen de datos de un grupo de amigos.
 - Alternativas descartadas: Firebase/Firestore (peor ajuste relacional para este modelo), backend propio con Node+Postgres (más trabajo de mantenimiento sin beneficio claro para este alcance).
 
@@ -220,7 +220,7 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 - Los demás clientes conectados reciben el cambio vía canal realtime de Supabase (WebSocket) y actualizan su vista sin acción del usuario.
 - **Carga:** Hoy trae catálogo, miembros y la sesión de hoy. El historial pide páginas al servidor (no se descarga el histórico entero).
 - **Offline:** v1 asume conexión a internet disponible durante el entreno (gimnasio con wifi/datos). No se implementa cola offline-first en v1; si se detecta que hace falta (mala cobertura en el gimnasio), se añade como mejora de fase 2 usando IndexedDB local + reintento de sync.
-- **Conflictos:** cada serie pertenece a un único miembro. Inserción, edición y borrado los hace el dueño de la fila; el riesgo de escritura concurrente entre personas distintas es bajo. No se requiere resolución de conflictos compleja en v1. Si el mismo miembro edita la misma serie desde dos dispositivos, gana la última escritura (last-write-wins vía `actualizado_en`).
+- **Conflictos:** cada serie tiene un `miembro_id` (a quién se anotó el trabajo), no un “dueño de escritura”. Cualquier integrante del grupo puede insertar, editar o borrar cualquier serie o fila de asistencia. Si dos personas editan la misma fila a la vez, gana la última escritura (last-write-wins vía `actualizado_en`). No se requiere resolución de conflictos más compleja en v1.
 
 ## 5. Catálogo de equipos y ejercicios
 
@@ -237,10 +237,10 @@ Decisión: hay un **seed inicial** con un juego correcto (Pecho, Espalda, Pierna
 
 ### 6.1 Flujo de sesión
 1. Un miembro crea la sesión (fecha + nota opcional). Quien la crea queda marcado presente.
-2. Asistencia **auto-declarada**: cada miembro marca su propia presencia o ausencia en su iPhone, una vez al empezar (no repetido por ejercicio). Nadie puede marcar la fila de otro (RLS, sec. 7). Quien aún no ha elegido Sí/No aparece como «sin marcar», distinto de ausente.
-3. Durante el entreno, cada miembro registra sus series: selecciona ejercicio (el grupo muscular se infiere automáticamente) → selecciona equipo → introduce repeticiones y peso con controles +/- grandes (se evita teclado en la medida de lo posible) → chips opcionales "Con ayuda" / "Fallo muscular" → guarda.
-4. Atajo "repetir última serie" con un tap para series consecutivas iguales (la nota no se copia por defecto; se deja vacía o se confirma si se quiere repetir).
-5. Una serie ya guardada se puede editar (reps, peso, equipo, nota) o borrar. El `numero_serie` es automático (1, 2, 3… por ejercicio y miembro en esa sesión): no se edita a mano. Tras borrar, se reordenan para que no queden huecos.
+2. Asistencia **de grupo**: en cada fila hay Sí/No. Cualquier integrante puede marcar presente o ausente a cualquier compañero (una vez al empezar, no por ejercicio). Quien aún no tiene fila aparece como «sin marcar», distinto de ausente.
+3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → ejercicio (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después.
+4. Atajo "repetir última serie" con un tap para series consecutivas iguales **de ese miembro** (la nota no se copia por defecto; se deja vacía).
+5. Una serie ya guardada se puede editar (reps, peso, equipo, nota) o borrar, **aunque la haya anotado otro**. El `numero_serie` es automático (1, 2, 3… por ejercicio y miembro en esa sesión): no se edita a mano. Tras borrar, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
 
 ### 6.2 Flujo de consulta
@@ -277,7 +277,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, lista de asistencia con Sí/No en la fila propia (el resto es solo lectura), buscador/filtro compacto en historial, hoja inferior (bottom sheet) para editar una serie sin salir de la sesión.
+Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, hoja inferior (bottom sheet) para editar una serie sin salir de la sesión.
 
 ### 6.5 Tema claro y oscuro
 
@@ -299,7 +299,7 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 - Lectura y escritura de datos de producto: solo si existe fila en `miembros` para `auth.uid()`.
 - Row Level Security:
   - Lectura: cualquier **miembro** autenticado puede leer todas las tablas (grupo cerrado, confianza total en lectura).
-  - Escritura en SERIES y ASISTENCIA: un miembro solo puede insertar, editar y borrar filas donde `miembro_id` sea el suyo. No puede modificar series de otro miembro.
+  - Escritura en SERIES y ASISTENCIA: cualquier **miembro** autenticado puede insertar, editar y borrar filas de cualquier `miembro_id` del grupo (`private.es_miembro()`). Quien no es del grupo no escribe.
   - Escritura en catálogo (EQUIPOS, EJERCICIOS, GRUPOS_MUSCULARES): abierta a cualquier miembro autenticado (grupo pequeño, sin necesidad de rol admin diferenciado en v1).
 - Cambio de contraseña: el dueño, logueado, con `updateUser`. Reset de otro: misma Edge Function, por un compañero. No hay “olvidé mi contraseña” por email.
 
@@ -318,7 +318,7 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 
 Hecho:
 1. Esquema SQL en Supabase (tablas de la sección 3) + políticas RLS de la sección 7.
-2. Vue 3 PWA: alta de sesión, asistencia auto-declarada, registro de series, con el sistema visual y los flujos de la sección 6.
+2. Vue 3 PWA: alta de sesión, asistencia de grupo, registro de series de cualquier miembro, con el sistema visual y los flujos de la sección 6.
 3. Tema claro / oscuro / automático (sec. 6.5).
 4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app; seed inicial idempotente y nombres únicos.
 5. Consultas: vista por sesión (series agrupadas por miembro); quién no asistió / sin marcar; quién, estando presente, no usó un equipo.
@@ -343,14 +343,14 @@ Pendiente:
 |---|---|---|
 | Postgres/Supabase para el modelo de datos | Firestore/NoSQL | El modelo es relacional (FKs, consultas "quién no hizo X"); SQL encaja mejor |
 | ASISTENCIA como tabla propia | Inferir asistencia de la ausencia de SERIES | Ambiguo: no distingue "no asistió" de "asistió pero no usó X" |
-| Asistencia auto-declarada (cada uno marca la suya) | Un miembro marca presente/ausente por todo el grupo | Encaja con RLS (solo tu `miembro_id`); cada uno usa su iPhone; «sin marcar» ≠ ausente |
+| Escritura de grupo en SERIES y ASISTENCIA | Solo el dueño de la fila (`miembro_id = auth.uid()`) | En el gym uno puede anotar a todos; el login identifica quién entra, no a quién se anota. «Sin marcar» ≠ ausente |
 | PWA instalable en v1 | App nativa directa | Evita coste/fricción de App Store; Capacitor deja la puerta abierta para después |
 | Catálogo de equipos manual + seed inicial único | Integración con API de Fitness Park; seed que se puede repetir | No existe API pública; el juego inicial es útil, las copias no |
 | Sin offline-first en v1 | Cola offline con IndexedDB desde el inicio | Se asume conectividad en el gimnasio; se añade solo si se demuestra necesario |
 | Sin rol admin diferenciado en v1 | Rol admin para gestionar catálogo | Grupo cerrado de 1–5 personas, no aporta valor en v1 |
-| Series editables y borrables | Registro append-only | Corregir un peso/reps mal anotados entre series es habitual; el dueño de la fila puede editar o borrar |
+| Series editables y borrables por cualquier miembro | Registro append-only, o solo el dueño edita | Corregir un peso/reps mal anotados es habitual; quien registra para el grupo también corrige |
 | `numero_serie` automático, no editable a mano | Control para reordenar series en la hoja de edición | El orden es 1, 2, 3… por ejercicio; al borrar se compacta. Editarlo a mano pelea con esa regla |
-| Chips "Con ayuda" / "Fallo muscular" por serie | Campo de texto libre | En el gym se elige con un tap; se pueden marcar las dos; no bloquea el guardado |
+| Chips de marcas por serie (ayuda, fallo y técnicas) | Campo de texto libre | En el gym se elige con un tap; se combinan libremente; se serializan con " · " en orden canónico; no bloquean el guardado |
 | UI mobile-first con targets grandes y barra inferior | Dashboard denso tipo escritorio | El uso real es anotar entre series en el iPhone, no consultar en un portátil |
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
 | Usuario + contraseña (email interno `@fitcheck.local`) | Magic link por correo | El SMTP integrado limita a ~2 emails/hora; con hasta 5 personas el login diario no puede depender del correo |
@@ -358,15 +358,15 @@ Pendiente:
 
 ## 11. Preguntas abiertas
 
-Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04 y 2026-09-05:
+Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-09-05 y 2026-09-07:
 
 - Tamaño del grupo: entre 1 y 5 personas.
-- Una serie ya guardada se puede editar y borrar (no es append-only).
-- Nota por serie con chips seleccionables: "Con ayuda" y "Fallo muscular".
+- Una serie ya guardada se puede editar y borrar (no es append-only), por cualquier miembro del grupo.
+- Nota por serie con chips combinables: Con ayuda, Fallo muscular, Rest-pause, Myo-reps, Dropset / serie descendente, Doble dropset, Repeticiones forzadas, Repeticiones negativas, Rest-pause + dropset.
 - Diseño moderno, intuitivo y cómodo en iPhone (sec. 6.3–6.4).
 - Tema claro, oscuro o automático, a elección del usuario (sec. 6.5).
-- Asistencia auto-declarada: cada miembro marca la suya; no se marca a terceros (sec. 6.1 y 7).
+- Asistencia y series de grupo: cualquiera marca y anota a cualquiera; al guardar una serie se marca presente a ese miembro (sec. 6.1 y 7).
 - `numero_serie` automático: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
-- Login con usuario y contraseña; sin magic link en el uso diario (sec. 7).
+- Login con usuario y contraseña; sin magic link en el uso diario (sec. 7). El login no limita a quién se anota.
 - Seed de catálogo inicial, una sola vez por nombre (sec. 5).
 - Historial de sesiones paginado, filtrable por fechas y grupo muscular (sec. 6.2).

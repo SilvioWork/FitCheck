@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.1
+**Fuente de producto:** `SPEC.md` v1.2
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -114,68 +114,69 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| AUTH-01 | Login válido | `/entrar` → usuario + contraseña ≥ 8 → **Entrar** | Va a **Hoy**; nav visible; lede «Registras como {nombre}» | 6.0, 7 | P 2026-09-05 e2e |
-| AUTH-02 | Login inválido | Contraseña incorrecta | Se queda en Entrar; mensaje de error; no entra a Hoy | 6.0 | P 2026-09-05 e2e |
-| AUTH-03 | Cerrar sesión y volver a entrar | Ajustes → **Cerrar sesión** → login correcto | Login → Hoy (no se queda en `/entrar`) | 6.0 | P 2026-09-05 e2e |
-| AUTH-04 | Guard de rutas | Sin sesión, ir a `/`, `/historial`, `/ajustes` | Redirect a `/entrar` | 7 | P 2026-09-05 e2e |
-| AUTH-05 | Ya logueado en login | Con sesión, abrir `/entrar` | Redirect a Hoy | 7 | P 2026-09-05 e2e |
-| AUTH-06 | Usuario mal formado | Usuario `ab` o con espacios/mayúsculas raras | Botón **Entrar** deshabilitado o validación; no llama a Auth | 3.2, 7 | P 2026-09-05 e2e |
+| AUTH-01 | Login válido | `/entrar` → usuario + contraseña ≥ 8 → **Entrar** | Va a **Hoy**; nav visible; lede «Entraste como {nombre}. Puedes anotar a cualquiera.» | 6.0, 7 | P 2026-09-07 e2e |
+| AUTH-02 | Login inválido | Contraseña incorrecta | Se queda en Entrar; mensaje de error; no entra a Hoy | 6.0 | P 2026-09-07 e2e |
+| AUTH-03 | Cerrar sesión y volver a entrar | Ajustes → **Cerrar sesión** → login correcto | Login → Hoy (no se queda en `/entrar`) | 6.0 | P 2026-09-07 e2e |
+| AUTH-04 | Guard de rutas | Sin sesión, ir a `/`, `/historial`, `/ajustes` | Redirect a `/entrar` | 7 | P 2026-09-07 e2e |
+| AUTH-05 | Ya logueado en login | Con sesión, abrir `/entrar` | Redirect a Hoy | 7 | P 2026-09-07 e2e |
+| AUTH-06 | Usuario mal formado | Usuario `ab` o con espacios/mayúsculas raras | Botón **Entrar** deshabilitado o validación; no llama a Auth | 3.2, 7 | P 2026-09-07 e2e |
 | AUTH-07 | Crear grupo | Solo si `grupo_esta_vacio()` | Alta + sesión + Hoy. **N/A** si el grupo ya existe | 6.0 | N/A (grupo con miembros) |
-| AUTH-08 | Recarga con sesión | Logueado en Hoy → F5 | Sigue en Hoy, no pide login | 7 | P 2026-09-05 e2e |
+| AUTH-08 | Recarga con sesión | Logueado en Hoy → F5 | Sigue en Hoy, no pide login | 7 | P 2026-09-07 e2e |
 
 ### 4.2 Hoy — sesión, asistencia, series (`HOY`)
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| HOY-01 | Crear sesión de hoy | Si no hay sesión hoy: fecha + nota `QA-…` → **Crear sesión** | Aparece asistencia + «Tu serie»; creador **Presente** | 6.1 | P 2026-09-05 e2e (sesión ya existía; se usó) |
-| HOY-02 | Asistencia propia Sí/No | Botones **Sí** / **No** en la fila propia | Solo la fila propia tiene botones; el resto es lectura; estado Presente / Ausente / Sin marcar | 6.1, 7 | P 2026-09-05 e2e |
-| HOY-03 | Guardar serie | Ejercicio + equipo + reps/peso (steppers) + chips opcionales → **Guardar serie** | Feedback «Serie guardada»; lista «Tus series»; `numero_serie` 1, 2, 3… | 6.1 | P 2026-09-05 e2e |
-| HOY-04 | Chips de nota | Marcar «Con ayuda» y/o «Fallo muscular» al guardar | Se persisten; se pueden las dos; unidas con ` · ` | 6.1 | P 2026-09-05 e2e |
-| HOY-05 | Repetir última | Tras una serie, **Repetir última** | Misma reps/peso/ejercicio/equipo; **nota vacía** | 6.1 | P 2026-09-05 e2e |
-| HOY-06 | Editar serie | Abrir serie → cambiar reps/peso/equipo/nota → **Guardar cambios** | Lista actualizada; no se edita `numero_serie` a mano | 6.1 | P 2026-09-05 e2e |
-| HOY-07 | Borrar serie | Editar → borrar (confirmación) | Pide confirmación; desaparece; números de ese ejercicio se compactan | 6.1 | P 2026-09-05 e2e |
-| HOY-08 | Sin sesión de hoy | Borrar o no crear sesión del día | Formulario **Nueva sesión**, no el registro | 6.1 | N/A (había sesión el 2026-09-05) |
-| HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-05 e2e |
+| HOY-01 | Crear sesión de hoy | Si no hay sesión hoy: fecha + nota `QA-…` → **Crear sesión** | Aparece asistencia + «Anotar serie»; creador **Presente** | 6.1 | P 2026-09-07 e2e (sesión ya existía; se usó) |
+| HOY-02 | Asistencia de cualquiera | Botones **Sí** / **No** en cada fila | Todas las filas tienen Sí/No; estado Presente / Ausente / Sin marcar | 6.1, 7 | P 2026-09-07 e2e (3 miembros: Silvio, Armando, Pia) |
+| HOY-03 | Guardar serie | Ejercicio + equipo + reps/peso (steppers) + chips opcionales → **Guardar serie** | Feedback «Serie guardada»; lista «Series de {nombre}»; `numero_serie` 1, 2, 3… | 6.1 | P 2026-09-07 e2e |
+| HOY-04 | Chips de nota | Marcar varias (p. ej. «Con ayuda» + «Rest-pause + dropset») al guardar | Se persisten combinables; unidas con ` · ` en orden canónico; «Rest-pause + dropset» no activa «Rest-pause» | 6.1 | P 2026-09-07 e2e |
+| HOY-05 | Repetir última | Tras una serie, **Repetir última** | Misma reps/peso/ejercicio/equipo del miembro **seleccionado**; **nota vacía** | 6.1 | P 2026-09-07 e2e |
+| HOY-06 | Editar serie | Abrir serie → cambiar reps/peso/equipo/nota → **Guardar cambios** | Lista actualizada; no se edita `numero_serie` a mano | 6.1 | P 2026-09-07 e2e |
+| HOY-07 | Borrar serie | Editar → borrar (confirmación) | Pide confirmación; desaparece; números de ese ejercicio se compactan | 6.1 | P 2026-09-07 e2e |
+| HOY-08 | Sin sesión de hoy | Borrar o no crear sesión del día | Formulario **Nueva sesión**, no el registro | 6.1 | N/A (había sesión el 2026-09-07) |
+| HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-07 e2e |
+| HOY-10 | Serie de otro miembro | Selector → otro compañero → guardar serie | Aparece en «Series de {ese}»; no en las del logueado; ese miembro queda **Presente** | 6.1 | P 2026-09-07 e2e (Armando) |
 
 ### 4.3 Historial y consultas (`HIST`)
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| HIST-01 | Lista de sesiones | Historial → pestaña Sesiones | Filas fecha + nota; tap abre `/historial/:id` | 6.2 | P 2026-09-05 e2e |
+| HIST-01 | Lista de sesiones | Historial → pestaña Sesiones | Filas fecha + nota; tap abre `/historial/:id` | 6.2 | P 2026-09-07 e2e |
 | HIST-02 | Filtro fechas | Desde / Hasta → **Aplicar** | Solo sesiones en rango; vacío: «Ninguna sesión encaja…» | 6.2 | Pendiente (no se rellenó desde/hasta en esta ronda) |
-| HIST-03 | Filtro grupo muscular | Elegir Pecho (u otro) → Aplicar | Lista filtrada; texto de frecuencia `N sesiones de {grupo} en este rango` | 6.2 | P 2026-09-05 e2e |
-| HIST-04 | Quitar filtros | Con filtro activo → **Quitar filtros** | Vuelve la lista completa | 6.2 | P 2026-09-05 e2e |
+| HIST-03 | Filtro grupo muscular | Elegir Pecho (u otro) → Aplicar | Lista filtrada; texto de frecuencia `N sesiones de {grupo} en este rango` | 6.2 | P 2026-09-07 e2e |
+| HIST-04 | Quitar filtros | Con filtro activo → **Quitar filtros** | Vuelve la lista completa | 6.2 | P 2026-09-07 e2e |
 | HIST-05 | Paginación | Solo si hay **> 15** sesiones | Anterior/Siguiente; página N / M | 6.2, 8 | B (2 sesiones; hace falta volumen) |
-| HIST-06 | Detalle de sesión | Abrir una sesión | Asistencia, series propias editables, series ajenas solo lectura | 6.2 | P 2026-09-05 e2e |
-| HIST-07 | Consulta ausentes | Panel Consultas → elegir sesión | Ausentes y sin marcar; no mezcla «no usó equipo» | 3.3, 6.2 | P 2026-09-05 e2e (panel + headings; Armando sin marcar en Hoy) |
-| HIST-08 | Consulta equipo | Presente que no usó el equipo Y | Sale en «quién no usó»; ausentes **no** cuentan | 3.3, 6.2 | P 2026-09-05 e2e (UI y copy de la regla; no se forzó un presente-sin-equipo) |
-| HIST-09 | Por miembro | Pestaña Por miembro → filtros grupo/equipo/fechas | Series de ese miembro desde servidor; quitar filtros restaura | 6.2 | P 2026-09-05 e2e |
+| HIST-06 | Detalle de sesión | Abrir una sesión | Asistencia, selector de miembro, series de cualquiera editables | 6.2 | P 2026-09-07 e2e |
+| HIST-07 | Consulta ausentes | Panel Consultas → elegir sesión | Ausentes y sin marcar; no mezcla «no usó equipo» | 3.3, 6.2 | P 2026-09-07 e2e |
+| HIST-08 | Consulta equipo | Presente que no usó el equipo Y | Sale en «quién no usó»; ausentes **no** cuentan | 3.3, 6.2 | P 2026-09-07 e2e |
+| HIST-09 | Por miembro | Pestaña Por miembro → filtros grupo/equipo/fechas | Series de ese miembro desde servidor; quitar filtros restaura | 6.2 | P 2026-09-07 e2e |
 | HIST-10 | Consulta grupo muscular negativa | — | Fuera de v1 (SPEC 9.10) | 9 | N/A |
 
 ### 4.4 Ajustes, catálogo, tema (`AJU`, `CAT`, `TEM`)
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| AJU-01 | Perfil | Ajustes | Nombre · @usuario; lista de compañeros; activo destacado | 6.0 | P 2026-09-05 e2e |
+| AJU-01 | Perfil | Ajustes | Nombre · @usuario; lista de compañeros; activo destacado | 6.0 | P 2026-09-07 e2e |
 | AJU-02 | Cambiar mi contraseña | Nueva ≥ 8 → guardar → logout → entrar con la nueva | Entra. **Coordinar**: deja la clave nueva al QA | 7 | B (no se cambian claves de las cuentas reales) |
 | AJU-03 | Invitar compañero | Nombre + usuario `qa_tmp` + pass ≥ 8 → **Crear cuenta** | Aviso ok; aparece en la lista; puede entrar. Tope 5 | 6.0, 7 | B (no se crea cuenta Auth extra) |
 | AJU-04 | Invitar duplicado / usuario inválido | Usuario existente o `ab` | Error o botón deshabilitado; no segundo miembro | 7 | B (depende de AJU-03) |
 | AJU-05 | Resetear contraseña de otro | Usuario del compañero + pass nueva → logout de esa cuenta → entrar | Entra con la nueva. **Coordinar** | 2.2, 7 | B (no se cambian claves) |
-| CAT-01 | Seed visible | Ajustes → Catálogo | Grupos/equipos/ejercicios del seed, **sin duplicados** | 5 | P 2026-09-05 e2e |
-| CAT-02 | Alta equipo/ejercicio/grupo | Nombre `QA-tmp-…` | Aparece en listas y en selectores de Hoy | 5, 6.0 | P 2026-09-05 e2e (equipo `QA-banco-tmp`) |
-| CAT-03 | Nombre duplicado | Crear «Pecho» otra vez (cualquier casing) | Error «ya existe»; no duplica | 5, 10 | P 2026-09-05 e2e |
+| CAT-01 | Seed visible | Ajustes → Catálogo | Grupos/equipos/ejercicios del seed, **sin duplicados** | 5 | P 2026-09-07 e2e |
+| CAT-02 | Alta equipo/ejercicio/grupo | Nombre `QA-tmp-…` | Aparece en listas y en selectores de Hoy | 5, 6.0 | P 2026-09-07 e2e (equipo `QA-banco-tmp`) |
+| CAT-03 | Nombre duplicado | Crear «Hombro» otra vez (cualquier casing) | Error «ya existe»; no duplica | 5, 10 | P 2026-09-07 e2e |
 | CAT-04 | Editar ítem | Editar nombre de un `QA-tmp-…` | Se actualiza | 5 | Pendiente |
-| CAT-05 | Borrar sin uso | Borrar `QA-tmp-…` no usado en series | Desaparece | 5 | P 2026-09-05 e2e |
-| CAT-06 | Borrar en uso | Borrar equipo/ejercicio con series | Se impide (mensaje); no rompe historial | 5 | P 2026-09-05 e2e |
-| TEM-01 | Tema Claro / Oscuro / Auto | Segmented en Ajustes | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | P 2026-09-05 e2e |
+| CAT-05 | Borrar sin uso | Borrar `QA-tmp-…` no usado en series | Desaparece | 5 | P 2026-09-07 e2e |
+| CAT-06 | Borrar en uso | Borrar equipo/ejercicio con series | Se impide (mensaje); no rompe historial | 5 | P 2026-09-07 e2e |
+| TEM-01 | Tema Claro / Oscuro / Auto | Segmented en Ajustes | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | P 2026-09-07 e2e |
 
 ### 4.5 Seguridad y realtime (`RLS`, `RT`)
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| RLS-01 | No editar serie ajena | Detalle de sesión: series del otro | Sin botones de editar/borrar en las ajenas | 7 | P 2026-09-05 e2e |
-| RLS-02 | No marcar asistencia ajena | Lista de asistencia | Botones Sí/No solo en la fila propia | 7 | P 2026-09-05 e2e |
-| RT-01 | Serie en vivo | A guarda serie; B está en Hoy/detalle | B ve la serie **sin F5** (o en < ~2 s) | 4.4, 6.1 | P 2026-09-05 e2e (dos contextos) |
+| RLS-01 | Editar serie ajena | Detalle/Hoy: elegir al otro, abrir una serie suya | Hay edición/borrado; guardar cambios persiste | 7 | P 2026-09-07 e2e |
+| RLS-02 | Marcar asistencia ajena | Lista de asistencia | Sí/No también en la fila del compañero | 7 | P 2026-09-07 e2e |
+| RT-01 | Serie en vivo | A guarda serie; B está en Hoy/detalle | B ve la serie **sin F5** (o en < ~2 s) | 4.4, 6.1 | P 2026-09-07 e2e (dos contextos) |
 
 ### 4.6 PWA e iPhone (`PWA`) — el usuario ejecuta, el QA registra
 
@@ -192,8 +193,8 @@ Bugs ya vistos en esta ronda; se reejecutan para no reabrirlos.
 
 | ID | Caso | Esperado | Último |
 |---|---|---|---|
-| REG-01 | Tras login, `ensureMiembro` no hace upsert si ya existe la fila | Entra a Hoy; no «No formas parte del grupo» | P 2026-09-05 e2e (retest) |
-| REG-02 | Logout → login no deja parado en `/entrar` | Navega a Hoy | P 2026-09-05 e2e (retest) |
+| REG-01 | Tras login, `ensureMiembro` no hace upsert si ya existe la fila | Entra a Hoy; no «No formas parte del grupo» | P 2026-09-07 e2e (retest) |
+| REG-02 | Logout → login no deja parado en `/entrar` | Navega a Hoy | P 2026-09-07 e2e (retest) |
 
 ---
 
@@ -202,7 +203,7 @@ Bugs ya vistos en esta ronda; se reejecutan para no reabrirlos.
 Orden sugerido cuando hay poco tiempo (~15 min, 1 usuario):
 
 1. AUTH-01, AUTH-03  
-2. HOY-01 (o usar sesión de hoy si ya existe), HOY-02, HOY-03, HOY-05  
+2. HOY-01 (o usar sesión de hoy si ya existe), HOY-02, HOY-03, HOY-05, HOY-10  
 3. HIST-01, HIST-06, HIST-07  
 4. AJU-01, TEM-01, CAT-01  
 5. AUTH-08  
@@ -218,6 +219,7 @@ Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
 | 2026-09-05 | local `5174` + Supabase vivo | Usuario + agente | AUTH-01, REG-01 | F → P | Primer login con `silvio`: error «No formas parte del grupo». Causa: `upsert` de miembro chocaba con RLS (insert solo si el grupo está vacío). Fix: SELECT por `auth.uid()`; insert solo si no hay fila. |
 | 2026-09-05 | local `5174` | Usuario + agente | AUTH-03, REG-02 | F → P | Ajustes → Cerrar sesión → login: se quedaba en Entrar. Causa: el guard no corre si ya estás en `/entrar`; `signIn` no asignaba `session` de inmediato. Fix: `session` al responder Auth + `router.replace({ name: 'hoy' })` + reset del store al logout. Usuario: «Perfecto ya va bien». |
 | 2026-09-05 | local `5174` | QA (Playwright, 8/8) | AUTH-01..06, AUTH-08, HOY-01..07, HOY-09, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Batería `e2e/qa.spec.ts` contra Chromium viewport 390×844. Confirm email off. No se tocaron contraseñas ni se invitó `qa_tmp`. HIST-05 bloqueado (2 sesiones). HIST-02 y CAT-04 no ejecutados. PWA-* pendiente de iPhone. Quedan series de Silvio en la sesión de hoy (Sentadilla / Barra, incl. 40 kg de RT). Equipo `QA-banco-tmp` se creó y se borró. |
+| 2026-09-07 | local `5174` + Supabase vivo | QA (Playwright, 8/8) | AUTH-01..06, AUTH-08, HOY-01..07, HOY-09..10, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.2: escritura de grupo + 9 chips. Chromium viewport 390×844. RLS vivo `asistencia grupo *` / `series grupo *`. 3 miembros (Silvio, Armando, Pia). HOY-10: serie de Armando anotada por Silvio. Chips «Con ayuda · Rest-pause + dropset» sin falso positivo de Rest-pause. CAT-03 con «Hombro» (hay varios grupos Pecho*). HIST-05 no cubierto. PWA-* pendiente. |
 
 ---
 
@@ -236,7 +238,7 @@ Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
 
 Si se creó basura `QA-*`:
 
-1. Borrar series de prueba (dueño de la fila). Tras la ronda e2e del 2026-09-05 quedan series de Silvio en la sesión de hoy; se pueden borrar desde Hoy → Tus series.
+1. Borrar series de prueba. Tras la ronda e2e del 2026-09-05 quedan series de Silvio en la sesión de hoy; se pueden borrar desde Hoy → Series de {nombre}.
 2. Borrar equipos/ejercicios/grupos `QA-*` no usados (`QA-banco-tmp` ya se quitó).
 3. Sesiones `QA-*`: dejarlas o borrarlas a mano en SQL **solo** con permiso (puede haber asistencia/series).
 4. Usuario `qa_tmp`: no borrar Auth sin acuerdo; queda cuenta real.
@@ -245,7 +247,7 @@ Si se creó basura `QA-*`:
 
 ## 9. Cómo sigue el QA
 
-1. Ronda e2e local hecha (2026-09-05). Pendiente: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
+1. Ronda e2e local v1.2 hecha (2026-09-07): registro por cualquier miembro + chips de técnicas. Pendiente: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
 2. Reejecutar `npm run test:e2e` tras cambios de UI o auth.
 3. Cada fail nuevo → BUG en sec. 7 y, si aplica, arreglo de código + retest del ID.
 

@@ -41,12 +41,13 @@ function toggle(chip: NotaChip) {
 
 .chip {
   min-height: var(--tap);
-  padding: 0 14px;
+  padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--text-muted);
   font-weight: 700;
+  font-size: 0.85rem;
 }
 
 .chip.on {

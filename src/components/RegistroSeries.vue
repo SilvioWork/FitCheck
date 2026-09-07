@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import NotaChips from '@/components/NotaChips.vue'
 import StepperControl from '@/components/StepperControl.vue'
 import { parseNotaChips, serializeNotaChips } from '@/lib/notaChips'
@@ -10,7 +10,21 @@ const props = defineProps<{
   sesionId: string
 }>()
 
+const miembroId = defineModel<string>('miembroId', { default: '' })
 const gym = useFitcheckStore()
+
+watch(
+  () => gym.miembroActivoId,
+  (id) => {
+    if (id && !miembroId.value) miembroId.value = id
+  },
+  { immediate: true },
+)
+
+const elegidoId = computed(() => miembroId.value || gym.miembroActivoId || '')
+const elegido = computed(
+  () => gym.miembros.find((m) => m.id === elegidoId.value) ?? gym.miembroActivo,
+)
 
 const form = reactive({
   ejercicioId: gym.ejercicios[0]?.id ?? '',
@@ -25,7 +39,7 @@ const editando = ref<Serie | null>(null)
 const editChips = ref<string[]>([])
 const confirmarBorrado = ref(false)
 
-const mias = computed(() => gym.seriesDe(props.sesionId, gym.miembroActivoId ?? undefined))
+const deElegido = computed(() => gym.seriesDe(props.sesionId, elegidoId.value || undefined))
 
 function nombreEjercicio(id: string) {
   return gym.ejercicios.find((e) => e.id === id)?.nombre ?? id
@@ -42,10 +56,15 @@ function flash(text: string) {
   }, 1200)
 }
 
+function elegir(id: string) {
+  miembroId.value = id
+}
+
 async function guardar() {
-  if (!form.ejercicioId || !form.equipoId) return
+  if (!form.ejercicioId || !form.equipoId || !elegidoId.value) return
   await gym.guardarSerie({
     sesionId: props.sesionId,
+    miembroId: elegidoId.value,
     ejercicioId: form.ejercicioId,
     equipoId: form.equipoId,
     repeticiones: form.repeticiones,
@@ -57,10 +76,11 @@ async function guardar() {
 }
 
 async function repetir() {
-  const last = gym.ultimaSeriePropia(props.sesionId)
+  const last = gym.ultimaSerieDe(props.sesionId, elegidoId.value)
   if (!last) return
   await gym.guardarSerie({
     sesionId: props.sesionId,
+    miembroId: elegidoId.value,
     ejercicioId: last.ejercicio_id,
     equipoId: last.equipo_id,
     repeticiones: last.repeticiones,
@@ -109,8 +129,25 @@ async function borrar() {
 
 <template>
   <article class="card">
-    <h2>Tu serie</h2>
+    <h2>Anotar serie</h2>
     <p v-if="feedback" class="ok">{{ feedback }}</p>
+
+    <div>
+      <p class="field-label">Anotar a</p>
+      <div class="chips" role="group" aria-label="Miembro de la serie">
+        <button
+          v-for="miembro in gym.miembrosOrdenados"
+          :key="miembro.id"
+          type="button"
+          class="chip"
+          :class="{ on: elegidoId === miembro.id }"
+          :aria-pressed="elegidoId === miembro.id"
+          @click="elegir(miembro.id)"
+        >
+          {{ miembro.nombre }}
+        </button>
+      </div>
+    </div>
 
     <label>
       Ejercicio
@@ -139,15 +176,20 @@ async function borrar() {
     </div>
 
     <button class="primary" type="button" @click="guardar">Guardar serie</button>
-    <button class="ghost" type="button" :disabled="!gym.ultimaSeriePropia(sesionId)" @click="repetir">
+    <button
+      class="ghost"
+      type="button"
+      :disabled="!gym.ultimaSerieDe(sesionId, elegidoId)"
+      @click="repetir"
+    >
       Repetir última
     </button>
   </article>
 
-  <article v-if="mias.length" class="card">
-    <h2>Tus series</h2>
+  <article v-if="deElegido.length" class="card">
+    <h2>Series de {{ elegido?.nombre ?? 'este miembro' }}</h2>
     <ul>
-      <li v-for="serie in mias" :key="serie.id">
+      <li v-for="serie in deElegido" :key="serie.id">
         <button type="button" class="row" @click="abrirEdicion(serie)">
           <span class="tabular">{{ serie.numero_serie }}</span>
           <span>
@@ -233,6 +275,28 @@ input {
   background: var(--bg);
   color: var(--text);
   padding: 0 12px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.chip.on {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--text);
 }
 
 .pair {

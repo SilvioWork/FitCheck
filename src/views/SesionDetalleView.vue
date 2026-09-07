@@ -10,6 +10,7 @@ import { useFitcheckStore } from '@/stores/fitcheck'
 const route = useRoute()
 const gym = useFitcheckStore()
 const cargando = ref(true)
+const miembroElegidoId = ref('')
 
 const sesionId = computed(() => String(route.params.id))
 const sesion = computed(() => gym.sesionPorId(sesionId.value))
@@ -25,9 +26,17 @@ watch(sesionId, async (id) => {
   cargando.value = false
 })
 
+watch(
+  () => gym.miembroActivoId,
+  (id) => {
+    if (id && !miembroElegidoId.value) miembroElegidoId.value = id
+  },
+  { immediate: true },
+)
+
 const grupos = computed(() => (sesion.value ? gym.seriesAgrupadasPorMiembro(sesion.value.id) : []))
 
-const otros = computed(() => grupos.value.filter((g) => !g.propio))
+const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembroElegidoId.value))
 </script>
 
 <template>
@@ -48,10 +57,13 @@ const otros = computed(() => grupos.value.filter((g) => !g.propio))
       </ul>
     </article>
 
-    <RegistroSeries v-if="gym.miembroActivoId" :sesion-id="sesion.id" />
+    <RegistroSeries v-if="gym.miembroActivoId" v-model:miembro-id="miembroElegidoId" :sesion-id="sesion.id" />
 
     <article v-for="grupo in otros" :key="grupo.miembro.id" class="card">
-      <h2>{{ grupo.miembro.nombre }}</h2>
+      <button type="button" class="pick" @click="miembroElegidoId = grupo.miembro.id">
+        <h2>{{ grupo.miembro.nombre }}</h2>
+        <p class="muted">Pulsa para anotar o editar sus series.</p>
+      </button>
       <p v-if="!grupo.series.length" class="muted">Sin series en esta sesión.</p>
       <ul v-else class="series">
         <li v-for="serie in grupo.series" :key="serie.id">
@@ -101,6 +113,27 @@ header p,
 h2 {
   margin: 0 0 8px;
   font-size: 1.05rem;
+}
+
+.pick {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  min-height: var(--tap);
+}
+
+.pick h2 {
+  margin: 0;
+}
+
+.pick .muted {
+  font-size: 0.85rem;
 }
 
 .plain {

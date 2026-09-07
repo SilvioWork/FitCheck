@@ -15,7 +15,6 @@ const rows = computed(() =>
       miembro,
       presente: row?.presente,
       marcado: Boolean(row),
-      propio: miembro.id === gym.miembroActivoId,
     }
   }),
 )
@@ -24,7 +23,7 @@ const rows = computed(() =>
 <template>
   <article class="card">
     <h2>Asistencia</h2>
-    <p class="hint">Cada uno marca la suya en su iPhone. Quien aún no ha elegido aparece como sin marcar.</p>
+    <p class="hint">Cualquiera puede marcar a cualquiera. Quien aún no tiene Sí/No aparece como sin marcar.</p>
     <ul>
       <li v-for="row in rows" :key="row.miembro.id">
         <div>
@@ -33,11 +32,19 @@ const rows = computed(() =>
           <span v-else-if="row.presente" class="ok">Presente</span>
           <span v-else class="no">Ausente</span>
         </div>
-        <div v-if="row.propio" class="actions">
-          <button type="button" :class="{ on: row.presente === true }" @click="gym.marcarAsistencia(sesionId, true)">
+        <div class="actions">
+          <button
+            type="button"
+            :class="{ on: row.presente === true }"
+            @click="gym.marcarAsistencia(sesionId, true, row.miembro.id)"
+          >
             Sí
           </button>
-          <button type="button" :class="{ on: row.presente === false }" @click="gym.marcarAsistencia(sesionId, false)">
+          <button
+            type="button"
+            :class="{ on: row.presente === false }"
+            @click="gym.marcarAsistencia(sesionId, false, row.miembro.id)"
+          >
             No
           </button>
         </div>

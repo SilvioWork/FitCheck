@@ -1,7 +1,7 @@
 # FitCheck — Spec-Status
 
 **Tipo:** estado de desarrollo (no sustituye a `SPEC.md`)
-**Fecha:** 2026-09-05
+**Fecha:** 2026-09-07
 **Repo:** [github.com/SilvioWork/FitCheck](https://github.com/SilvioWork/FitCheck)
 **Carpeta:** `FitCheck/` (producto **FitCheck**; la Spec original vive aquí como `SPEC.md`)
 
@@ -17,11 +17,11 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.1) |
+| Spec y decisiones de producto | Hecho (v1.2) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
-| Flujo de sesión (alta, asistencia, series) | Hecho |
-| Chips Con ayuda / Fallo muscular | Hecho |
+| Flujo de sesión (alta, asistencia de grupo, series de cualquiera) | Hecho |
+| Chips de marcas (ayuda, fallo y técnicas) | Hecho |
 | Supabase: esquema, cliente, usuario/contraseña | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
 | Realtime | Hecho |
 | Catálogo editable + seed idempotente + nombres únicos | Hecho |
@@ -40,7 +40,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.1 en `SPEC.md` (grupo 1–5, usuario/contraseña, seed único, historial paginado, PWA).
+- Spec v1.2 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -59,7 +59,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Login por **usuario + contraseña**. Auth usa el email interno `{usuario}@fitcheck.local`.
 - Primer usuario: `/entrar` en modo crear grupo (Edge Function, grupo vacío).
 - Compañeros: un miembro los da de alta en Ajustes (tope 5).
-- RLS: solo quien tiene fila en `miembros` lee/escribe datos de producto; cada uno escribe solo su asistencia y sus series; catálogo escribible/borrable por cualquier miembro.
+- RLS: solo quien tiene fila en `miembros` lee/escribe datos de producto; cualquier miembro escribe asistencia y series de cualquiera del grupo; catálogo escribible/borrable por cualquier miembro.
 - Seed de catálogo idempotente (`ensure_catalogo`) + índices únicos `lower(trim(nombre))`.
 - Realtime: canal `fitcheck-live`. En Hoy aparece **En vivo** si `SUBSCRIBED`.
 - Persistencia de tema en `localStorage` (`fitcheck-theme`), no en la base.
@@ -68,7 +68,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Entrar** — usuario y contraseña, o crear el grupo si está vacío. Sin nav inferior.
 
-**Hoy** — crear sesión (fecha + nota), asistencia propia (Sí/No), registro de serie, lista de series propias, edición/borrado.
+**Hoy** — crear sesión (fecha + nota), asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie, lista de series de ese miembro, edición/borrado.
 
 **Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
 
@@ -79,8 +79,8 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.5 Decisiones ya cerradas en código (respecto a la Spec)
 
 - Series no son append-only.
-- Nota de serie = chips «Con ayuda» y/o «Fallo muscular».
-- Asistencia auto-declarada.
+- Nota de serie = chips combinables (ayuda, fallo y técnicas de intensidad).
+- Asistencia y series de grupo: cualquiera anota a cualquiera; al guardar serie se marca presente.
 - No hay rol admin.
 - Consulta de «quién no usó X» solo sobre `presente = true`.
 - Login sin correo.

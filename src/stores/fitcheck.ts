@@ -542,11 +542,12 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     if (asis) asistencia.value.push(asis as Asistencia)
   }
 
-  async function marcarAsistencia(sesionId: string, presente: boolean) {
-    const mid = miembroActivoId.value
+  async function marcarAsistencia(sesionId: string, presente: boolean, miembroId?: string) {
+    const mid = miembroId ?? miembroActivoId.value
     if (!mid) return
     const existing = asistencia.value.find((a) => a.sesion_id === sesionId && a.miembro_id === mid)
     if (existing) {
+      if (existing.presente === presente) return
       const { error: err } = await supabase.from('asistencia').update({ presente }).eq('id', existing.id)
       if (err) {
         fail(err.message)
@@ -580,8 +581,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       })
   }
 
-  function ultimaSeriePropia(sesionId: string): Serie | undefined {
-    const mid = miembroActivoId.value
+  function ultimaSerieDe(sesionId: string, miembroId?: string): Serie | undefined {
+    const mid = miembroId ?? miembroActivoId.value
     if (!mid) return undefined
     return series.value
       .filter((s) => s.sesion_id === sesionId && s.miembro_id === mid)
@@ -615,13 +616,14 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
 
   async function guardarSerie(input: {
     sesionId: string
+    miembroId?: string
     ejercicioId: string
     equipoId: string
     repeticiones: number
     pesoKg: number
     nota: string
   }) {
-    const mid = miembroActivoId.value
+    const mid = input.miembroId ?? miembroActivoId.value
     if (!mid) return
     const { data, error: err } = await supabase
       .from('series')
@@ -642,6 +644,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       return
     }
     series.value.push(mapSerie(data as Serie & { peso_kg: number | string }))
+    await marcarAsistencia(input.sesionId, true, mid)
   }
 
   async function editarSerie(
@@ -655,7 +658,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     },
   ) {
     const serie = series.value.find((s) => s.id === id)
-    if (!serie || serie.miembro_id !== miembroActivoId.value) return
+    if (!serie) return
     const oldEj = serie.ejercicio_id
     let numero = serie.numero_serie
     if (oldEj !== patch.ejercicioId) {
@@ -688,7 +691,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
 
   async function borrarSerie(id: string) {
     const serie = series.value.find((s) => s.id === id)
-    if (!serie || serie.miembro_id !== miembroActivoId.value) return
+    if (!serie) return
     const { error: err } = await supabase.from('series').delete().eq('id', id)
     if (err) {
       fail(err.message)
@@ -816,7 +819,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     marcarAsistencia,
     asistenciaDe,
     seriesDe,
-    ultimaSeriePropia,
+    ultimaSerieDe,
     guardarSerie,
     editarSerie,
     borrarSerie,
