@@ -87,6 +87,7 @@ test.describe('FitCheck QA', () => {
     await esperarHoy(page)
 
     await irA(page, 'Ajustes')
+    await page.getByRole('tab', { name: 'Users' }).click()
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
     await entrar(page, USER, PASS)
@@ -215,10 +216,12 @@ test.describe('FitCheck QA', () => {
   test('AJU perfil, tema, catálogo seed / dup / tmp', async ({ page }) => {
     await entrar(page, USER, PASS)
     await irA(page, 'Ajustes')
+    await page.getByRole('tab', { name: 'Users' }).click()
 
     await expect(page.getByText('Silvio · @silvio').first()).toBeVisible()
     await expect(page.getByText('Armando · @armando')).toBeVisible()
 
+    await page.getByRole('tab', { name: 'Catálogo' }).click()
     await page.getByRole('button', { name: 'Oscuro' }).click()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
     await page.reload()
@@ -226,26 +229,33 @@ test.describe('FitCheck QA', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
     await page.getByRole('button', { name: 'Auto' }).click()
 
+    const catalogo = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Catálogo' }) })
+    const grupos = catalogo.getByRole('list', { name: 'Grupos musculares' })
+    const equipos = catalogo.getByRole('list', { name: 'Equipos' })
+
     for (const nombre of ['Pecho', 'Espalda', 'Pierna', 'Hombro']) {
-      await expect(page.locator('.chip', { hasText: nombre }).first()).toBeVisible()
+      await expect(grupos.getByRole('listitem').filter({ hasText: nombre }).first()).toBeVisible()
     }
 
-    const tmp = page.locator('.chip', { hasText: 'QA-banco-tmp' })
+    const buscarEquipo = catalogo.getByPlaceholder('Buscar equipo')
+    await buscarEquipo.fill('QA-banco-tmp')
+    const tmp = equipos.getByRole('listitem').filter({ hasText: 'QA-banco-tmp' })
     if ((await tmp.count()) === 0) {
+      await buscarEquipo.fill('')
       await page.getByPlaceholder('Máquina press banca Technogym').fill('QA-banco-tmp')
       await page.getByRole('button', { name: 'Añadir equipo' }).click()
+      await buscarEquipo.fill('QA-banco-tmp')
     }
     await expect(tmp).toBeVisible()
 
-    const catalogo = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Catálogo' }) })
     await catalogo.getByPlaceholder('Core').fill('Hombro')
     await catalogo.getByRole('button', { name: 'Añadir grupo' }).click()
     await expect(page.locator('.toast')).toContainText('Ya existe «Hombro» en el catálogo.')
     await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
-    await tmp.click()
     await tmp.getByRole('button', { name: 'Quitar' }).click()
     await tmp.getByRole('button', { name: 'Confirmar' }).click()
-    await expect(page.locator('.chip', { hasText: 'QA-banco-tmp' })).toHaveCount(0)
+    await buscarEquipo.fill('QA-banco-tmp')
+    await expect(equipos.getByRole('listitem').filter({ hasText: 'QA-banco-tmp' })).toHaveCount(0)
 
     await irA(page, 'Hoy')
     const detalleSerie = page.locator('.row small').first()
@@ -253,13 +263,15 @@ test.describe('FitCheck QA', () => {
     const equipoUsado = detalle.split('·').pop()?.trim()
     test.skip(!equipoUsado, 'CAT-06: no hay serie propia para comprobar borrado en uso')
     await irA(page, 'Ajustes')
-    const usado = page.locator('.chip').filter({ hasText: equipoUsado! }).first()
-    await usado.click()
+    const buscarUsado = page.getByPlaceholder('Buscar equipo')
+    await buscarUsado.fill(equipoUsado!)
+    const usado = page.getByRole('list', { name: 'Equipos' }).getByRole('listitem').filter({ hasText: equipoUsado! }).first()
     await usado.getByRole('button', { name: 'Quitar' }).click()
     await usado.getByRole('button', { name: 'Confirmar' }).click()
     await expect(page.locator('.toast')).toContainText('ya está en series guardadas')
     await page.locator('.toast').getByRole('button', { name: 'Cerrar', exact: true }).click()
-    await expect(page.locator('.chip', { hasText: equipoUsado! }).first()).toBeVisible()
+    await buscarUsado.fill(equipoUsado!)
+    await expect(page.getByRole('list', { name: 'Equipos' }).getByRole('listitem').filter({ hasText: equipoUsado! }).first()).toBeVisible()
   })
 
   test('RLS-01/02 y RT-01 dos miembros', async ({ browser }) => {

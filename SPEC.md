@@ -1,6 +1,6 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.2 — fuente de la verdad
+**Estado:** Borrador v1.3 — fuente de la verdad
 **Última actualización:** 2026-09-07
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
@@ -228,12 +228,14 @@ No existe una API pública de Fitness Park (ni de ninguna cadena de gimnasios ha
 
 Decisión: hay un **seed inicial** con un juego correcto (Pecho, Espalda, Pierna, Hombro; Barra, Mancuernas, Máquina press, Polea; Press banca, Aperturas, Remo con barra, Jalón al pecho, Sentadilla, Prensa, Press militar). Ese seed es **idempotente**: nombres únicos (case-insensitive); si dos clientes arrancan a la vez, no se duplica. Después el grupo amplía o edita el catálogo a mano. No hay dependencia externa ni sincronización con terceros.
 
+La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos musculares comparten una **lista filtrable de altura fija** (sec. 6.6). Si un ítem ya está en series, no se puede borrar.
+
 ## 6. UX — flujos principales
 
 ### 6.0 Flujo de cuenta
 1. Si el grupo está vacío: pantalla **Crear el grupo** (nombre, usuario, contraseña).
 2. Si ya hay equipo: pantalla **Entrar** (usuario, contraseña). Sin enlace de correo.
-3. En Ajustes: listar compañeros, invitar (nombre + usuario + contraseña inicial), cambiar la propia contraseña, resetear la de otro si hace falta.
+3. En Ajustes hay dos pestañas (mismo patrón que Historial): **Catálogo** (equipos, ejercicios, grupos musculares, apariencia, instalar PWA) y **Users** (listar compañeros, invitar, cambiar la propia contraseña, resetear la de otro, cerrar sesión). Sin cambio de reglas de negocio.
 
 ### 6.1 Flujo de sesión
 1. Un miembro crea la sesión (fecha + nota opcional). Quien la crea queda marcado presente.
@@ -257,9 +259,9 @@ Contexto de uso: iPhone en el gimnasio, entre series, a menudo con una sola mano
 - **Mobile-first iPhone:** layouts de una columna, safe areas (notch / Dynamic Island / home indicator), tipografía legible a ~40 cm, contraste WCAG AA en claro y en oscuro.
 - **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, repetir última serie, presente/ausente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos.
 - **Jerarquía obvia:** en la pantalla de registro, lo primero que se ve es el ejercicio activo, la serie actual y los controles de reps/peso. Historial, catálogo y ajustes quedan un tap más atrás.
-- **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado solo para notas, altas de catálogo y login.
+- **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado para notas, login, altas de catálogo y el **filtro por nombre** del catálogo en Ajustes.
 - **Feedback inmediato:** al guardar/editar/borrar, confirmación visual en < 1 s (toast o estado en la propia tarjeta). Acciones destructivas (borrar serie) piden confirmación breve, no un modal pesado.
-- **Navegación simple:** barra inferior con 3 destinos como máximo (p. ej. **Hoy / Historial / Ajustes**). Sin hamburger menu. Crear sesión y registrar serie no deben estar a más de un tap desde “Hoy”.
+- **Navegación simple:** barra inferior con 3 destinos como máximo (**Hoy / Historial / Ajustes**). Sin hamburger menu. Crear sesión y registrar serie no deben estar a más de un tap desde “Hoy”. Dentro de Historial y de Ajustes hay pestañas de agrupación (no son destinos extra de la barra).
 - **Estética moderna, no recargada:** superficies limpias, radios consistentes, sombras suaves, acento único (energía / entrenamiento), iconos reconocibles. Evitar ilustraciones decorativas que restan espacio a los controles.
 
 ### 6.4 Sistema visual
@@ -270,14 +272,15 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 |---|---|
 | `--bg`, `--surface`, `--surface-2` | Fondo de app, tarjetas, filas elevadas |
 | `--text`, `--text-muted` | Texto principal y secundario |
-| `--accent` | Acciones primarias (guardar, presente, serie activa) |
+| `--accent` | Acciones primarias (guardar, presente, serie activa) y anillo de foco inset del filtro de catálogo |
 | `--danger` | Borrar, ausente, errores |
 | `--success` | Guardado ok, sincronizado |
 | `--border` | Separadores sutiles |
+| `--catalog-list-h` | Altura fija del viewport de cada lista de catálogo en Ajustes (240px, ~5 filas) |
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, hoja inferior (bottom sheet) para editar una serie sin salir de la sesión.
+Componentes de referencia: tarjetas de serie (reps · peso · nota), stepper +/- grande, selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar una serie o un ítem de catálogo sin salir de la pantalla.
 
 ### 6.5 Tema claro y oscuro
 
@@ -286,9 +289,23 @@ El usuario **elige** el aspecto; no se fuerza un solo tema.
 - Opciones: **Claro**, **Oscuro** y **Automático** (sigue el modo del iPhone via `prefers-color-scheme`).
 - Por defecto: **Automático** (en el gym de noche el oscuro cansa menos; de día el claro es más legible).
 - Persistencia: preferencia **local al dispositivo** (`localStorage`), no va a la base de datos. No es un dato de grupo.
-- El interruptor vive en **Ajustes**, visible y de un tap (segmented control Claro / Oscuro / Auto). Cambio instantáneo, sin recargar.
+- El interruptor vive en **Ajustes → Catálogo**, visible y de un tap (segmented control Claro / Oscuro / Auto). Cambio instantáneo, sin recargar.
 - `theme-color` de la PWA y `color-scheme` CSS se actualizan con el tema activo para que Safari, la status bar y el splash no “parpadeen” al color contrario.
 - Ambos temas se diseñan y prueban; el oscuro no es un invertido automático.
+
+### 6.6 Catálogo en Ajustes (listas filtrables)
+
+El catálogo crece (sobre todo equipos y ejercicios). Pintarlo como chips en `flex-wrap` infla la página y el scroll pasa a ser de **toda** la vista de Ajustes, poco usable en iPhone. Las acciones Editar/Quitar en un menú al tap/hover eran inestables.
+
+**Componente reutilizable** (`CatalogList`) en las tres secciones de la pestaña **Catálogo**: Equipos, Ejercicios y Grupos musculares. Los chips de marcas de serie (Hoy) no cambian. La pestaña **Users** agrupa perfil, invitación y contraseñas (sec. 6.0); no hay reglas nuevas.
+
+- **Filtro embebido** arriba del recuadro, fijo (no se mueve con las filas). Filtra por **nombre** (`title`), case-insensitive, locale `es`. El subtítulo se muestra (descripción del equipo; grupo muscular del ejercicio) pero no entra en el filtro. Cada sección tiene su query; no se comparte.
+- **Altura fija** del viewport (`--catalog-list-h`: 240px). `overflow-y` solo en la lista. La página de Ajustes sigue haciendo scroll entre tarjetas de la pestaña activa; no entre cientos de chips.
+- **Filas**, no chips: título + subtítulo a la izquierda; **Editar** y **Quitar** siempre visibles a la derecha, área táctil ≥ 44 pt. Se descartó seguir con chips dentro del recuadro y un híbrido chip-row: las filas se escanean y se tocan mejor.
+- **Quitar** pide confirmación en dos toques (Quitar → Confirmar), igual que antes. Si el ítem ya está en series, el store bloquea el borrado.
+- Formularios de **alta** debajo de cada lista, fuera del viewport. **Editar** abre la hoja inferior existente.
+- Vacío: sin ítems («No hay equipos/ejercicios/grupos»); filtro sin coincidencias («Nada coincide»).
+- **Foco del filtro:** anillo interior 2px `--accent` (`outline-offset: -2px`). El outline nativo del sistema se dibuja por fuera y el `overflow: hidden` del recuadro recorta el borde superior.
 
 ## 7. Seguridad y permisos
 
@@ -320,7 +337,7 @@ Hecho:
 1. Esquema SQL en Supabase (tablas de la sección 3) + políticas RLS de la sección 7.
 2. Vue 3 PWA: alta de sesión, asistencia de grupo, registro de series de cualquier miembro, con el sistema visual y los flujos de la sección 6.
 3. Tema claro / oscuro / automático (sec. 6.5).
-4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app; seed inicial idempotente y nombres únicos.
+4. Catálogo editable de ejercicios/equipos/grupos musculares desde la propia app; seed inicial idempotente y nombres únicos; en Ajustes, listas filtrables de altura fija (sec. 6.6).
 5. Consultas: vista por sesión (series agrupadas por miembro); quién no asistió / sin marcar; quién, estando presente, no usó un equipo.
 6. Vista por miembro: historial filtrable por grupo muscular, equipo o rango de fechas.
 7. Login usuario / contraseña, alta del grupo e invitación de compañeros.
@@ -355,6 +372,11 @@ Pendiente:
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
 | Usuario + contraseña (email interno `@fitcheck.local`) | Magic link por correo | El SMTP integrado limita a ~2 emails/hora; con hasta 5 personas el login diario no puede depender del correo |
 | Historial paginado con filtros | Cargar todas las sesiones y series al arrancar | A los pocos meses la lista es larga; hace falta buscar por fecha y ver frecuencia por grupo muscular |
+| Catálogo en Ajustes como listas filtrables de filas | Chips en `flex-wrap`, o chips/híbrido dentro del recuadro | Al crecer el catálogo el scroll de página se vuelve inusable; las filas se escanean y se tocan mejor. Un componente sirve para equipos, ejercicios y grupos |
+| Filtro de catálogo solo por nombre | Filtrar también por subtítulo (grupo muscular, descripción) | Se busca lo que el grupo nombra al ítem; el subtítulo es contexto, no clave |
+| Scroll interno de altura fija en cada lista de catálogo | Dejar crecer la tarjeta de Catálogo | El scroll debe ser del componente que muestra los ítems, no de toda la vista de Ajustes |
+| Anillo de foco inset (`--accent`) en el filtro | Outline nativo del sistema | `overflow: hidden` del recuadro recorta el borde superior del outline nativo |
+| Ajustes con pestañas Catálogo / Users | Cuarto destino en la barra inferior, o una sola pantalla larga | Solo agrupación visual; la barra sigue en 3 destinos (sec. 6.3). Users: cuentas; Catálogo: catálogo, apariencia e instalar PWA |
 
 ## 11. Preguntas abiertas
 
@@ -370,3 +392,5 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-0
 - Login con usuario y contraseña; sin magic link en el uso diario (sec. 7). El login no limita a quién se anota.
 - Seed de catálogo inicial, una sola vez por nombre (sec. 5).
 - Historial de sesiones paginado, filtrable por fechas y grupo muscular (sec. 6.2).
+- Catálogo en Ajustes: listas filtrables de filas (no chips), filtro por nombre, altura fija y scroll interno; Editar/Quitar visibles; foco del filtro con anillo inset (sec. 6.6). Los chips de marcas de serie no cambian.
+- Ajustes se agrupa en pestañas **Catálogo** y **Users** (sec. 6.0); sin cambio de reglas de negocio.

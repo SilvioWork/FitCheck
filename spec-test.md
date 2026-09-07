@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.2
+**Fuente de producto:** `SPEC.md` v1.3
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -116,7 +116,7 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 |---|---|---|---|---|---|
 | AUTH-01 | Login válido | `/entrar` → usuario + contraseña ≥ 8 → **Entrar** | Va a **Hoy**; nav visible; lede «Entraste como {nombre}. Puedes anotar a cualquiera.» | 6.0, 7 | P 2026-09-07 e2e |
 | AUTH-02 | Login inválido | Contraseña incorrecta | Se queda en Entrar; mensaje de error; no entra a Hoy | 6.0 | P 2026-09-07 e2e |
-| AUTH-03 | Cerrar sesión y volver a entrar | Ajustes → **Cerrar sesión** → login correcto | Login → Hoy (no se queda en `/entrar`) | 6.0 | P 2026-09-07 e2e |
+| AUTH-03 | Cerrar sesión y volver a entrar | Ajustes → pestaña **Users** → **Cerrar sesión** → login correcto | Login → Hoy (no se queda en `/entrar`) | 6.0 | Pendiente retest (pestaña Users) |
 | AUTH-04 | Guard de rutas | Sin sesión, ir a `/`, `/historial`, `/ajustes` | Redirect a `/entrar` | 7 | P 2026-09-07 e2e |
 | AUTH-05 | Ya logueado en login | Con sesión, abrir `/entrar` | Redirect a Hoy | 7 | P 2026-09-07 e2e |
 | AUTH-06 | Usuario mal formado | Usuario `ab` o con espacios/mayúsculas raras | Botón **Entrar** deshabilitado o validación; no llama a Auth | 3.2, 7 | P 2026-09-07 e2e |
@@ -157,18 +157,22 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| AJU-01 | Perfil | Ajustes | Nombre · @usuario; lista de compañeros; activo destacado | 6.0 | P 2026-09-07 e2e |
-| AJU-02 | Cambiar mi contraseña | Nueva ≥ 8 → guardar → logout → entrar con la nueva | Entra. **Coordinar**: deja la clave nueva al QA | 7 | B (no se cambian claves de las cuentas reales) |
-| AJU-03 | Invitar compañero | Nombre + usuario `qa_tmp` + pass ≥ 8 → **Crear cuenta** | Aviso ok; aparece en la lista; puede entrar. Tope 5 | 6.0, 7 | B (no se crea cuenta Auth extra) |
-| AJU-04 | Invitar duplicado / usuario inválido | Usuario existente o `ab` | Error o botón deshabilitado; no segundo miembro | 7 | B (depende de AJU-03) |
-| AJU-05 | Resetear contraseña de otro | Usuario del compañero + pass nueva → logout de esa cuenta → entrar | Entra con la nueva. **Coordinar** | 2.2, 7 | B (no se cambian claves) |
-| CAT-01 | Seed visible | Ajustes → Catálogo | Grupos/equipos/ejercicios del seed, **sin duplicados** | 5 | P 2026-09-07 e2e |
-| CAT-02 | Alta equipo/ejercicio/grupo | Nombre `QA-tmp-…` | Aparece en listas y en selectores de Hoy | 5, 6.0 | P 2026-09-07 e2e (equipo `QA-banco-tmp`) |
+| AJU-01 | Perfil | Ajustes → **Users** | Nombre · @usuario; lista de compañeros; activo destacado | 6.0 | Pendiente retest (pestaña Users) |
+| AJU-02 | Cambiar mi contraseña | Users → Nueva ≥ 8 → guardar → logout → entrar con la nueva | Entra. **Coordinar**: deja la clave nueva al QA | 7 | B (no se cambian claves de las cuentas reales) |
+| AJU-03 | Invitar compañero | Users → Nombre + usuario `qa_tmp` + pass ≥ 8 → **Crear cuenta** | Aviso ok; aparece en la lista; puede entrar. Tope 5 | 6.0, 7 | B (no se crea cuenta Auth extra) |
+| AJU-04 | Invitar duplicado / usuario inválido | Users → Usuario existente o `ab` | Error o botón deshabilitado; no segundo miembro | 7 | B (depende de AJU-03) |
+| AJU-05 | Resetear contraseña de otro | Users → Usuario del compañero + pass nueva → logout de esa cuenta → entrar | Entra con la nueva. **Coordinar** | 2.2, 7 | B (no se cambian claves) |
+| CAT-01 | Seed visible | Ajustes → **Catálogo** | Grupos/equipos/ejercicios del seed en **listas** (no chips), **sin duplicados**. Recuadro de altura fija por sección | 5, 6.6 | Pendiente retest (UI lista; runner usa `list` + filtro) |
+| CAT-02 | Alta equipo/ejercicio/grupo | Nombre `QA-tmp-…`; buscarlo en el filtro de esa sección | Aparece en la lista filtrada y en selectores de Hoy | 5, 6.0, 6.6 | Pendiente retest |
 | CAT-03 | Nombre duplicado | Crear «Hombro» otra vez (cualquier casing) | Error «ya existe»; no duplica | 5, 10 | P 2026-09-07 e2e |
-| CAT-04 | Editar ítem | Editar nombre de un `QA-tmp-…` | Se actualiza | 5 | Pendiente |
-| CAT-05 | Borrar sin uso | Borrar `QA-tmp-…` no usado en series | Desaparece | 5 | P 2026-09-07 e2e |
-| CAT-06 | Borrar en uso | Borrar equipo/ejercicio con series | Se impide (mensaje); no rompe historial | 5 | P 2026-09-07 e2e |
-| TEM-01 | Tema Claro / Oscuro / Auto | Segmented en Ajustes | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | P 2026-09-07 e2e |
+| CAT-04 | Editar ítem | En la fila: **Editar** (sin tap previo al ítem) → cambiar nombre de un `QA-tmp-…` | Se actualiza | 5, 6.6 | Pendiente |
+| CAT-05 | Borrar sin uso | Filtro → **Quitar** → **Confirmar** en `QA-tmp-…` no usado | Desaparece; confirmación en dos toques | 5, 6.6 | Pendiente retest |
+| CAT-06 | Borrar en uso | Filtro por el equipo de una serie → Quitar → Confirmar | Se impide (mensaje); no rompe historial; la fila sigue | 5, 6.6 | Pendiente retest |
+| CAT-07 | Filtro por nombre | Escribir un fragmento del nombre (p. ej. «press») | Solo filas cuyo **título** coincide (case-insensitive, locale `es`); el subtítulo no filtra; «Nada coincide» si no hay match | 6.6 | Pendiente |
+| CAT-08 | Scroll interno | Catálogo con más ítems de los que caben (~5 filas) | El recuadro mide `--catalog-list-h` (240px); el scroll es de la lista, no de toda la vista de Ajustes; el input de buscar no se mueve | 6.6 | Pendiente |
+| CAT-09 | Acciones de fila | Sin hover ni tap extra | **Editar** y **Quitar** visibles en cada fila; Quitar pide Confirmar | 6.6 | Pendiente |
+| CAT-10 | Foco del filtro | Tap en Buscar equipo/ejercicio/grupo | Anillo de 2px `--accent` en los **cuatro** lados (inset); no se pierde el borde superior | 6.6 | Pendiente |
+| TEM-01 | Tema Claro / Oscuro / Auto | Ajustes → **Catálogo** → segmented | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | Pendiente retest (pestaña Catálogo) |
 
 ### 4.5 Seguridad y realtime (`RLS`, `RT`)
 
@@ -205,7 +209,7 @@ Orden sugerido cuando hay poco tiempo (~15 min, 1 usuario):
 1. AUTH-01, AUTH-03  
 2. HOY-01 (o usar sesión de hoy si ya existe), HOY-02, HOY-03, HOY-05, HOY-10  
 3. HIST-01, HIST-06, HIST-07  
-4. AJU-01, TEM-01, CAT-01  
+4. AJU-01, TEM-01, CAT-01, CAT-07  
 5. AUTH-08  
 
 Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
@@ -247,7 +251,7 @@ Si se creó basura `QA-*`:
 
 ## 9. Cómo sigue el QA
 
-1. Ronda e2e local v1.2 hecha (2026-09-07): registro por cualquier miembro + chips de técnicas. Pendiente: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
+1. Ronda e2e local v1.2 hecha (2026-09-07): registro por cualquier miembro + chips de técnicas. Spec v1.3: catálogo en listas filtrables; Ajustes con pestañas **Catálogo** / **Users**. El runner ya no usa `.chip` y entra a Users para perfil/logout. **Retest AUTH-03, AJU-01, TEM-01, CAT-01..02, CAT-05..06** y cubrir CAT-07..10. Pendiente además: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
 2. Reejecutar `npm run test:e2e` tras cambios de UI o auth.
 3. Cada fail nuevo → BUG en sec. 7 y, si aplica, arreglo de código + retest del ID.
 

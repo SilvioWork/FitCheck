@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import CatalogChip from '@/components/CatalogChip.vue'
+import CatalogList from '@/components/CatalogList.vue'
 import { useFitcheckStore } from '@/stores/fitcheck'
 import type { Ejercicio, Equipo, GrupoMuscular } from '@/types/models'
 
@@ -28,6 +28,27 @@ const ejerciciosOrden = computed(() =>
 )
 const gruposOrden = computed(() =>
   [...gym.grupos].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+)
+
+const equiposItems = computed(() =>
+  equiposOrden.value.map((eq) => ({
+    id: eq.id,
+    title: eq.nombre,
+    subtitle: eq.descripcion ?? undefined,
+  })),
+)
+const ejerciciosItems = computed(() =>
+  ejerciciosOrden.value.map((ej) => ({
+    id: ej.id,
+    title: ej.nombre,
+    subtitle: gym.grupoDeEjercicio(ej.id) || undefined,
+  })),
+)
+const gruposItems = computed(() =>
+  gruposOrden.value.map((g) => ({
+    id: g.id,
+    title: g.nombre,
+  })),
 )
 
 type EditState =
@@ -78,6 +99,21 @@ function editarGrupo(item: GrupoMuscular) {
   editando.value = { kind: 'grupo', item, nombre: item.nombre }
 }
 
+function editarEquipoPorId(id: string) {
+  const item = gym.equipos.find((eq) => eq.id === id)
+  if (item) editarEquipo(item)
+}
+
+function editarEjercicioPorId(id: string) {
+  const item = gym.ejercicios.find((ej) => ej.id === id)
+  if (item) editarEjercicio(item)
+}
+
+function editarGrupoPorId(id: string) {
+  const item = gym.grupos.find((g) => g.id === id)
+  if (item) editarGrupo(item)
+}
+
 async function guardarEdicion() {
   const draft = editando.value
   if (!draft) return
@@ -96,20 +132,18 @@ async function guardarEdicion() {
   <article class="card">
     <h2>Catálogo</h2>
     <p class="hint">
-      Chips del grupo. Pasa el cursor (o toca en el iPhone) para editar o quitar. Si ya hay series, no se puede borrar.
+      Busca por nombre. Editar o quitar en cada fila. Si ya hay series, no se puede borrar.
     </p>
 
     <h3>Equipos</h3>
-    <div class="chips">
-      <CatalogChip
-        v-for="eq in equiposOrden"
-        :key="eq.id"
-        :title="eq.nombre"
-        :subtitle="eq.descripcion ?? undefined"
-        @edit="editarEquipo(eq)"
-        @remove="gym.borrarEquipo(eq.id)"
-      />
-    </div>
+    <CatalogList
+      :items="equiposItems"
+      label="Equipos"
+      placeholder="Buscar equipo"
+      empty-label="No hay equipos"
+      @edit="editarEquipoPorId"
+      @remove="gym.borrarEquipo"
+    />
     <label>
       Nombre
       <input v-model="equipoNombre" type="text" maxlength="60" placeholder="Máquina press banca Technogym" />
@@ -121,16 +155,14 @@ async function guardarEdicion() {
     <button class="ghost" type="button" :disabled="!equipoNombre.trim()" @click="addEquipo">Añadir equipo</button>
 
     <h3>Ejercicios</h3>
-    <div class="chips">
-      <CatalogChip
-        v-for="ej in ejerciciosOrden"
-        :key="ej.id"
-        :title="ej.nombre"
-        :subtitle="gym.grupoDeEjercicio(ej.id)"
-        @edit="editarEjercicio(ej)"
-        @remove="gym.borrarEjercicio(ej.id)"
-      />
-    </div>
+    <CatalogList
+      :items="ejerciciosItems"
+      label="Ejercicios"
+      placeholder="Buscar ejercicio"
+      empty-label="No hay ejercicios"
+      @edit="editarEjercicioPorId"
+      @remove="gym.borrarEjercicio"
+    />
     <label>
       Nombre
       <input v-model="ejercicioNombre" type="text" maxlength="60" placeholder="Press banca" />
@@ -146,15 +178,14 @@ async function guardarEdicion() {
     </button>
 
     <h3>Grupos musculares</h3>
-    <div class="chips">
-      <CatalogChip
-        v-for="g in gruposOrden"
-        :key="g.id"
-        :title="g.nombre"
-        @edit="editarGrupo(g)"
-        @remove="gym.borrarGrupo(g.id)"
-      />
-    </div>
+    <CatalogList
+      :items="gruposItems"
+      label="Grupos musculares"
+      placeholder="Buscar grupo"
+      empty-label="No hay grupos"
+      @edit="editarGrupoPorId"
+      @remove="gym.borrarGrupo"
+    />
     <label>
       Nombre
       <input v-model="grupoNombre" type="text" maxlength="40" placeholder="Core" />
@@ -229,12 +260,6 @@ h3 {
   color: var(--text-muted);
   font-size: 0.85rem;
   line-height: 1.4;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 label {

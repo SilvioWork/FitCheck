@@ -17,7 +17,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.2) |
+| Spec y decisiones de producto | Hecho (v1.3) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
 | Flujo de sesión (alta, asistencia de grupo, series de cualquiera) | Hecho |
@@ -25,6 +25,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 | Supabase: esquema, cliente, usuario/contraseña | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
 | Realtime | Hecho |
 | Catálogo editable + seed idempotente + nombres únicos | Hecho |
+| Catálogo en Ajustes: listas filtrables (altura fija, scroll interno) | Hecho |
 | Consultas «quién no asistió / no usó equipo» | Hecho |
 | Historial paginado (fechas + grupo muscular) | Hecho |
 | Alta de grupo e invitación de compañeros | Hecho |
@@ -40,7 +41,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.2 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, PWA).
+- Spec v1.3 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -72,7 +73,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
 
-**Ajustes** — perfil (usuario), invitar / resetear compañero, cerrar sesión, **En el iPhone**, catálogo, tema, cambiar contraseña.
+**Ajustes** — pestañas **Catálogo** (listas filtrables, apariencia, **En el iPhone**) y **Users** (perfil, invitar / resetear compañero, cambiar contraseña, cerrar sesión). Query `?vista=users` para Users.
 
 **Navegación** — barra inferior Hoy / Historial / Ajustes; toques ≥ 44 pt; tokens CSS.
 
@@ -85,6 +86,8 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Consulta de «quién no usó X» solo sobre `presente = true`.
 - Login sin correo.
 - Catálogo sin nombres duplicados.
+- Catálogo en Ajustes: listas filtrables de filas (no chips wrapping); filtro por nombre; scroll interno (`--catalog-list-h`); foco del filtro con anillo inset `--accent`. Los chips de marcas de serie no cambian.
+- Ajustes agrupado en pestañas Catálogo / Users (sin cambio de reglas).
 
 ---
 

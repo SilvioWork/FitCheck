@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import CatalogoPanel from '@/components/CatalogoPanel.vue'
 import InstalarPwa from '@/components/InstalarPwa.vue'
 import { usuarioValido } from '@/lib/usuario'
@@ -9,10 +9,13 @@ import { useAuthStore } from '@/stores/auth'
 import { useFitcheckStore } from '@/stores/fitcheck'
 
 const router = useRouter()
+const route = useRoute()
 
 const theme = useThemeStore()
 const auth = useAuthStore()
 const gym = useFitcheckStore()
+
+const vista = computed(() => (route.query.vista === 'users' ? 'users' : 'catalogo'))
 
 const options: { value: ThemePreference; label: string }[] = [
   { value: 'light', label: 'Claro' },
@@ -24,6 +27,14 @@ const alta = reactive({ nombre: '', usuario: '', password: '' })
 const reset = reactive({ usuario: '', password: '' })
 const nuevaPassword = ref('')
 const enviando = ref(false)
+
+function setVista(next: 'catalogo' | 'users') {
+  if (next === 'users') {
+    void router.replace({ name: 'ajustes', query: { vista: 'users' } })
+    return
+  }
+  void router.replace({ name: 'ajustes' })
+}
 
 async function salir() {
   await auth.signOut()
@@ -64,105 +75,131 @@ async function cambiarPassword() {
   <section class="page">
     <header>
       <h1>Ajustes</h1>
-      <p>
-        Sesión de Supabase{{ gym.enVivo ? ' · en vivo' : '' }} y catálogo del grupo.
-      </p>
+      <p v-if="vista === 'users'">Cuentas del grupo{{ gym.enVivo ? ' · en vivo' : '' }}.</p>
+      <p v-else>Catálogo del grupo y apariencia{{ gym.enVivo ? ' · en vivo' : '' }}.</p>
     </header>
 
-    <article class="card">
-      <h2>Tu perfil</h2>
-      <p class="hint">{{ gym.miembroActivo?.nombre }} · @{{ gym.miembroActivo?.usuario }}</p>
-      <p class="hint">Cada uno entra con su usuario y contraseña en su iPhone.</p>
-      <ul>
-        <li v-for="miembro in gym.miembros" :key="miembro.id">
-          <span :class="{ on: gym.miembroActivoId === miembro.id }">
-            {{ miembro.nombre }} · @{{ miembro.usuario }}
-          </span>
-        </li>
-      </ul>
-      <label>
-        Nueva contraseña
-        <input v-model="nuevaPassword" type="password" autocomplete="new-password" />
-      </label>
+    <div class="tabs" role="tablist" aria-label="Sección de ajustes">
       <button
-        class="ghost"
         type="button"
-        :disabled="enviando || nuevaPassword.length < 8"
-        @click="cambiarPassword"
+        class="tab-btn"
+        role="tab"
+        :aria-selected="vista === 'catalogo'"
+        :class="{ active: vista === 'catalogo' }"
+        @click="setVista('catalogo')"
       >
-        Cambiar mi contraseña
+        Catálogo
       </button>
-      <button class="ghost" type="button" @click="salir">Cerrar sesión</button>
-    </article>
-
-    <article v-if="gym.miembros.length < 5" class="card">
-      <h2>Invitar compañero</h2>
-      <p class="hint">Se lo dices en persona. Tope de 5. {{ gym.miembros.length }}/5.</p>
-      <label>
-        Nombre
-        <input v-model="alta.nombre" type="text" maxlength="40" />
-      </label>
-      <label>
-        Usuario
-        <input v-model="alta.usuario" type="text" maxlength="24" autocapitalize="off" />
-      </label>
-      <label>
-        Contraseña inicial
-        <input v-model="alta.password" type="password" autocomplete="new-password" />
-      </label>
       <button
-        class="ghost"
         type="button"
-        :disabled="enviando || !alta.nombre.trim() || !usuarioValido(alta.usuario) || alta.password.length < 8"
-        @click="invitar"
+        class="tab-btn"
+        role="tab"
+        :aria-selected="vista === 'users'"
+        :class="{ active: vista === 'users' }"
+        @click="setVista('users')"
       >
-        Crear cuenta
+        Users
       </button>
-    </article>
+    </div>
 
-    <article class="card">
-      <h2>Resetear contraseña</h2>
-      <p class="hint">Si alguien olvida la suya, otro miembro puede ponerle una nueva.</p>
-      <label>
-        Usuario
-        <input v-model="reset.usuario" type="text" maxlength="24" autocapitalize="off" />
-      </label>
-      <label>
-        Nueva contraseña
-        <input v-model="reset.password" type="password" autocomplete="new-password" />
-      </label>
-      <button
-        class="ghost"
-        type="button"
-        :disabled="enviando || !usuarioValido(reset.usuario) || reset.password.length < 8"
-        @click="resetear"
-      >
-        Actualizar contraseña
-      </button>
-    </article>
-
-    <p v-if="auth.aviso" class="ok">{{ auth.aviso }}</p>
-    <p v-if="auth.error" class="err">{{ auth.error }}</p>
-
-    <InstalarPwa />
-
-    <CatalogoPanel />
-
-    <article class="card">
-      <h2>Apariencia</h2>
-      <div class="segment" role="group" aria-label="Tema">
+    <template v-if="vista === 'users'">
+      <article class="card">
+        <h2>Tu perfil</h2>
+        <p class="hint">{{ gym.miembroActivo?.nombre }} · @{{ gym.miembroActivo?.usuario }}</p>
+        <p class="hint">Cada uno entra con su usuario y contraseña en su iPhone.</p>
+        <ul>
+          <li v-for="miembro in gym.miembros" :key="miembro.id">
+            <span :class="{ on: gym.miembroActivoId === miembro.id }">
+              {{ miembro.nombre }} · @{{ miembro.usuario }}
+            </span>
+          </li>
+        </ul>
+        <label>
+          Nueva contraseña
+          <input v-model="nuevaPassword" type="password" autocomplete="new-password" />
+        </label>
         <button
-          v-for="option in options"
-          :key="option.value"
+          class="ghost"
           type="button"
-          class="seg-btn"
-          :class="{ active: theme.preference === option.value }"
-          @click="theme.setPreference(option.value)"
+          :disabled="enviando || nuevaPassword.length < 8"
+          @click="cambiarPassword"
         >
-          {{ option.label }}
+          Cambiar mi contraseña
         </button>
-      </div>
-    </article>
+        <button class="ghost" type="button" @click="salir">Cerrar sesión</button>
+      </article>
+
+      <article v-if="gym.miembros.length < 5" class="card">
+        <h2>Invitar compañero</h2>
+        <p class="hint">Se lo dices en persona. Tope de 5. {{ gym.miembros.length }}/5.</p>
+        <label>
+          Nombre
+          <input v-model="alta.nombre" type="text" maxlength="40" />
+        </label>
+        <label>
+          Usuario
+          <input v-model="alta.usuario" type="text" maxlength="24" autocapitalize="off" />
+        </label>
+        <label>
+          Contraseña inicial
+          <input v-model="alta.password" type="password" autocomplete="new-password" />
+        </label>
+        <button
+          class="ghost"
+          type="button"
+          :disabled="enviando || !alta.nombre.trim() || !usuarioValido(alta.usuario) || alta.password.length < 8"
+          @click="invitar"
+        >
+          Crear cuenta
+        </button>
+      </article>
+
+      <article class="card">
+        <h2>Resetear contraseña</h2>
+        <p class="hint">Si alguien olvida la suya, otro miembro puede ponerle una nueva.</p>
+        <label>
+          Usuario
+          <input v-model="reset.usuario" type="text" maxlength="24" autocapitalize="off" />
+        </label>
+        <label>
+          Nueva contraseña
+          <input v-model="reset.password" type="password" autocomplete="new-password" />
+        </label>
+        <button
+          class="ghost"
+          type="button"
+          :disabled="enviando || !usuarioValido(reset.usuario) || reset.password.length < 8"
+          @click="resetear"
+        >
+          Actualizar contraseña
+        </button>
+      </article>
+
+      <p v-if="auth.aviso" class="ok">{{ auth.aviso }}</p>
+      <p v-if="auth.error" class="err">{{ auth.error }}</p>
+    </template>
+
+    <template v-else>
+      <InstalarPwa />
+
+      <CatalogoPanel />
+
+      <article class="card">
+        <h2>Apariencia</h2>
+        <div class="segment" role="group" aria-label="Tema">
+          <button
+            v-for="option in options"
+            :key="option.value"
+            type="button"
+            class="seg-btn"
+            :class="{ active: theme.preference === option.value }"
+            @click="theme.setPreference(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </article>
+    </template>
   </section>
 </template>
 
@@ -191,6 +228,30 @@ header p,
 
 .hint {
   font-size: 0.85rem;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.tab-btn {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.tab-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .card {
