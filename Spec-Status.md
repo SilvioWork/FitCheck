@@ -89,6 +89,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Catálogo en Ajustes: listas filtrables de filas (no chips wrapping); filtro por nombre; scroll interno (`--catalog-list-h`); foco del filtro con anillo inset `--accent`. Los chips de marcas de serie no cambian.
 - Ajustes agrupado en pestañas Catálogo / Users (sin cambio de reglas).
 - Hoy anclado a una fecha elegible (pasado, hoy o futuro); si ese día ya tiene sesión, se continúa; si no, se crea. No es un planificador de rutinas.
+- Stepper de reps/peso: tap = un paso; mantener ≥ 1 s avanza a ritmo constante (100 ms) hasta soltar.
 
 ---
 

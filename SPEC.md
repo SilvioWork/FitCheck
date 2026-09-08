@@ -240,7 +240,7 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 ### 6.1 Flujo de sesión
 1. En Hoy, la fecha por defecto es hoy. Se cambia con el selector (día anterior / fecha / día siguiente; **Ir a hoy** si no es el día actual). Si ese día no tiene sesión, se crea (nota opcional); quien la crea queda marcado presente. Si ya hay sesión, se continúa anotando. Tras crear, se permanece en ese día.
 2. Asistencia **de grupo**: en cada fila hay Sí/No. Cualquier integrante puede marcar presente o ausente a cualquier compañero (una vez al empezar, no por ejercicio). Quien aún no tiene fila aparece como «sin marcar», distinto de ausente.
-3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → ejercicio (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después.
+3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → ejercicio (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes (tap o mantener pulsado) → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después.
 4. Atajo "repetir última serie" con un tap para series consecutivas iguales **de ese miembro** (la nota no se copia por defecto; se deja vacía).
 5. Una serie ya guardada se puede editar (reps, peso, equipo, nota) o borrar, **aunque la haya anotado otro**. El `numero_serie` es automático (1, 2, 3… por ejercicio y miembro en esa sesión): no se edita a mano. Tras borrar, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
@@ -257,7 +257,7 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 Contexto de uso: iPhone en el gimnasio, entre series, a menudo con una sola mano y poca atención. La interfaz prioriza **velocidad, claridad y toques grandes** por encima de densidad de información.
 
 - **Mobile-first iPhone:** layouts de una columna, safe areas (notch / Dynamic Island / home indicator), tipografía legible a ~40 cm, contraste WCAG AA en claro y en oscuro.
-- **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, repetir última serie, presente/ausente, día anterior/siguiente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos.
+- **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, repetir última serie, presente/ausente, día anterior/siguiente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos. El stepper de reps/peso responde a un tap (un paso) y a **mantener pulsado**: tras **1 s** el valor avanza a ritmo constante hasta soltar.
 - **Jerarquía obvia:** en la pantalla de registro, lo primero que se ve es la fecha de la sesión, el ejercicio activo, la serie actual y los controles de reps/peso. Historial, catálogo y ajustes quedan un tap más atrás.
 - **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado para notas, login, altas de catálogo y el **filtro por nombre** del catálogo en Ajustes.
 - **Feedback inmediato:** al guardar/editar/borrar, confirmación visual en < 1 s (toast o estado en la propia tarjeta). Acciones destructivas (borrar serie) piden confirmación breve, no un modal pesado.
@@ -280,7 +280,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), tarjetas de serie (reps · peso · nota), stepper +/- grande, selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar una serie o un ítem de catálogo sin salir de la pantalla.
+Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), tarjetas de serie (reps · peso · nota), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar una serie o un ítem de catálogo sin salir de la pantalla.
 
 ### 6.5 Tema claro y oscuro
 

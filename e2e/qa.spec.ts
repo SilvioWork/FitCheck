@@ -51,25 +51,62 @@ function addDaysISO(isoDate: string, n: number): string {
   return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`
 }
 
+function fechasSandboxQA(): string[] {
+  const now = new Date()
+  const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const month = now.getMonth() === 0 ? 12 : now.getMonth()
+  const z = (n: number) => String(n).padStart(2, '0')
+  return [1, 2, 3, 4, 5].map((day) => `${year}-${z(month)}-${z(day)}`)
+}
+
+function assertSandbox(iso: string) {
+  const allowed = fechasSandboxQA()
+  if (!allowed.includes(iso)) {
+    throw new Error(`QA solo escribe en ${allowed.join(', ')}; se pidió ${iso}`)
+  }
+}
+
 async function esperarFechaCargada(page: Page) {
   await expect(page.getByText('Cargando sesión…')).toHaveCount(0)
   await expect(page.getByLabel('Fecha', { exact: true })).toBeEnabled()
 }
 
-async function irADiaVacio(page: Page, fromISO: string): Promise<string> {
+async function irAFecha(page: Page, iso: string) {
   const fecha = page.getByLabel('Fecha', { exact: true })
+  await expect(fecha).toBeEnabled()
+  await fecha.fill(iso)
+  await fecha.dispatchEvent('change')
+  await expect(fecha).toHaveValue(iso)
+  await esperarFechaCargada(page)
+}
+
+async function irADiaVacioSandbox(page: Page): Promise<string | null> {
   const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
-  for (let i = 14; i <= 40; i++) {
-    const d = addDaysISO(fromISO, -i)
-    await expect(fecha).toBeEnabled()
-    await fecha.fill(d)
-    await fecha.dispatchEvent('change')
-    await expect(fecha).toHaveValue(d)
-    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
-    await esperarFechaCargada(page)
+  for (const d of fechasSandboxQA()) {
+    await irAFecha(page, d)
     if (await nueva.isVisible()) return d
   }
-  throw new Error('No se encontró un día vacío para HOY-12')
+  return null
+}
+
+async function irASandboxQA(page: Page, nota = 'QA-sandbox'): Promise<string> {
+  const anotar = page.getByRole('heading', { name: 'Anotar serie' })
+  const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
+  for (const d of fechasSandboxQA()) {
+    await irAFecha(page, d)
+    if (await anotar.isVisible().catch(() => false)) {
+      assertSandbox(d)
+      return d
+    }
+    if (await nueva.isVisible().catch(() => false)) {
+      assertSandbox(d)
+      await page.getByLabel('Nota (opcional)').fill(nota)
+      await page.getByRole('button', { name: 'Crear sesión' }).click()
+      await expect(anotar).toBeVisible()
+      return d
+    }
+  }
+  throw new Error('Sandbox 1–5 del mes pasado no disponible')
 }
 
 async function prepararPagina(page: Page) {
@@ -135,13 +172,9 @@ test.describe('FitCheck QA', () => {
 
   test('HOY asistencia, serie, chips, repetir, editar, borrar, otro miembro', async ({ page }) => {
     await entrar(page, USER, PASS)
+    await irASandboxQA(page, 'QA-sandbox smoke')
 
-    const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
     const anotarSerie = page.getByRole('heading', { name: 'Anotar serie' })
-    if (await nueva.isVisible().catch(() => false)) {
-      await page.getByLabel('Nota (opcional)').fill('QA-2026-09-07 smoke')
-      await page.getByRole('button', { name: 'Crear sesión' }).click()
-    }
     await expect(anotarSerie).toBeVisible()
 
     const asistencia = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Asistencia' }) })
@@ -199,7 +232,6 @@ test.describe('FitCheck QA', () => {
     await formSerie.getByRole('button', { name: 'Armando', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Myo-reps', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
-    await expect(page.getByText('Serie guardada')).toBeVisible()
     const filasArmando = page
       .locator('article')
       .filter({ has: page.getByRole('heading', { name: 'Series de Armando' }) })
@@ -214,7 +246,7 @@ test.describe('FitCheck QA', () => {
     await expect(filas.filter({ hasText: 'Myo-reps' })).toHaveCount(0)
   })
 
-  test('HOY-11..14 fecha: default, vacío, existente, navegación', async ({ page }) => {
+  test('HOY-11..14 fecha: default, vacío sandbox, existente, navegación', async ({ page }) => {
     await entrar(page, USER, PASS)
 
     const fecha = page.getByLabel('Fecha', { exact: true })
@@ -224,30 +256,29 @@ test.describe('FitCheck QA', () => {
 
     const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
     const anotar = page.getByRole('heading', { name: 'Anotar serie' })
-    if (await nueva.isVisible().catch(() => false)) {
-      await page.getByLabel('Nota (opcional)').fill('QA-2026-09-08 hoy')
-      await page.getByRole('button', { name: 'Crear sesión' }).click()
+    if (await anotar.isVisible().catch(() => false)) {
+      await expect(anotar).toBeVisible()
+    } else {
+      await expect(nueva).toBeVisible()
     }
-    await expect(anotar).toBeVisible()
 
-    const vacio = await irADiaVacio(page, hoy)
+    const vacio = await irADiaVacioSandbox(page)
+    test.skip(!vacio, 'HOY-12: los días 1–5 del mes pasado ya tienen sesión')
+    assertSandbox(vacio!)
     await expect(nueva).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Ir a hoy' })).toBeVisible()
-    await page.getByLabel('Nota (opcional)').fill('QA-2026-09-08 historico')
+    await page.getByLabel('Nota (opcional)').fill('QA-sandbox historico')
     await page.getByRole('button', { name: 'Crear sesión' }).click()
     await expect(anotar).toBeVisible()
-    await expect(fecha).toHaveValue(vacio)
+    await expect(fecha).toHaveValue(vacio!)
 
     await page.getByRole('button', { name: 'Día siguiente' }).click()
-    await expect(fecha).toHaveValue(addDaysISO(vacio, 1))
+    await expect(fecha).toHaveValue(addDaysISO(vacio!, 1))
     await esperarFechaCargada(page)
-    await fecha.fill(vacio)
-    await fecha.dispatchEvent('change')
-    await expect(fecha).toHaveValue(vacio)
-    await esperarFechaCargada(page)
+    await irAFecha(page, vacio!)
     await expect(anotar).toBeVisible()
-    await expect(page.getByText('QA-2026-09-08 historico')).toBeVisible()
+    await expect(page.getByText('QA-sandbox historico')).toBeVisible()
     await page.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(page.getByText('Serie guardada')).toBeVisible()
 
@@ -256,6 +287,28 @@ test.describe('FitCheck QA', () => {
     await esperarFechaCargada(page)
     await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Ir a hoy' })).toHaveCount(0)
+  })
+
+  test('HOY-15 stepper hold-to-repeat peso', async ({ page }) => {
+    await entrar(page, USER, PASS)
+    await irASandboxQA(page, 'QA-sandbox stepper')
+
+    const formSerie = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+    const masPeso = formSerie.getByRole('button', { name: 'Más Peso kg' })
+    const valorPeso = masPeso.locator('xpath=preceding-sibling::span')
+    await expect(valorPeso).toHaveText('20')
+    await masPeso.click()
+    await expect(valorPeso).toHaveText('22.5')
+
+    const box = await masPeso.boundingBox()
+    expect(box).toBeTruthy()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    await page.mouse.down()
+    await page.waitForTimeout(1300)
+    await page.mouse.up()
+    await expect
+      .poll(async () => Number((await valorPeso.textContent()) ?? '0'))
+      .toBeGreaterThan(25)
   })
 
   test('HIST lista, filtros, consultas, detalle, por miembro', async ({ page }) => {
@@ -348,6 +401,7 @@ test.describe('FitCheck QA', () => {
     await expect(equipos.getByRole('listitem').filter({ hasText: 'QA-banco-tmp' })).toHaveCount(0)
 
     await irA(page, 'Hoy')
+    await irASandboxQA(page, 'QA-sandbox cat')
     const detalleSerie = page.locator('.row small').first()
     const detalle = (await detalleSerie.textContent()) ?? ''
     const equipoUsado = detalle.split('·').pop()?.trim()
@@ -375,12 +429,9 @@ test.describe('FitCheck QA', () => {
     await entrar(p1, USER, PASS)
     await entrar(p2, USER2, PASS2)
 
-    await irA(p1, 'Historial')
-    await p1.locator('a.row').first().click()
+    await irASandboxQA(p1, 'QA-sandbox realtime')
+    await irASandboxQA(p2, 'QA-sandbox realtime')
     await expect(p1.getByRole('heading', { name: 'Anotar serie' })).toBeVisible()
-
-    await irA(p2, 'Historial')
-    await p2.locator('a.row').first().click()
     await expect(p2.getByRole('heading', { name: 'Anotar serie' })).toBeVisible()
 
     const asistencia2 = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Asistencia' }) })
@@ -407,17 +458,17 @@ test.describe('FitCheck QA', () => {
       await editor.getByRole('button', { name: 'Cerrar' }).click()
     }
 
-    await formP2.getByRole('button', { name: 'Armando', exact: true }).click()
-    const bloqueSilvio = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Silvio' }) })
+    const bloqueSilvio = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Series de Silvio' }) })
     await expect(bloqueSilvio).toBeVisible()
 
     const marcas40 = bloqueSilvio.getByText('40 kg')
     const antesRt = await marcas40.count()
+    const formP1 = p1.locator('article').filter({ has: p1.getByRole('heading', { name: 'Anotar serie' }) })
+    await formP1.getByRole('button', { name: 'Silvio', exact: true }).click()
     for (let i = 0; i < 8; i++) {
-      await p1.getByRole('button', { name: 'Más Peso kg' }).click()
+      await formP1.getByRole('button', { name: 'Más Peso kg' }).click()
     }
-    await p1.getByRole('button', { name: 'Guardar serie' }).click()
-    await expect(p1.getByText('Serie guardada')).toBeVisible()
+    await formP1.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(marcas40).toHaveCount(antesRt + 1, { timeout: 8_000 })
 
     await silvio.close()

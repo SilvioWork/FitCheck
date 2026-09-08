@@ -57,6 +57,8 @@ Prefijo **`QA-`** en notas de sesión, nombres de catálogo y usuarios invitados
 - Equipo de prueba: `QA-banco-tmp` (borrar al terminar si no se usó en series reales)
 - Usuario invitado de prueba: `qa_tmp` — **solo si das permiso**; cuenta de Auth real, no se borra sola
 
+**Sandbox de fechas:** sesiones, series, asistencia y notas `QA-*` **solo** se escriben en el **mes pasado, días 1 a 5**. El mes actual no se toca para meter datos de prueba. Leer hoy sí (default del date, **Ir a hoy**). Catálogo `QA-tmp-*` no es una sesión y puede crearse/borrarse.
+
 **No** se meten contraseñas en este archivo.
 
 ### 1.5 Entorno bajo prueba
@@ -127,7 +129,7 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| HOY-01 | Crear sesión de hoy | Si no hay sesión hoy: nota `QA-…` → **Crear sesión** (fecha = hoy en el selector) | Aparece asistencia + «Anotar serie»; creador **Presente**; se permanece en hoy | 6.1 | P 2026-09-07 e2e (sesión ya existía; se usó) |
+| HOY-01 | Crear sesión de hoy | Si no hay sesión hoy: nota `QA-…` → **Crear sesión** (fecha = hoy en el selector) | Aparece asistencia + «Anotar serie»; creador **Presente**; se permanece en hoy | 6.1 | Manual; e2e no escribe el mes actual (sandbox 1–5 mes pasado) |
 | HOY-02 | Asistencia de cualquiera | Botones **Sí** / **No** en cada fila | Todas las filas tienen Sí/No; estado Presente / Ausente / Sin marcar | 6.1, 7 | P 2026-09-07 e2e (3 miembros: Silvio, Armando, Pia) |
 | HOY-03 | Guardar serie | Ejercicio + equipo + reps/peso (steppers) + chips opcionales → **Guardar serie** | Feedback «Serie guardada»; lista «Series de {nombre}»; `numero_serie` 1, 2, 3… | 6.1 | P 2026-09-07 e2e |
 | HOY-04 | Chips de nota | Marcar varias (p. ej. «Con ayuda» + «Rest-pause + dropset») al guardar | Se persisten combinables; unidas con ` · ` en orden canónico; «Rest-pause + dropset» no activa «Rest-pause» | 6.1 | P 2026-09-07 e2e |
@@ -138,9 +140,10 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-07 e2e |
 | HOY-10 | Serie de otro miembro | Selector → otro compañero → guardar serie | Aparece en «Series de {ese}»; no en las del logueado; ese miembro queda **Presente** | 6.1 | P 2026-09-07 e2e (Armando) |
 | HOY-11 | Default hoy | Abrir Hoy | El date input vale la fecha local; `h1` **Hoy**; si hay sesión hoy, se ve el registro | 6.1 | P 2026-09-08 e2e |
-| HOY-12 | Día vacío pasado | Elegir un día sin sesión (p. ej. hace 14–40 días) → nota `QA-…` → **Crear sesión** | Asistencia + «Anotar serie»; el selector **no** vuelve a hoy solo | 6.1 | P 2026-09-08 e2e |
-| HOY-13 | Día con sesión | Cambiar a una fecha que ya tiene sesión | Muestra asistencia/series de ese día; se puede guardar otra serie | 6.1 | P 2026-09-08 e2e |
+| HOY-12 | Día vacío pasado | Elegir un día vacío en **días 1–5 del mes pasado** → nota `QA-…` → **Crear sesión** | Asistencia + «Anotar serie»; el selector **no** vuelve a hoy solo | 6.1 | P 2026-09-08 e2e |
+| HOY-13 | Día con sesión | Cambiar a una fecha que ya tiene sesión (sandbox) | Muestra asistencia/series de ese día; se puede guardar otra serie | 6.1 | P 2026-09-08 e2e |
 | HOY-14 | Día siguiente / Ir a hoy | **Día siguiente** (o anterior); luego **Ir a hoy** | Cambia la fecha del selector; Ir a hoy restaura hoy y el `h1` **Hoy** | 6.1 | P 2026-09-08 e2e |
+| HOY-15 | Stepper hold-to-repeat | En sandbox: tap **Más Peso kg** = +2.5; mantener ≥ 1 s | Tras 1 s el peso sube **más de un paso** a ritmo constante; soltar detiene | 6.3 | P 2026-09-08 e2e |
 
 ### 4.3 Historial y consultas (`HIST`)
 
@@ -229,6 +232,7 @@ Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
 | 2026-09-05 | local `5174` | QA (Playwright, 8/8) | AUTH-01..06, AUTH-08, HOY-01..07, HOY-09, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Batería `e2e/qa.spec.ts` contra Chromium viewport 390×844. Confirm email off. No se tocaron contraseñas ni se invitó `qa_tmp`. HIST-05 bloqueado (2 sesiones). HIST-02 y CAT-04 no ejecutados. PWA-* pendiente de iPhone. Quedan series de Silvio en la sesión de hoy (Sentadilla / Barra, incl. 40 kg de RT). Equipo `QA-banco-tmp` se creó y se borró. |
 | 2026-09-07 | local `5174` + Supabase vivo | QA (Playwright, 8/8) | AUTH-01..06, AUTH-08, HOY-01..07, HOY-09..10, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.2: escritura de grupo + 9 chips. Chromium viewport 390×844. RLS vivo `asistencia grupo *` / `series grupo *`. 3 miembros (Silvio, Armando, Pia). HOY-10: serie de Armando anotada por Silvio. Chips «Con ayuda · Rest-pause + dropset» sin falso positivo de Rest-pause. CAT-03 con «Hombro» (hay varios grupos Pecho*). HIST-05 no cubierto. PWA-* pendiente. |
 | 2026-09-08 | local `5174` + Supabase vivo | QA (Playwright, 9/9) | AUTH-01..06, AUTH-08, HOY-01..14, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.4: selector de fecha en Hoy. Chromium viewport 390×844. HOY-08 y HOY-11..14: default hoy, alta en día vacío, continuar día con sesión, Ir a hoy. El locator de series ya no usa `.last()` de toda la lista (hoy hay varios ejercicios). HIST-05 no cubierto. PWA-* pendiente. |
+| 2026-09-08 | local `5174` + Supabase vivo | QA (Playwright, 10/10) | AUTH-01..06, AUTH-08, HOY-02..07, HOY-10..15, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Hold-to-repeat stepper (HOY-15). Datos QA solo en mes pasado días 1–5 (`2026-08-01`…`05`); el mes actual no se escribió. Chromium 390×844. HOY-01 no crea sesión de hoy. |
 
 ---
 
@@ -247,7 +251,7 @@ Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
 
 Si se creó basura `QA-*`:
 
-1. Borrar series de prueba. Tras la ronda e2e del 2026-09-05 quedan series de Silvio en la sesión de hoy; se pueden borrar desde Hoy → Series de {nombre}.
+1. Borrar series de prueba **en el sandbox** (mes pasado, días 1–5). No se escriben series en el mes actual.
 2. Borrar equipos/ejercicios/grupos `QA-*` no usados (`QA-banco-tmp` ya se quitó).
 3. Sesiones `QA-*`: dejarlas o borrarlas a mano en SQL **solo** con permiso (puede haber asistencia/series).
 4. Usuario `qa_tmp`: no borrar Auth sin acuerdo; queda cuenta real.
@@ -256,7 +260,7 @@ Si se creó basura `QA-*`:
 
 ## 9. Cómo sigue el QA
 
-1. Ronda e2e local v1.4 hecha (2026-09-08): selector de fecha en Hoy (HOY-08, HOY-11..14). **Retest AUTH-03, AJU-01, TEM-01, CAT-01..02, CAT-05..06** y cubrir CAT-07..10. Pendiente además: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
+1. Ronda e2e local v1.4 + hold-to-repeat stepper (HOY-15). Datos QA solo en días 1–5 del mes pasado. Pendiente: HIST-02, CAT-04, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
 2. Reejecutar `npm run test:e2e` tras cambios de UI o auth.
 3. Cada fail nuevo → BUG en sec. 7 y, si aplica, arreglo de código + retest del ID.
 
