@@ -30,6 +30,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   const historialPagina = ref(0)
   const historialFiltros = ref({ desde: '', hasta: '', grupoId: '' })
   const consultaSesiones = ref<Sesion[]>([])
+  const fechaActiva = ref(todayISO())
   const error = ref('')
   const listo = ref(false)
   const enVivo = ref(false)
@@ -43,11 +44,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     () => miembros.value.find((m) => m.id === miembroActivoId.value) ?? null,
   )
 
-  const sesionDeHoy = computed(() => {
-    const today = todayISO()
+  const sesionDeFecha = computed(() => {
+    const fecha = fechaActiva.value
     return (
       sesiones.value
-        .filter((s) => s.fecha === today)
+        .filter((s) => s.fecha === fecha)
         .sort((a, b) => b.creado_en.localeCompare(a.creado_en))[0] ?? null
     )
   })
@@ -187,12 +188,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     return (s.data as Sesion | null) ?? null
   }
 
-  async function cargarHoy() {
-    const today = todayISO()
+  async function cargarSesionPorFecha(fecha: string) {
     const { data, error: err } = await supabase
       .from('sesiones')
       .select('*')
-      .eq('fecha', today)
+      .eq('fecha', fecha)
       .order('creado_en', { ascending: false })
       .limit(1)
     if (err) throw err
@@ -200,6 +200,17 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     if (!row) return
     mergeSesion(row)
     await cargarSesion(row.id)
+  }
+
+  async function seleccionarFecha(fecha: string) {
+    const next = String(fecha).slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(next)) return
+    fechaActiva.value = next
+    try {
+      await cargarSesionPorFecha(next)
+    } catch (err) {
+      fail(err instanceof Error ? err.message : 'No se pudo cargar la sesión')
+    }
   }
 
   async function listarSesiones(pagina = historialPagina.value) {
@@ -283,7 +294,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       ...series.value.map((s) => s.sesion_id),
       ...sesiones.value.map((s) => s.id),
     ])
-    await cargarHoy()
+    await cargarSesionPorFecha(fechaActiva.value)
     await Promise.all([...ids].map((id) => cargarSesion(id)))
     if (historialSesiones.value.length || historialFiltros.value.grupoId || historialFiltros.value.desde) {
       await listarSesiones()
@@ -340,6 +351,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     historialPagina.value = 0
     historialFiltros.value = { desde: '', hasta: '', grupoId: '' }
     consultaSesiones.value = []
+    fechaActiva.value = todayISO()
     error.value = ''
     listo.value = false
   }
@@ -355,7 +367,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       await ensureMiembro()
       await seedCatalogIfEmpty()
       await refreshBase()
-      await cargarHoy()
+      await cargarSesionPorFecha(fechaActiva.value)
       listenRealtime()
     } catch (err) {
       fail(err instanceof Error ? err.message : 'No se pudo cargar FitCheck')
@@ -520,16 +532,18 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   async function crearSesion(fecha: string, nota: string) {
     const mid = miembroActivoId.value
     if (!mid) return
+    const fechaNorm = String(fecha || fechaActiva.value).slice(0, 10)
     const { data, error: err } = await supabase
       .from('sesiones')
-      .insert({ fecha, nota: nota.trim() || null })
+      .insert({ fecha: fechaNorm, nota: nota.trim() || null })
       .select()
       .single()
     if (err || !data) {
       fail(err?.message ?? 'No se pudo crear la sesión')
       return
     }
-    sesiones.value.push(data as Sesion)
+    mergeSesion(data as Sesion)
+    if (fechaNorm !== fechaActiva.value) fechaActiva.value = fechaNorm
     const { data: asis, error: aErr } = await supabase
       .from('asistencia')
       .insert({ sesion_id: data.id, miembro_id: mid, presente: true })
@@ -802,9 +816,10 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     limpiarError,
     listo,
     enVivo,
+    fechaActiva,
     miembroActivoId,
     miembroActivo,
-    sesionDeHoy,
+    sesionDeFecha,
     sesionesOrdenadas,
     grupoDeEjercicio,
     load,
@@ -812,6 +827,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     refresh,
     listarSesiones,
     cargarSesion,
+    cargarSesionPorFecha,
+    seleccionarFecha,
     cargarConsultaSesiones,
     fetchSeriesDeMiembro,
     crearSesion,

@@ -1,23 +1,48 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, ref } from 'vue'
 import AsistenciaList from '@/components/AsistenciaList.vue'
 import RegistroSeries from '@/components/RegistroSeries.vue'
-import { formatFecha, todayISO } from '@/lib/ids'
+import { addDaysISO, formatFecha, todayISO } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
 
 const gym = useFitcheckStore()
+const nota = ref('')
+const cambiando = ref(false)
 
-const alta = reactive({
-  fecha: todayISO(),
-  nota: '',
-})
+const sesion = computed(() => gym.sesionDeFecha)
+const esHoy = computed(() => gym.fechaActiva === todayISO())
+const titulo = computed(() => (esHoy.value ? 'Hoy' : formatFecha(gym.fechaActiva)))
 
-const sesion = computed(() => gym.sesionDeHoy)
+async function cambiarFecha(fecha: string) {
+  if (!fecha || fecha === gym.fechaActiva || cambiando.value) return
+  cambiando.value = true
+  try {
+    await gym.seleccionarFecha(fecha)
+  } finally {
+    cambiando.value = false
+  }
+}
+
+function onFechaInput(event: Event) {
+  const value = (event.target as HTMLInputElement).value
+  void cambiarFecha(value)
+}
+
+function diaAnterior() {
+  void cambiarFecha(addDaysISO(gym.fechaActiva, -1))
+}
+
+function diaSiguiente() {
+  void cambiarFecha(addDaysISO(gym.fechaActiva, 1))
+}
+
+function irAHoy() {
+  void cambiarFecha(todayISO())
+}
 
 async function crearSesion() {
-  await gym.crearSesion(alta.fecha, alta.nota)
-  alta.nota = ''
-  alta.fecha = todayISO()
+  await gym.crearSesion(gym.fechaActiva, nota.value)
+  nota.value = ''
 }
 </script>
 
@@ -25,27 +50,57 @@ async function crearSesion() {
   <section class="page">
     <header class="header">
       <p class="eyebrow">Sesión</p>
-      <h1>Hoy</h1>
+      <h1>{{ titulo }}</h1>
       <p class="lede">
         {{ gym.miembroActivo ? `Entraste como ${gym.miembroActivo.nombre}. Puedes anotar a cualquiera.` : 'Cargando perfil…' }}
         <span v-if="gym.enVivo"> · En vivo</span>
       </p>
     </header>
 
-    <article v-if="!gym.listo" class="card">
-      <p>Sincronizando con Supabase…</p>
+    <div class="fecha-bar" role="group" aria-label="Fecha de la sesión">
+      <button
+        class="fecha-step"
+        type="button"
+        aria-label="Día anterior"
+        :disabled="cambiando"
+        @click="diaAnterior"
+      >
+        ‹
+      </button>
+      <label class="fecha-field">
+        Fecha
+        <input
+          :value="gym.fechaActiva"
+          type="date"
+          :disabled="cambiando"
+          @change="onFechaInput"
+          @input="onFechaInput"
+        />
+      </label>
+      <button
+        class="fecha-step"
+        type="button"
+        aria-label="Día siguiente"
+        :disabled="cambiando"
+        @click="diaSiguiente"
+      >
+        ›
+      </button>
+    </div>
+    <button v-if="!esHoy" class="ghost" type="button" :disabled="cambiando" @click="irAHoy">
+      Ir a hoy
+    </button>
+
+    <article v-if="!gym.listo || cambiando" class="card">
+      <p>{{ gym.listo ? 'Cargando sesión…' : 'Sincronizando con Supabase…' }}</p>
     </article>
 
     <template v-else-if="!sesion">
       <article class="card">
         <h2>Nueva sesión</h2>
         <label>
-          Fecha
-          <input v-model="alta.fecha" type="date" />
-        </label>
-        <label>
           Nota (opcional)
-          <input v-model="alta.nota" type="text" maxlength="80" placeholder="pierna + hombro" />
+          <input v-model="nota" type="text" maxlength="80" placeholder="pierna + hombro" />
         </label>
         <button class="primary" type="button" @click="crearSesion">Crear sesión</button>
       </article>
@@ -88,6 +143,48 @@ async function crearSesion() {
   line-height: 1.45;
 }
 
+.fecha-bar {
+  display: grid;
+  grid-template-columns: var(--tap) 1fr var(--tap);
+  gap: 8px;
+  align-items: end;
+}
+
+.fecha-step {
+  min-height: var(--tap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.fecha-step:disabled {
+  opacity: 0.45;
+}
+
+.fecha-field {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ghost {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.ghost:disabled {
+  opacity: 0.45;
+}
+
 .card {
   padding: 16px;
   border: 1px solid var(--border);
@@ -112,6 +209,7 @@ label {
 
 input {
   min-height: var(--tap);
+  width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg);

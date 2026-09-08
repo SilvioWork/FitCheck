@@ -1,7 +1,7 @@
 # FitCheck — Spec-Status
 
 **Tipo:** estado de desarrollo (no sustituye a `SPEC.md`)
-**Fecha:** 2026-09-07
+**Fecha:** 2026-09-08
 **Repo:** [github.com/SilvioWork/FitCheck](https://github.com/SilvioWork/FitCheck)
 **Carpeta:** `FitCheck/` (producto **FitCheck**; la Spec original vive aquí como `SPEC.md`)
 
@@ -17,10 +17,10 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.3) |
+| Spec y decisiones de producto | Hecho (v1.4) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
-| Flujo de sesión (alta, asistencia de grupo, series de cualquiera) | Hecho |
+| Flujo de sesión (alta en cualquier fecha, asistencia de grupo, series de cualquiera) | Hecho |
 | Chips de marcas (ayuda, fallo y técnicas) | Hecho |
 | Supabase: esquema, cliente, usuario/contraseña | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
 | Realtime | Hecho |
@@ -41,7 +41,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.3 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, PWA).
+- Spec v1.4 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -69,7 +69,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Entrar** — usuario y contraseña, o crear el grupo si está vacío. Sin nav inferior.
 
-**Hoy** — crear sesión (fecha + nota), asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie, lista de series de ese miembro, edición/borrado.
+**Hoy** — workspace por fecha (hoy por defecto; anterior / date / siguiente e Ir a hoy). Sin sesión ese día: alta con nota. Con sesión: asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie, lista de series de ese miembro, edición/borrado. Tras crear se permanece en ese día.
 
 **Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
 
@@ -88,6 +88,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Catálogo sin nombres duplicados.
 - Catálogo en Ajustes: listas filtrables de filas (no chips wrapping); filtro por nombre; scroll interno (`--catalog-list-h`); foco del filtro con anillo inset `--accent`. Los chips de marcas de serie no cambian.
 - Ajustes agrupado en pestañas Catálogo / Users (sin cambio de reglas).
+- Hoy anclado a una fecha elegible (pasado, hoy o futuro); si ese día ya tiene sesión, se continúa; si no, se crea. No es un planificador de rutinas.
 
 ---
 

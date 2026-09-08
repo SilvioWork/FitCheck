@@ -12,7 +12,7 @@ test.beforeAll(() => {
 })
 
 async function esperarHoy(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Hoy' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText('Sincronizando con Supabase')).toHaveCount(0, { timeout: 20_000 })
   await expect(page.getByText(/Entraste como /)).toBeVisible()
   await expect(page.getByText(/Puedes anotar a cualquiera/)).toBeVisible()
@@ -29,7 +29,47 @@ async function entrar(page: Page, usuario: string, password: string) {
 
 async function irA(page: Page, destino: 'Hoy' | 'Historial' | 'Ajustes') {
   await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: destino }).click()
+  if (destino === 'Hoy') {
+    await expect(page.getByLabel('Fecha', { exact: true })).toBeVisible()
+    await expect(page.getByText(/Puedes anotar a cualquiera/)).toBeVisible()
+    return
+  }
   await expect(page.getByRole('heading', { name: destino })).toBeVisible()
+}
+
+function todayISO(): string {
+  const d = new Date()
+  const z = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`
+}
+
+function addDaysISO(isoDate: string, n: number): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
+  d.setDate(d.getDate() + n)
+  const z = (x: number) => String(x).padStart(2, '0')
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`
+}
+
+async function esperarFechaCargada(page: Page) {
+  await expect(page.getByText('Cargando sesión…')).toHaveCount(0)
+  await expect(page.getByLabel('Fecha', { exact: true })).toBeEnabled()
+}
+
+async function irADiaVacio(page: Page, fromISO: string): Promise<string> {
+  const fecha = page.getByLabel('Fecha', { exact: true })
+  const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
+  for (let i = 14; i <= 40; i++) {
+    const d = addDaysISO(fromISO, -i)
+    await expect(fecha).toBeEnabled()
+    await fecha.fill(d)
+    await fecha.dispatchEvent('change')
+    await expect(fecha).toHaveValue(d)
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
+    await esperarFechaCargada(page)
+    if (await nueva.isVisible()) return d
+  }
+  throw new Error('No se encontró un día vacío para HOY-12')
 }
 
 async function prepararPagina(page: Page) {
@@ -73,7 +113,7 @@ test.describe('FitCheck QA', () => {
     await page.getByRole('button', { name: 'Entrar' }).click()
     await expect(page.locator('.err')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Hoy' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
   })
 
   test('AUTH-01 login válido y AUTH-05 / AUTH-08 / AUTH-03', async ({ page }) => {
@@ -121,30 +161,36 @@ test.describe('FitCheck QA', () => {
       .locator('article')
       .filter({ has: page.getByRole('heading', { name: /Series de Silvio/ }) })
       .locator('button.row')
+    const filasSentadilla = filas.filter({ hasText: 'Sentadilla' })
     const antes = await filas.count()
+    const antesSentadilla = await filasSentadilla.count()
 
     await formSerie.getByRole('button', { name: 'Con ayuda', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Rest-pause + dropset', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(page.getByText('Serie guardada')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
-    await expect(filas.last().getByText('Con ayuda · Rest-pause + dropset')).toBeVisible()
-    await expect(filas.last().getByText('Con ayuda · Rest-pause · Rest-pause + dropset')).toHaveCount(0)
+    const conChips = filasSentadilla.filter({ hasText: 'Con ayuda · Rest-pause + dropset' })
+    await expect(conChips.last()).toBeVisible()
+    await expect(filasSentadilla.filter({ hasText: 'Con ayuda · Rest-pause · Rest-pause + dropset' })).toHaveCount(0)
     await expect(filas).toHaveCount(antes + 1)
+    await expect(filasSentadilla).toHaveCount(antesSentadilla + 1)
 
     await page.getByRole('button', { name: 'Repetir última' }).click()
     await expect(page.getByText('Serie repetida')).toBeVisible()
     await expect(filas).toHaveCount(antes + 2)
-    await expect(filas.last().getByText('Con ayuda')).toHaveCount(0)
+    await expect(filasSentadilla).toHaveCount(antesSentadilla + 2)
+    const repetida = filasSentadilla.last()
+    await expect(repetida.getByText('Con ayuda')).toHaveCount(0)
 
-    await filas.last().click()
+    await repetida.click()
     const editor = page.getByRole('dialog', { name: 'Editar serie' })
     await expect(editor.getByRole('heading', { name: 'Editar serie' })).toBeVisible()
     await editor.getByRole('button', { name: 'Más Reps' }).click()
     await editor.getByRole('button', { name: 'Guardar cambios' }).click()
     await expect(page.getByText('Serie actualizada')).toBeVisible()
 
-    await filas.last().click()
+    await repetida.click()
     await editor.getByRole('button', { name: 'Borrar' }).click()
     await editor.getByRole('button', { name: 'Confirmar borrado' }).click()
     await expect(page.getByText('Serie borrada')).toBeVisible()
@@ -159,13 +205,57 @@ test.describe('FitCheck QA', () => {
       .filter({ has: page.getByRole('heading', { name: 'Series de Armando' }) })
       .locator('button.row')
     await expect(page.getByRole('heading', { name: 'Series de Armando' })).toBeVisible()
-    await expect(filasArmando.last().getByText('Myo-reps')).toBeVisible()
+    await expect(filasArmando.filter({ hasText: 'Myo-reps' }).last()).toBeVisible()
     const armandoAsis = asistencia.locator('li').filter({ hasText: 'Armando' })
     await expect(armandoAsis.getByText('Presente')).toBeVisible()
 
     await formSerie.getByRole('button', { name: 'Silvio', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
-    await expect(filas.last().getByText('Myo-reps')).toHaveCount(0)
+    await expect(filas.filter({ hasText: 'Myo-reps' })).toHaveCount(0)
+  })
+
+  test('HOY-11..14 fecha: default, vacío, existente, navegación', async ({ page }) => {
+    await entrar(page, USER, PASS)
+
+    const fecha = page.getByLabel('Fecha', { exact: true })
+    const hoy = todayISO()
+    await expect(fecha).toHaveValue(hoy)
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
+
+    const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
+    const anotar = page.getByRole('heading', { name: 'Anotar serie' })
+    if (await nueva.isVisible().catch(() => false)) {
+      await page.getByLabel('Nota (opcional)').fill('QA-2026-09-08 hoy')
+      await page.getByRole('button', { name: 'Crear sesión' }).click()
+    }
+    await expect(anotar).toBeVisible()
+
+    const vacio = await irADiaVacio(page, hoy)
+    await expect(nueva).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Ir a hoy' })).toBeVisible()
+    await page.getByLabel('Nota (opcional)').fill('QA-2026-09-08 historico')
+    await page.getByRole('button', { name: 'Crear sesión' }).click()
+    await expect(anotar).toBeVisible()
+    await expect(fecha).toHaveValue(vacio)
+
+    await page.getByRole('button', { name: 'Día siguiente' }).click()
+    await expect(fecha).toHaveValue(addDaysISO(vacio, 1))
+    await esperarFechaCargada(page)
+    await fecha.fill(vacio)
+    await fecha.dispatchEvent('change')
+    await expect(fecha).toHaveValue(vacio)
+    await esperarFechaCargada(page)
+    await expect(anotar).toBeVisible()
+    await expect(page.getByText('QA-2026-09-08 historico')).toBeVisible()
+    await page.getByRole('button', { name: 'Guardar serie' }).click()
+    await expect(page.getByText('Serie guardada')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Ir a hoy' }).click()
+    await expect(fecha).toHaveValue(hoy)
+    await esperarFechaCargada(page)
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ir a hoy' })).toHaveCount(0)
   })
 
   test('HIST lista, filtros, consultas, detalle, por miembro', async ({ page }) => {
