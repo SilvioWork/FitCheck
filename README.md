@@ -20,7 +20,7 @@ En Vercel → Project → Settings → Environment Variables, las mismas que en 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-Tras `git push` a `main`, si el repo está conectado a Vercel, se despliega solo. Si no: `npx vercel deploy --prod` desde esta carpeta (sesión `silviowork89-4758`).
+Tras `git push` a `main`, Vercel despliega solo (proyecto **fitcheck** enlazado a `SilvioWork/FitCheck`). `npx vercel deploy --prod` es opcional, solo si hay que publicar sin GitHub.
 
 **URL de producción (iPhone):** https://fitcheck-silviowork89-4758.vercel.app
 

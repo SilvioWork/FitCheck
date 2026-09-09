@@ -109,7 +109,8 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Producción: **https://fitcheck-silviowork89-4758.vercel.app** (SSO de Vercel desactivado para poder instalar la PWA).
 - Alias antiguo, mismo deploy: `https://temporary-nimble-basin-ycmrd13.vercel.app`
 - `fitcheck.vercel.app` está ocupado por otro producto ajeno; no usarlo.
-- Local enlazado (`.vercel` gitignored). Auto-deploy desde GitHub: falta Login Connection de GitHub en Vercel; mientras tanto `npx vercel deploy --prod`.
+- Local enlazado (`.vercel` gitignored). **Auto-deploy desde GitHub está conectado:** repo [`SilvioWork/FitCheck`](https://github.com/SilvioWork/FitCheck), rama de producción `main`. Un `git push` a `main` dispara el build (fuente `git`, no CLI). Alias de rama: `https://fitcheck-git-main-silviowork89-4758.vercel.app`. `npx vercel deploy --prod` solo hace falta si se quiere publicar sin pasar por GitHub.
+- Comprobado 2026-09-09: producción **Ready** con commit `d90c133` (acordeón v1.5 + registro QA), `githubDeployment=1`.
 - Variables de build: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 
 ### 3.3 Dashboard Auth (manual, una vez)
@@ -128,7 +129,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 2. Entrar con usuario/contraseña y **cambiar la contraseña temporal**.
 3. URL HTTPS estable — **https://fitcheck-silviowork89-4758.vercel.app**
 4. En el iPhone: Safari → esa URL → Añadir a pantalla de inicio.
-5. Opcional: en Vercel, conectar GitHub (Login Connection) para desplegar con cada `git push`.
+5. Auto-deploy GitHub → Vercel — **hecho** (push a `main` publica; ver sec. 3.2).
 
 ### 4.2 Producto (Spec / roadmap)
 
