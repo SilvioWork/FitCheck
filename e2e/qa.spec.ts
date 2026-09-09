@@ -439,9 +439,12 @@ test.describe('FitCheck QA', () => {
 
     await irA(page, 'Hoy')
     await irASandboxQA(page, 'QA-sandbox cat')
-    const detalleSerie = page.locator('.row small').first()
-    const detalle = (await detalleSerie.textContent()) ?? ''
-    const equipoUsado = detalle.split('·').pop()?.trim()
+    const gruposSerie = page.getByRole('region', { name: /^Series de / })
+    if ((await gruposSerie.count()) === 0) {
+      test.skip(true, 'CAT-06: no hay serie propia para comprobar borrado en uso')
+    }
+    const ariaGrupo = (await gruposSerie.first().getAttribute('aria-label')) ?? ''
+    const equipoUsado = ariaGrupo.replace(/^Series de /, '').split(' · ').pop()?.trim()
     test.skip(!equipoUsado, 'CAT-06: no hay serie propia para comprobar borrado en uso')
     await irA(page, 'Ajustes')
     const buscarUsado = page.getByPlaceholder('Buscar equipo')
