@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import EjercicioAcordeon from '@/components/EjercicioAcordeon.vue'
 import NotaChips from '@/components/NotaChips.vue'
+import SerieSetRow from '@/components/SerieSetRow.vue'
 import StepperControl from '@/components/StepperControl.vue'
 import { parseNotaChips, serializeNotaChips } from '@/lib/notaChips'
 import { useFitcheckStore } from '@/stores/fitcheck'
@@ -38,8 +40,32 @@ const feedback = ref('')
 const editando = ref<Serie | null>(null)
 const editChips = ref<string[]>([])
 const confirmarBorrado = ref(false)
+const cerradoPorClave = ref<Record<string, boolean>>({})
 
-const deElegido = computed(() => gym.seriesDe(props.sesionId, elegidoId.value || undefined))
+const grupos = computed(() =>
+  gym.seriesAgrupadasPorEjercicioEquipo(props.sesionId, elegidoId.value || undefined),
+)
+
+function claveGrupo(ejercicioId: string, equipoId: string) {
+  return `${ejercicioId}:${equipoId}`
+}
+
+function estaAbierto(key: string) {
+  return cerradoPorClave.value[key] !== true
+}
+
+function toggleGrupo(key: string) {
+  cerradoPorClave.value = { ...cerradoPorClave.value, [key]: estaAbierto(key) }
+}
+
+function asegurarAbierto(ejercicioId: string, equipoId: string) {
+  const key = claveGrupo(ejercicioId, equipoId)
+  if (cerradoPorClave.value[key]) {
+    const next = { ...cerradoPorClave.value }
+    delete next[key]
+    cerradoPorClave.value = next
+  }
+}
 
 function nombreEjercicio(id: string) {
   return gym.ejercicios.find((e) => e.id === id)?.nombre ?? id
@@ -72,27 +98,27 @@ async function guardar() {
     nota: serializeNotaChips(form.chips),
   })
   form.chips = []
+  asegurarAbierto(form.ejercicioId, form.equipoId)
   flash('Serie guardada')
 }
 
-async function repetir() {
-  const last = gym.ultimaSerieDe(props.sesionId, elegidoId.value)
-  if (!last) return
+async function duplicar(serie: Serie) {
   await gym.guardarSerie({
     sesionId: props.sesionId,
     miembroId: elegidoId.value,
-    ejercicioId: last.ejercicio_id,
-    equipoId: last.equipo_id,
-    repeticiones: last.repeticiones,
-    pesoKg: last.peso_kg,
+    ejercicioId: serie.ejercicio_id,
+    equipoId: serie.equipo_id,
+    repeticiones: serie.repeticiones,
+    pesoKg: serie.peso_kg,
     nota: '',
   })
-  form.ejercicioId = last.ejercicio_id
-  form.equipoId = last.equipo_id
-  form.repeticiones = last.repeticiones
-  form.pesoKg = last.peso_kg
+  form.ejercicioId = serie.ejercicio_id
+  form.equipoId = serie.equipo_id
+  form.repeticiones = serie.repeticiones
+  form.pesoKg = serie.peso_kg
   form.chips = []
-  flash('Serie repetida')
+  asegurarAbierto(serie.ejercicio_id, serie.equipo_id)
+  flash('Serie duplicada')
 }
 
 function abrirEdicion(serie: Serie) {
@@ -176,30 +202,29 @@ async function borrar() {
     </div>
 
     <button class="primary" type="button" @click="guardar">Guardar serie</button>
-    <button
-      class="ghost"
-      type="button"
-      :disabled="!gym.ultimaSerieDe(sesionId, elegidoId)"
-      @click="repetir"
-    >
-      Repetir última
-    </button>
   </article>
 
-  <article v-if="deElegido.length" class="card">
+  <article v-if="grupos.length" class="card">
     <h2>Series de {{ elegido?.nombre ?? 'este miembro' }}</h2>
-    <ul>
-      <li v-for="serie in deElegido" :key="serie.id">
-        <button type="button" class="row" @click="abrirEdicion(serie)">
-          <span class="tabular">{{ serie.numero_serie }}</span>
-          <span>
-            <strong>{{ nombreEjercicio(serie.ejercicio_id) }}</strong>
-            <small>{{ serie.repeticiones }} × {{ serie.peso_kg }} kg · {{ nombreEquipo(serie.equipo_id) }}</small>
-            <small v-if="serie.nota">{{ serie.nota }}</small>
-          </span>
-        </button>
-      </li>
-    </ul>
+    <div class="grupos">
+      <EjercicioAcordeon
+        v-for="grupo in grupos"
+        :key="grupo.key"
+        :abierto="estaAbierto(grupo.key)"
+        :titulo="nombreEjercicio(grupo.ejercicioId)"
+        :subtitulo="nombreEquipo(grupo.equipoId)"
+        :recuento="grupo.series.length"
+        @toggle="toggleGrupo(grupo.key)"
+      >
+        <SerieSetRow
+          v-for="serie in grupo.series"
+          :key="serie.id"
+          :serie="serie"
+          @editar="abrirEdicion"
+          @duplicar="duplicar"
+        />
+      </EjercicioAcordeon>
+    </div>
   </article>
 
   <div v-if="editando" class="overlay" @click.self="editando = null">
@@ -328,46 +353,14 @@ input {
   opacity: 0.45;
 }
 
+.grupos {
+  display: grid;
+  gap: 10px;
+}
+
 .danger {
   background: transparent;
   color: var(--danger);
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.row {
-  width: 100%;
-  min-height: var(--tap);
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 8px;
-  text-align: left;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: inherit;
-  padding: 8px 10px;
-}
-
-.row span:first-child {
-  font-weight: 800;
-  color: var(--accent);
-}
-
-.row strong,
-.row small {
-  display: block;
-}
-
-.row small {
-  color: var(--text-muted);
-  font-weight: 500;
 }
 
 .overlay {

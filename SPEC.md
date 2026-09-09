@@ -1,6 +1,6 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.4 — fuente de la verdad
+**Estado:** Borrador v1.5 — fuente de la verdad
 **Última actualización:** 2026-09-08
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
@@ -165,7 +165,7 @@ Restricción: única fila por combinación (sesion_id, miembro_id).
 | miembro_id | uuid, FK → MIEMBROS | |
 | ejercicio_id | uuid, FK → EJERCICIOS | |
 | equipo_id | uuid, FK → EQUIPOS | |
-| numero_serie | int | orden automático dentro del ejercicio para ese miembro en esa sesión (serie 1, 2, 3…); no se edita a mano |
+| numero_serie | int | orden automático dentro del ejercicio **y** equipo para ese miembro en esa sesión (serie 1, 2, 3…); no se edita a mano |
 | repeticiones | int | |
 | peso_kg | float | |
 | nota | string, opcional | chips de la serie, combinables, unidas con " · " en este orden canónico: "Con ayuda", "Fallo muscular", "Rest-pause", "Myo-reps", "Dropset / serie descendente", "Doble dropset", "Repeticiones forzadas", "Repeticiones negativas", "Rest-pause + dropset" |
@@ -241,8 +241,8 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 1. En Hoy, la fecha por defecto es hoy. Se cambia con el selector (día anterior / fecha / día siguiente; **Ir a hoy** si no es el día actual). Si ese día no tiene sesión, se crea (nota opcional); quien la crea queda marcado presente. Si ya hay sesión, se continúa anotando. Tras crear, se permanece en ese día.
 2. Asistencia **de grupo**: en cada fila hay Sí/No. Cualquier integrante puede marcar presente o ausente a cualquier compañero (una vez al empezar, no por ejercicio). Quien aún no tiene fila aparece como «sin marcar», distinto de ausente.
 3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → ejercicio (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes (tap o mantener pulsado) → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después.
-4. Atajo "repetir última serie" con un tap para series consecutivas iguales **de ese miembro** (la nota no se copia por defecto; se deja vacía).
-5. Una serie ya guardada se puede editar (reps, peso, equipo, nota) o borrar, **aunque la haya anotado otro**. El `numero_serie` es automático (1, 2, 3… por ejercicio y miembro en esa sesión): no se edita a mano. Tras borrar, se reordenan para que no queden huecos.
+4. Las series guardadas se listan agrupadas por **ejercicio + equipo** (p. ej. Press banca con máquina es un grupo distinto de Press banca con barra). Cada grupo es un acordeón: cabecera con el ejercicio, el equipo y el recuento; al abrir, cada SET con steppers de reps/peso y **Duplicar**. Duplicar copia ejercicio, equipo, reps y peso de esa serie **de ese miembro**; la nota no se copia (queda vacía). No hay botón global «Repetir última».
+5. Una serie ya guardada se puede editar (reps y peso en el SET, o equipo/nota en la hoja) o borrar, **aunque la haya anotado otro**. El `numero_serie` es automático (1, 2, 3… por ejercicio, equipo y miembro en esa sesión): no se edita a mano. Tras borrar o al cambiar de grupo, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
 
 ### 6.2 Flujo de consulta
@@ -257,7 +257,7 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 Contexto de uso: iPhone en el gimnasio, entre series, a menudo con una sola mano y poca atención. La interfaz prioriza **velocidad, claridad y toques grandes** por encima de densidad de información.
 
 - **Mobile-first iPhone:** layouts de una columna, safe areas (notch / Dynamic Island / home indicator), tipografía legible a ~40 cm, contraste WCAG AA en claro y en oscuro.
-- **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, repetir última serie, presente/ausente, día anterior/siguiente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos. El stepper de reps/peso responde a un tap (un paso) y a **mantener pulsado**: tras **1 s** el valor avanza a ritmo constante hasta soltar.
+- **Toques cómodos:** controles primarios (guardar, +/− de reps y peso, duplicar un SET, presente/ausente, día anterior/siguiente) con área táctil mínima de **44×44 pt**. Nada crítico depende de gestos ocultos. El stepper de reps/peso responde a un tap (un paso) y a **mantener pulsado**: tras **1 s** el valor avanza a ritmo constante hasta soltar.
 - **Jerarquía obvia:** en la pantalla de registro, lo primero que se ve es la fecha de la sesión, el ejercicio activo, la serie actual y los controles de reps/peso. Historial, catálogo y ajustes quedan un tap más atrás.
 - **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado para notas, login, altas de catálogo y el **filtro por nombre** del catálogo en Ajustes.
 - **Feedback inmediato:** al guardar/editar/borrar, confirmación visual en < 1 s (toast o estado en la propia tarjeta). Acciones destructivas (borrar serie) piden confirmación breve, no un modal pesado.
@@ -280,7 +280,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), tarjetas de serie (reps · peso · nota), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar una serie o un ítem de catálogo sin salir de la pantalla.
+Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), acordeón de series por ejercicio + equipo (SET con steppers compactos y Duplicar), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar equipo/nota o borrar una serie sin salir de la pantalla.
 
 ### 6.5 Tema claro y oscuro
 
@@ -366,7 +366,8 @@ Pendiente:
 | Sin offline-first en v1 | Cola offline con IndexedDB desde el inicio | Se asume conectividad en el gimnasio; se añade solo si se demuestra necesario |
 | Sin rol admin diferenciado en v1 | Rol admin para gestionar catálogo | Grupo cerrado de 1–5 personas, no aporta valor en v1 |
 | Series editables y borrables por cualquier miembro | Registro append-only, o solo el dueño edita | Corregir un peso/reps mal anotados es habitual; quien registra para el grupo también corrige |
-| `numero_serie` automático, no editable a mano | Control para reordenar series en la hoja de edición | El orden es 1, 2, 3… por ejercicio; al borrar se compacta. Editarlo a mano pelea con esa regla |
+| `numero_serie` automático, no editable a mano | Control para reordenar series en la hoja de edición | El orden es 1, 2, 3… por ejercicio **y** equipo; al borrar o cambiar de grupo se compacta. Editarlo a mano pelea con esa regla |
+| Series en acordeón por ejercicio + equipo; duplicar el SET | Lista plana + botón global «Repetir última» | En el gym se encadenan series del mismo ejercicio/equipo; el atajo vive en el SET, no en el formulario |
 | Chips de marcas por serie (ayuda, fallo y técnicas) | Campo de texto libre | En el gym se elige con un tap; se combinan libremente; se serializan con " · " en orden canónico; no bloquean el guardado |
 | UI mobile-first con targets grandes y barra inferior | Dashboard denso tipo escritorio | El uso real es anotar entre series en el iPhone, no consultar en un portátil |
 | Tema Claro / Oscuro / Auto, local al dispositivo | Un solo tema, o tema guardado en servidor | En el gym cambia la luz; cada móvil tiene su preferencia y no es un dato del grupo |
@@ -389,7 +390,8 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-0
 - Diseño moderno, intuitivo y cómodo en iPhone (sec. 6.3–6.4).
 - Tema claro, oscuro o automático, a elección del usuario (sec. 6.5).
 - Asistencia y series de grupo: cualquiera marca y anota a cualquiera; al guardar una serie se marca presente a ese miembro (sec. 6.1 y 7).
-- `numero_serie` automático: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
+- `numero_serie` automático por ejercicio **y** equipo: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
+- Listado de series en Hoy: acordeón por ejercicio + equipo; Duplicar en cada SET (nota vacía); sin botón «Repetir última» (sec. 6.1).
 - Login con usuario y contraseña; sin magic link en el uso diario (sec. 7). El login no limita a quién se anota.
 - Seed de catálogo inicial, una sola vez por nombre (sec. 5).
 - Historial de sesiones paginado, filtrable por fechas y grupo muscular (sec. 6.2).

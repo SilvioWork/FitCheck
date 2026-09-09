@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Locator, type Page } from '@playwright/test'
 
 const USER = process.env.QA_USER ?? ''
 const PASS = process.env.QA_PASS ?? ''
@@ -12,7 +12,9 @@ test.beforeAll(() => {
 })
 
 async function esperarHoy(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible({
+    timeout: 20_000,
+  })
   await expect(page.getByText('Sincronizando con Supabase')).toHaveCount(0, { timeout: 20_000 })
   await expect(page.getByText(/Entraste como /)).toBeVisible()
   await expect(page.getByText(/Puedes anotar a cualquiera/)).toBeVisible()
@@ -28,7 +30,10 @@ async function entrar(page: Page, usuario: string, password: string) {
 }
 
 async function irA(page: Page, destino: 'Hoy' | 'Historial' | 'Ajustes') {
-  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: destino }).click()
+  await page
+    .getByRole('navigation', { name: 'Principal' })
+    .getByRole('link', { name: destino })
+    .click()
   if (destino === 'Hoy') {
     await expect(page.getByLabel('Fecha', { exact: true })).toBeVisible()
     await expect(page.getByText(/Puedes anotar a cualquiera/)).toBeVisible()
@@ -114,10 +119,32 @@ async function prepararPagina(page: Page) {
     const kill = () => document.getElementById('__vue-devtools-container__')?.remove()
     const start = () => {
       kill()
-      new MutationObserver(kill).observe(document.documentElement, { childList: true, subtree: true })
+      new MutationObserver(kill).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      })
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
     else start()
+  })
+}
+
+async function nombreOpcion(select: Locator): Promise<string> {
+  return select.evaluate((el) => {
+    const opt = (el as HTMLSelectElement).selectedOptions[0]
+    return (opt?.textContent ?? '').split(' · ')[0].trim()
+  })
+}
+
+function bloqueSeries(page: Page, miembro: string) {
+  return page.locator('article').filter({
+    has: page.getByRole('heading', { name: `Series de ${miembro}` }),
+  })
+}
+
+function regionGrupo(page: Page, miembro: string, ejercicio: string, equipo: string) {
+  return bloqueSeries(page, miembro).getByRole('region', {
+    name: `Series de ${ejercicio} · ${equipo}`,
   })
 }
 
@@ -170,14 +197,16 @@ test.describe('FitCheck QA', () => {
     await entrar(page, USER, PASS)
   })
 
-  test('HOY asistencia, serie, chips, repetir, editar, borrar, otro miembro', async ({ page }) => {
+  test('HOY asistencia, serie, chips, duplicar, editar, borrar, otro miembro', async ({ page }) => {
     await entrar(page, USER, PASS)
     await irASandboxQA(page, 'QA-sandbox smoke')
 
     const anotarSerie = page.getByRole('heading', { name: 'Anotar serie' })
     await expect(anotarSerie).toBeVisible()
 
-    const asistencia = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Asistencia' }) })
+    const asistencia = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Asistencia' }) })
     const filasAsis = asistencia.locator('li')
     const nMiembros = await filasAsis.count()
     expect(nMiembros).toBeGreaterThanOrEqual(2)
@@ -189,61 +218,62 @@ test.describe('FitCheck QA', () => {
     await silvioAsis.getByRole('button', { name: 'Sí' }).click()
     await expect(silvioAsis.getByText('Presente')).toBeVisible()
 
-    const formSerie = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
-    const filas = page
+    const formSerie = page
       .locator('article')
-      .filter({ has: page.getByRole('heading', { name: /Series de Silvio/ }) })
-      .locator('button.row')
-    const filasSentadilla = filas.filter({ hasText: 'Sentadilla' })
-    const antes = await filas.count()
-    const antesSentadilla = await filasSentadilla.count()
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+    const ejercicio = await nombreOpcion(formSerie.getByLabel('Ejercicio'))
+    const equipo = await nombreOpcion(formSerie.getByLabel('Equipo'))
+    const setsSilvio = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
+    const grupo = () => regionGrupo(page, 'Silvio', ejercicio, equipo)
+    const setsGrupo = () => grupo().getByTestId('serie-set')
+    const antes = await setsSilvio.count()
+    const antesGrupo = await setsGrupo().count()
 
     await formSerie.getByRole('button', { name: 'Con ayuda', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Rest-pause + dropset', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(page.getByText('Serie guardada')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
-    const conChips = filasSentadilla.filter({ hasText: 'Con ayuda · Rest-pause + dropset' })
+    await expect(page.getByRole('button', { name: `${ejercicio} · ${equipo}` })).toBeVisible()
+    const conChips = setsGrupo().filter({ hasText: 'Con ayuda · Rest-pause + dropset' })
     await expect(conChips.last()).toBeVisible()
-    await expect(filasSentadilla.filter({ hasText: 'Con ayuda · Rest-pause · Rest-pause + dropset' })).toHaveCount(0)
-    await expect(filas).toHaveCount(antes + 1)
-    await expect(filasSentadilla).toHaveCount(antesSentadilla + 1)
+    await expect(
+      setsGrupo().filter({ hasText: 'Con ayuda · Rest-pause · Rest-pause + dropset' }),
+    ).toHaveCount(0)
+    await expect(setsSilvio).toHaveCount(antes + 1)
+    await expect(setsGrupo()).toHaveCount(antesGrupo + 1)
 
-    await page.getByRole('button', { name: 'Repetir última' }).click()
-    await expect(page.getByText('Serie repetida')).toBeVisible()
-    await expect(filas).toHaveCount(antes + 2)
-    await expect(filasSentadilla).toHaveCount(antesSentadilla + 2)
-    const repetida = filasSentadilla.last()
-    await expect(repetida.getByText('Con ayuda')).toHaveCount(0)
+    await setsGrupo().last().getByRole('button', { name: 'Duplicar' }).click()
+    await expect(page.getByText('Serie duplicada')).toBeVisible()
+    await expect(setsSilvio).toHaveCount(antes + 2)
+    await expect(setsGrupo()).toHaveCount(antesGrupo + 2)
+    const duplicada = setsGrupo().last()
+    await expect(duplicada.getByText('Con ayuda')).toHaveCount(0)
 
-    await repetida.click()
+    await duplicada.getByRole('button', { name: 'Editar' }).click()
     const editor = page.getByRole('dialog', { name: 'Editar serie' })
     await expect(editor.getByRole('heading', { name: 'Editar serie' })).toBeVisible()
     await editor.getByRole('button', { name: 'Más Reps' }).click()
     await editor.getByRole('button', { name: 'Guardar cambios' }).click()
     await expect(page.getByText('Serie actualizada')).toBeVisible()
 
-    await repetida.click()
+    await setsGrupo().last().getByRole('button', { name: 'Editar' }).click()
     await editor.getByRole('button', { name: 'Borrar' }).click()
     await editor.getByRole('button', { name: 'Confirmar borrado' }).click()
     await expect(page.getByText('Serie borrada')).toBeVisible()
-    await expect(filas).toHaveCount(antes + 1)
+    await expect(setsSilvio).toHaveCount(antes + 1)
 
     await formSerie.getByRole('button', { name: 'Armando', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Myo-reps', exact: true }).click()
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
-    const filasArmando = page
-      .locator('article')
-      .filter({ has: page.getByRole('heading', { name: 'Series de Armando' }) })
-      .locator('button.row')
     await expect(page.getByRole('heading', { name: 'Series de Armando' })).toBeVisible()
-    await expect(filasArmando.filter({ hasText: 'Myo-reps' }).last()).toBeVisible()
+    await expect(bloqueSeries(page, 'Armando').getByText('Myo-reps').last()).toBeVisible()
     const armandoAsis = asistencia.locator('li').filter({ hasText: 'Armando' })
     await expect(armandoAsis.getByText('Presente')).toBeVisible()
 
     await formSerie.getByRole('button', { name: 'Silvio', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
-    await expect(filas.filter({ hasText: 'Myo-reps' })).toHaveCount(0)
+    await expect(setsSilvio.filter({ hasText: 'Myo-reps' })).toHaveCount(0)
   })
 
   test('HOY-11..14 fecha: default, vacío sandbox, existente, navegación', async ({ page }) => {
@@ -293,7 +323,9 @@ test.describe('FitCheck QA', () => {
     await entrar(page, USER, PASS)
     await irASandboxQA(page, 'QA-sandbox stepper')
 
-    const formSerie = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+    const formSerie = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
     const masPeso = formSerie.getByRole('button', { name: 'Más Peso kg' })
     const valorPeso = masPeso.locator('xpath=preceding-sibling::span')
     await expect(valorPeso).toHaveText('20')
@@ -318,7 +350,9 @@ test.describe('FitCheck QA', () => {
     const filas = page.locator('a.row')
     await expect(filas.first()).toBeVisible()
 
-    const filtros = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Filtros' }) })
+    const filtros = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Filtros' }) })
     const grupoFiltro = filtros.getByLabel('Grupo muscular')
     const pechoId = await grupoFiltro.evaluate((el) => {
       const opt = [...el.options].find((o) => o.text.trim() === 'Pecho')
@@ -338,7 +372,8 @@ test.describe('FitCheck QA', () => {
     const pager = page.locator('.pager')
     test.info().annotations.push({
       type: 'HIST-05',
-      description: (await pager.count()) === 0 ? 'blocked: menos de 16 sesiones' : 'paginador visible',
+      description:
+        (await pager.count()) === 0 ? 'blocked: menos de 16 sesiones' : 'paginador visible',
     })
 
     await filas.first().click()
@@ -372,7 +407,9 @@ test.describe('FitCheck QA', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
     await page.getByRole('button', { name: 'Auto' }).click()
 
-    const catalogo = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Catálogo' }) })
+    const catalogo = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Catálogo' }) })
     const grupos = catalogo.getByRole('list', { name: 'Grupos musculares' })
     const equipos = catalogo.getByRole('list', { name: 'Equipos' })
 
@@ -409,13 +446,23 @@ test.describe('FitCheck QA', () => {
     await irA(page, 'Ajustes')
     const buscarUsado = page.getByPlaceholder('Buscar equipo')
     await buscarUsado.fill(equipoUsado!)
-    const usado = page.getByRole('list', { name: 'Equipos' }).getByRole('listitem').filter({ hasText: equipoUsado! }).first()
+    const usado = page
+      .getByRole('list', { name: 'Equipos' })
+      .getByRole('listitem')
+      .filter({ hasText: equipoUsado! })
+      .first()
     await usado.getByRole('button', { name: 'Quitar' }).click()
     await usado.getByRole('button', { name: 'Confirmar' }).click()
     await expect(page.locator('.toast')).toContainText('ya está en series guardadas')
     await page.locator('.toast').getByRole('button', { name: 'Cerrar', exact: true }).click()
     await buscarUsado.fill(equipoUsado!)
-    await expect(page.getByRole('list', { name: 'Equipos' }).getByRole('listitem').filter({ hasText: equipoUsado! }).first()).toBeVisible()
+    await expect(
+      page
+        .getByRole('list', { name: 'Equipos' })
+        .getByRole('listitem')
+        .filter({ hasText: equipoUsado! })
+        .first(),
+    ).toBeVisible()
   })
 
   test('RLS-01/02 y RT-01 dos miembros', async ({ browser }) => {
@@ -434,7 +481,9 @@ test.describe('FitCheck QA', () => {
     await expect(p1.getByRole('heading', { name: 'Anotar serie' })).toBeVisible()
     await expect(p2.getByRole('heading', { name: 'Anotar serie' })).toBeVisible()
 
-    const asistencia2 = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Asistencia' }) })
+    const asistencia2 = p2
+      .locator('article')
+      .filter({ has: p2.getByRole('heading', { name: 'Asistencia' }) })
     await expect(asistencia2.locator('li').first()).toBeVisible()
     const nMiembros = await asistencia2.locator('li').count()
     expect(nMiembros).toBeGreaterThanOrEqual(2)
@@ -444,32 +493,32 @@ test.describe('FitCheck QA', () => {
     await silvioRow.getByRole('button', { name: 'Sí' }).click()
     await expect(silvioRow.getByText('Presente')).toBeVisible()
 
-    const formP2 = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Anotar serie' }) })
+    const formP2 = p2
+      .locator('article')
+      .filter({ has: p2.getByRole('heading', { name: 'Anotar serie' }) })
     await formP2.getByRole('button', { name: 'Silvio', exact: true }).click()
     await expect(p2.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
-    const filasSilvio = p2
-      .locator('article')
-      .filter({ has: p2.getByRole('heading', { name: 'Series de Silvio' }) })
-      .locator('button.row')
-    if ((await filasSilvio.count()) > 0) {
-      await filasSilvio.last().click()
+    const bloqueSilvio = bloqueSeries(p2, 'Silvio')
+    const setsSilvioP2 = bloqueSilvio.getByTestId('serie-set')
+    if ((await setsSilvioP2.count()) > 0) {
+      await setsSilvioP2.last().getByRole('button', { name: 'Editar' }).click()
       const editor = p2.getByRole('dialog', { name: 'Editar serie' })
       await expect(editor.getByRole('heading', { name: 'Editar serie' })).toBeVisible()
       await editor.getByRole('button', { name: 'Cerrar' }).click()
     }
 
-    const bloqueSilvio = p2.locator('article').filter({ has: p2.getByRole('heading', { name: 'Series de Silvio' }) })
     await expect(bloqueSilvio).toBeVisible()
 
-    const marcas40 = bloqueSilvio.getByText('40 kg')
-    const antesRt = await marcas40.count()
-    const formP1 = p1.locator('article').filter({ has: p1.getByRole('heading', { name: 'Anotar serie' }) })
+    const antesRt = await setsSilvioP2.count()
+    const formP1 = p1
+      .locator('article')
+      .filter({ has: p1.getByRole('heading', { name: 'Anotar serie' }) })
     await formP1.getByRole('button', { name: 'Silvio', exact: true }).click()
     for (let i = 0; i < 8; i++) {
       await formP1.getByRole('button', { name: 'Más Peso kg' }).click()
     }
     await formP1.getByRole('button', { name: 'Guardar serie' }).click()
-    await expect(marcas40).toHaveCount(antesRt + 1, { timeout: 8_000 })
+    await expect(setsSilvioP2).toHaveCount(antesRt + 1, { timeout: 8_000 })
 
     await silvio.close()
     await armando.close()

@@ -51,6 +51,13 @@ export type Serie = {
   actualizado_en: string
 }
 
+export type GrupoSerieEjercicioEquipo = {
+  key: string
+  ejercicioId: string
+  equipoId: string
+  series: Serie[]
+}
+
 export type FitcheckDB = {
   miembros: Miembro[]
   sesiones: Sesion[]

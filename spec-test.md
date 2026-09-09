@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.4
+**Fuente de producto:** `SPEC.md` v1.5
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -131,10 +131,10 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 |---|---|---|---|---|---|
 | HOY-01 | Crear sesión de hoy | Si no hay sesión hoy: nota `QA-…` → **Crear sesión** (fecha = hoy en el selector) | Aparece asistencia + «Anotar serie»; creador **Presente**; se permanece en hoy | 6.1 | Manual; e2e no escribe el mes actual (sandbox 1–5 mes pasado) |
 | HOY-02 | Asistencia de cualquiera | Botones **Sí** / **No** en cada fila | Todas las filas tienen Sí/No; estado Presente / Ausente / Sin marcar | 6.1, 7 | P 2026-09-07 e2e (3 miembros: Silvio, Armando, Pia) |
-| HOY-03 | Guardar serie | Ejercicio + equipo + reps/peso (steppers) + chips opcionales → **Guardar serie** | Feedback «Serie guardada»; lista «Series de {nombre}»; `numero_serie` 1, 2, 3… | 6.1 | P 2026-09-07 e2e |
+| HOY-03 | Guardar serie | Ejercicio + equipo + reps/peso (steppers) + chips opcionales → **Guardar serie** | Feedback «Serie guardada»; acordeón «{ejercicio} · {equipo}» dentro de «Series de {nombre}»; SET 1, 2, 3… por ese grupo | 6.1 | P 2026-09-07 e2e |
 | HOY-04 | Chips de nota | Marcar varias (p. ej. «Con ayuda» + «Rest-pause + dropset») al guardar | Se persisten combinables; unidas con ` · ` en orden canónico; «Rest-pause + dropset» no activa «Rest-pause» | 6.1 | P 2026-09-07 e2e |
-| HOY-05 | Repetir última | Tras una serie, **Repetir última** | Misma reps/peso/ejercicio/equipo del miembro **seleccionado**; **nota vacía** | 6.1 | P 2026-09-07 e2e |
-| HOY-06 | Editar serie | Abrir serie → cambiar reps/peso/equipo/nota → **Guardar cambios** | Lista actualizada; no se edita `numero_serie` a mano | 6.1 | P 2026-09-07 e2e |
+| HOY-05 | Duplicar SET | Tras una serie, **Duplicar** en ese SET | Misma reps/peso/ejercicio/equipo del SET; **nota vacía**; aparece en el mismo acordeón | 6.1 | Pendiente e2e (reemplaza Repetir última) |
+| HOY-06 | Editar serie | En el SET, **Editar** → cambiar reps/peso/equipo/nota → **Guardar cambios** | Lista actualizada; no se edita `numero_serie` a mano | 6.1 | P 2026-09-07 e2e |
 | HOY-07 | Borrar serie | Editar → borrar (confirmación) | Pide confirmación; desaparece; números de ese ejercicio se compactan | 6.1 | P 2026-09-07 e2e |
 | HOY-08 | Día elegido sin sesión | Con sesión hoy: elegir un día vacío | Formulario **Nueva sesión** (sin input de fecha duplicado), no el registro de hoy | 6.1 | P 2026-09-08 e2e |
 | HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-07 e2e |

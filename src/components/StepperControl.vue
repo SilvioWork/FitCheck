@@ -9,8 +9,9 @@ const props = withDefaults(
     label: string
     step?: number
     min?: number
+    compact?: boolean
   }>(),
-  { step: 1, min: 0 },
+  { step: 1, min: 0, compact: false },
 )
 
 const model = defineModel<number>({ required: true })
@@ -101,7 +102,7 @@ function display(value: number) {
 </script>
 
 <template>
-  <div class="stepper">
+  <div class="stepper" :class="{ compact }">
     <p class="label">{{ label }}</p>
     <div class="row">
       <button
@@ -170,5 +171,21 @@ function display(value: number) {
   text-align: center;
   font-size: 1.6rem;
   font-weight: 800;
+}
+
+.compact {
+  gap: 4px;
+}
+
+.compact .label {
+  font-size: 0.75rem;
+}
+
+.compact .row {
+  gap: 4px;
+}
+
+.compact .value {
+  font-size: 1.2rem;
 }
 </style>

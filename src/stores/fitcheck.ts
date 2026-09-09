@@ -5,7 +5,16 @@ import { supabase } from '@/lib/supabase'
 import { todayISO } from '@/lib/ids'
 import { emailDeUsuario, normalizarUsuario } from '@/lib/usuario'
 import { useAuthStore } from '@/stores/auth'
-import type { Asistencia, Ejercicio, Equipo, GrupoMuscular, Miembro, Serie, Sesion } from '@/types/models'
+import type {
+  Asistencia,
+  Ejercicio,
+  Equipo,
+  GrupoMuscular,
+  GrupoSerieEjercicioEquipo,
+  Miembro,
+  Serie,
+  Sesion,
+} from '@/types/models'
 
 export const HISTORIAL_PAGE = 15
 
@@ -142,7 +151,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     // aunque la fila exista. Si ya eres miembro, no hay nada que crear.
     if (existente) return
     const usuario =
-      (typeof user.user_metadata.usuario === 'string' && normalizarUsuario(user.user_metadata.usuario)) ||
+      (typeof user.user_metadata.usuario === 'string' &&
+        normalizarUsuario(user.user_metadata.usuario)) ||
       user.email.split('@')[0] ||
       'yo'
     const nombre =
@@ -283,7 +293,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       else bySesion.set(row.sesion_id, { sesion: row.sesiones, series: [mapped] })
     }
     return [...bySesion.values()].sort((a, b) => {
-      if (a.sesion.fecha === b.sesion.fecha) return b.sesion.creado_en.localeCompare(a.sesion.creado_en)
+      if (a.sesion.fecha === b.sesion.fecha)
+        return b.sesion.creado_en.localeCompare(a.sesion.creado_en)
       return b.sesion.fecha.localeCompare(a.sesion.fecha)
     })
   }
@@ -296,7 +307,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     ])
     await cargarSesionPorFecha(fechaActiva.value)
     await Promise.all([...ids].map((id) => cargarSesion(id)))
-    if (historialSesiones.value.length || historialFiltros.value.grupoId || historialFiltros.value.desde) {
+    if (
+      historialSesiones.value.length ||
+      historialFiltros.value.grupoId ||
+      historialFiltros.value.desde
+    ) {
       await listarSesiones()
     }
   }
@@ -383,7 +398,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el equipo'))
+      fail(
+        esNombreDuplicado(err)
+          ? mensajeDuplicado(nombre)
+          : (err?.message ?? 'No se pudo crear el equipo'),
+      )
       return
     }
     equipos.value.push(data as Equipo)
@@ -396,7 +415,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el ejercicio'))
+      fail(
+        esNombreDuplicado(err)
+          ? mensajeDuplicado(nombre)
+          : (err?.message ?? 'No se pudo crear el ejercicio'),
+      )
       return
     }
     ejercicios.value.push(data as Ejercicio)
@@ -409,7 +432,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       .select()
       .single()
     if (err || !data) {
-      fail(esNombreDuplicado(err) ? mensajeDuplicado(nombre) : (err?.message ?? 'No se pudo crear el grupo muscular'))
+      fail(
+        esNombreDuplicado(err)
+          ? mensajeDuplicado(nombre)
+          : (err?.message ?? 'No se pudo crear el grupo muscular'),
+      )
       return
     }
     grupos.value.push(data as GrupoMuscular)
@@ -562,7 +589,10 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     const existing = asistencia.value.find((a) => a.sesion_id === sesionId && a.miembro_id === mid)
     if (existing) {
       if (existing.presente === presente) return
-      const { error: err } = await supabase.from('asistencia').update({ presente }).eq('id', existing.id)
+      const { error: err } = await supabase
+        .from('asistencia')
+        .update({ presente })
+        .eq('id', existing.id)
       if (err) {
         fail(err.message)
         return
@@ -595,37 +625,82 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       })
   }
 
-  function ultimaSerieDe(sesionId: string, miembroId?: string): Serie | undefined {
-    const mid = miembroId ?? miembroActivoId.value
-    if (!mid) return undefined
-    return series.value
-      .filter((s) => s.sesion_id === sesionId && s.miembro_id === mid)
-      .sort((a, b) => b.creado_en.localeCompare(a.creado_en))[0]
-  }
-
-  function siguienteNumero(sesionId: string, miembroId: string, ejercicioId: string): number {
+  function siguienteNumero(
+    sesionId: string,
+    miembroId: string,
+    ejercicioId: string,
+    equipoId: string,
+  ): number {
     const nums = series.value
       .filter(
         (s) =>
-          s.sesion_id === sesionId && s.miembro_id === miembroId && s.ejercicio_id === ejercicioId,
+          s.sesion_id === sesionId &&
+          s.miembro_id === miembroId &&
+          s.ejercicio_id === ejercicioId &&
+          s.equipo_id === equipoId,
       )
       .map((s) => s.numero_serie)
     return nums.length ? Math.max(...nums) + 1 : 1
   }
 
-  async function persistNumeros(sesionId: string, miembroId: string, ejercicioId: string) {
+  async function persistNumeros(
+    sesionId: string,
+    miembroId: string,
+    ejercicioId: string,
+    equipoId: string,
+  ) {
     const grupo = series.value
       .filter(
         (s) =>
-          s.sesion_id === sesionId && s.miembro_id === miembroId && s.ejercicio_id === ejercicioId,
+          s.sesion_id === sesionId &&
+          s.miembro_id === miembroId &&
+          s.ejercicio_id === ejercicioId &&
+          s.equipo_id === equipoId,
       )
       .sort((a, b) => a.numero_serie - b.numero_serie)
     await Promise.all(
       grupo.map((row, index) => {
         row.numero_serie = index + 1
-        return supabase.from('series').update({ numero_serie: index + 1 }).eq('id', row.id)
+        return supabase
+          .from('series')
+          .update({ numero_serie: index + 1 })
+          .eq('id', row.id)
       }),
     )
+  }
+
+  function seriesAgrupadasPorEjercicioEquipo(
+    sesionId: string,
+    miembroId?: string,
+  ): GrupoSerieEjercicioEquipo[] {
+    const list = series.value.filter(
+      (s) => s.sesion_id === sesionId && (!miembroId || s.miembro_id === miembroId),
+    )
+    const map = new Map<string, GrupoSerieEjercicioEquipo & { firstCreado: string }>()
+    for (const s of list) {
+      const key = `${s.ejercicio_id}:${s.equipo_id}`
+      const g = map.get(key)
+      if (g) {
+        g.series.push(s)
+        if (s.creado_en < g.firstCreado) g.firstCreado = s.creado_en
+      } else {
+        map.set(key, {
+          key,
+          ejercicioId: s.ejercicio_id,
+          equipoId: s.equipo_id,
+          series: [s],
+          firstCreado: s.creado_en,
+        })
+      }
+    }
+    return [...map.values()]
+      .sort((a, b) => a.firstCreado.localeCompare(b.firstCreado))
+      .map((g) => ({
+        key: g.key,
+        ejercicioId: g.ejercicioId,
+        equipoId: g.equipoId,
+        series: [...g.series].sort((x, y) => x.numero_serie - y.numero_serie),
+      }))
   }
 
   async function guardarSerie(input: {
@@ -646,7 +721,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
         miembro_id: mid,
         ejercicio_id: input.ejercicioId,
         equipo_id: input.equipoId,
-        numero_serie: siguienteNumero(input.sesionId, mid, input.ejercicioId),
+        numero_serie: siguienteNumero(input.sesionId, mid, input.ejercicioId, input.equipoId),
         repeticiones: input.repeticiones,
         peso_kg: input.pesoKg,
         nota: input.nota.trim() || null,
@@ -674,9 +749,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     const serie = series.value.find((s) => s.id === id)
     if (!serie) return
     const oldEj = serie.ejercicio_id
+    const oldEq = serie.equipo_id
+    const moved = oldEj !== patch.ejercicioId || oldEq !== patch.equipoId
     let numero = serie.numero_serie
-    if (oldEj !== patch.ejercicioId) {
-      numero = siguienteNumero(serie.sesion_id, serie.miembro_id, patch.ejercicioId)
+    if (moved) {
+      numero = siguienteNumero(serie.sesion_id, serie.miembro_id, patch.ejercicioId, patch.equipoId)
     }
     const { error: err } = await supabase
       .from('series')
@@ -700,7 +777,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     serie.peso_kg = patch.pesoKg
     serie.nota = patch.nota.trim() || null
     serie.numero_serie = numero
-    if (oldEj !== patch.ejercicioId) await persistNumeros(serie.sesion_id, serie.miembro_id, oldEj)
+    if (moved) await persistNumeros(serie.sesion_id, serie.miembro_id, oldEj, oldEq)
   }
 
   async function borrarSerie(id: string) {
@@ -712,12 +789,14 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       return
     }
     series.value = series.value.filter((s) => s.id !== id)
-    await persistNumeros(serie.sesion_id, serie.miembro_id, serie.ejercicio_id)
+    await persistNumeros(serie.sesion_id, serie.miembro_id, serie.ejercicio_id, serie.equipo_id)
   }
 
   function ausentesDe(sesionId: string) {
     return miembros.value.filter((m) =>
-      asistencia.value.some((a) => a.sesion_id === sesionId && a.miembro_id === m.id && !a.presente),
+      asistencia.value.some(
+        (a) => a.sesion_id === sesionId && a.miembro_id === m.id && !a.presente,
+      ),
     )
   }
 
@@ -836,7 +915,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     marcarAsistencia,
     asistenciaDe,
     seriesDe,
-    ultimaSerieDe,
+    seriesAgrupadasPorEjercicioEquipo,
     guardarSerie,
     editarSerie,
     borrarSerie,
