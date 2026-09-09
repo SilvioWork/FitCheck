@@ -58,34 +58,38 @@ async function crearSesion() {
     </header>
 
     <div class="fecha-bar" role="group" aria-label="Fecha de la sesión">
-      <button
-        class="fecha-step"
-        type="button"
-        aria-label="Día anterior"
-        :disabled="cambiando"
-        @click="diaAnterior"
-      >
-        ‹
-      </button>
-      <label class="fecha-field">
-        Fecha
-        <input
-          :value="gym.fechaActiva"
-          type="date"
+      <label class="fecha-label" for="fecha-sesion">Fecha</label>
+      <div class="fecha-row">
+        <button
+          class="fecha-step"
+          type="button"
+          aria-label="Día anterior"
           :disabled="cambiando"
-          @change="onFechaInput"
-          @input="onFechaInput"
-        />
-      </label>
-      <button
-        class="fecha-step"
-        type="button"
-        aria-label="Día siguiente"
-        :disabled="cambiando"
-        @click="diaSiguiente"
-      >
-        ›
-      </button>
+          @click="diaAnterior"
+        >
+          ‹
+        </button>
+        <div class="fecha-input-wrap">
+          <input
+            id="fecha-sesion"
+            class="fecha-input"
+            :value="gym.fechaActiva"
+            type="date"
+            :disabled="cambiando"
+            @change="onFechaInput"
+            @input="onFechaInput"
+          />
+        </div>
+        <button
+          class="fecha-step"
+          type="button"
+          aria-label="Día siguiente"
+          :disabled="cambiando"
+          @click="diaSiguiente"
+        >
+          ›
+        </button>
+      </div>
     </div>
     <button v-if="!esHoy" class="ghost" type="button" :disabled="cambiando" @click="irAHoy">
       Ir a hoy
@@ -145,13 +149,28 @@ async function crearSesion() {
 
 .fecha-bar {
   display: grid;
-  grid-template-columns: var(--tap) 1fr var(--tap);
+  gap: 6px;
+  min-width: 0;
+}
+
+.fecha-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.fecha-row {
+  display: grid;
+  grid-template-columns: var(--tap) minmax(0, 1fr) var(--tap);
   gap: 8px;
-  align-items: end;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .fecha-step {
+  width: 100%;
+  height: var(--tap);
   min-height: var(--tap);
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -159,17 +178,50 @@ async function crearSesion() {
   font-size: 1.6rem;
   line-height: 1;
   font-weight: 700;
+  display: grid;
+  place-items: center;
 }
 
 .fecha-step:disabled {
   opacity: 0.45;
 }
 
-.fecha-field {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
+.fecha-input-wrap {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.fecha-input {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.fecha-input::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
+
+.fecha-input::-webkit-datetime-edit {
+  min-width: 0;
+  padding: 0;
+}
+
+.fecha-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
 }
 
 .ghost {
