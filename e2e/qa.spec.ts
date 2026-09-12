@@ -485,22 +485,27 @@ test.describe('FitCheck QA', () => {
     await expect(trigger).toBeVisible()
     await trigger.click()
 
-    const lista = formSerie.getByRole('list', { name: 'Lista de ejercicios' })
+    const lista = formSerie.getByRole('listbox', { name: 'Lista de ejercicios' })
     await expect(lista).toBeVisible()
     const buscarInput = formSerie.getByPlaceholder('Buscar ejercicio')
     await expect(buscarInput).toBeVisible()
 
-    const opciones = lista.getByRole('listitem')
+    const opciones = lista.getByRole('option')
     const totalOpciones = await opciones.count()
     expect(totalOpciones).toBeGreaterThan(0)
 
+    await page.getByRole('heading', { name: 'Anotar serie' }).click()
+    await expect(lista).toHaveCount(0)
+
+    await trigger.click()
+    await expect(formSerie.getByRole('listbox', { name: 'Lista de ejercicios' })).toBeVisible()
     await buscarInput.fill('press')
     await expect(opciones).not.toHaveCount(totalOpciones)
     const opcionPress = opciones.filter({ hasText: /press/i }).first()
     await expect(opcionPress).toBeVisible()
 
     await opcionPress.click()
-    await expect(lista).toHaveCount(0)
+    await expect(formSerie.getByRole('listbox', { name: 'Lista de ejercicios' })).toHaveCount(0)
     await expect(trigger.locator('strong')).toContainText(/press/i)
 
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
