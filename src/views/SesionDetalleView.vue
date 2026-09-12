@@ -49,15 +49,24 @@ const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembro
     </header>
 
     <AsistenciaList :sesion-id="sesion.id" />
-    <article v-if="gym.ausentesDe(sesion.id).length || gym.sinMarcarDe(sesion.id).length" class="card">
+    <article
+      v-if="gym.ausentesDe(sesion.id).length || gym.sinMarcarDe(sesion.id).length"
+      class="card"
+    >
       <h2>Quién no asistió</h2>
       <ul class="plain">
         <li v-for="m in gym.ausentesDe(sesion.id)" :key="m.id">{{ m.nombre }} · ausente</li>
-        <li v-for="m in gym.sinMarcarDe(sesion.id)" :key="'s' + m.id">{{ m.nombre }} · sin marcar</li>
+        <li v-for="m in gym.sinMarcarDe(sesion.id)" :key="'s' + m.id">
+          {{ m.nombre }} · sin marcar
+        </li>
       </ul>
     </article>
 
-    <RegistroSeries v-if="gym.miembroActivoId" v-model:miembro-id="miembroElegidoId" :sesion-id="sesion.id" />
+    <RegistroSeries
+      v-if="gym.miembroActivoId"
+      v-model:miembro-id="miembroElegidoId"
+      :sesion-id="sesion.id"
+    />
 
     <article v-for="grupo in otros" :key="grupo.miembro.id" class="card">
       <button type="button" class="pick" @click="miembroElegidoId = grupo.miembro.id">

@@ -50,7 +50,9 @@ async function enviar() {
     <header>
       <p class="eyebrow">FitCheck</p>
       <h1>{{ modo === 'crear' ? 'Crear el grupo' : 'Entrar' }}</h1>
-      <p v-if="modo === 'crear'">El primero da de alta la cuenta. Luego invita al resto en Ajustes.</p>
+      <p v-if="modo === 'crear'">
+        El primero da de alta la cuenta. Luego invita al resto en Ajustes.
+      </p>
       <p v-else>Usuario y contraseña. Sin correo.</p>
     </header>
 

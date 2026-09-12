@@ -70,7 +70,9 @@ const nombreEquipo = computed(
           <option v-for="eq in gym.equipos" :key="eq.id" :value="eq.id">{{ eq.nombre }}</option>
         </select>
       </label>
-      <p v-if="!gym.presentesDe(sesionId).length" class="hint">Nadie marcado presente en esta sesión.</p>
+      <p v-if="!gym.presentesDe(sesionId).length" class="hint">
+        Nadie marcado presente en esta sesión.
+      </p>
       <p v-else-if="!noUsaron.length" class="ok">Todos los presentes usaron {{ nombreEquipo }}.</p>
       <ul v-else>
         <li v-for="m in noUsaron" :key="m.id">{{ m.nombre }} no usó {{ nombreEquipo }}</li>

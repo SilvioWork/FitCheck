@@ -116,7 +116,9 @@ watch(vista, (next) => {
           </label>
         </div>
         <button class="ghost" type="button" @click="aplicar">Aplicar</button>
-        <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">Quitar filtros</button>
+        <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">
+          Quitar filtros
+        </button>
         <p v-if="frecuencia" class="freq">{{ frecuencia }}</p>
       </article>
 

@@ -146,13 +146,20 @@ async function guardarEdicion() {
     />
     <label>
       Nombre
-      <input v-model="equipoNombre" type="text" maxlength="60" placeholder="Máquina press banca Technogym" />
+      <input
+        v-model="equipoNombre"
+        type="text"
+        maxlength="60"
+        placeholder="Máquina press banca Technogym"
+      />
     </label>
     <label>
       Descripción (opcional)
       <input v-model="equipoDesc" type="text" maxlength="80" />
     </label>
-    <button class="ghost" type="button" :disabled="!equipoNombre.trim()" @click="addEquipo">Añadir equipo</button>
+    <button class="ghost" type="button" :disabled="!equipoNombre.trim()" @click="addEquipo">
+      Añadir equipo
+    </button>
 
     <h3>Ejercicios</h3>
     <CatalogList
@@ -173,7 +180,12 @@ async function guardarEdicion() {
         <option v-for="g in gruposOrden" :key="g.id" :value="g.id">{{ g.nombre }}</option>
       </select>
     </label>
-    <button class="ghost" type="button" :disabled="!ejercicioNombre.trim() || !ejercicioGrupo" @click="addEjercicio">
+    <button
+      class="ghost"
+      type="button"
+      :disabled="!ejercicioNombre.trim() || !ejercicioGrupo"
+      @click="addEjercicio"
+    >
       Añadir ejercicio
     </button>
 
@@ -190,7 +202,9 @@ async function guardarEdicion() {
       Nombre
       <input v-model="grupoNombre" type="text" maxlength="40" placeholder="Core" />
     </label>
-    <button class="ghost" type="button" :disabled="!grupoNombre.trim()" @click="addGrupo">Añadir grupo</button>
+    <button class="ghost" type="button" :disabled="!grupoNombre.trim()" @click="addGrupo">
+      Añadir grupo
+    </button>
   </article>
 
   <div v-if="editando" class="overlay" @click.self="editando = null">
