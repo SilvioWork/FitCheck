@@ -468,6 +468,55 @@ test.describe('FitCheck QA', () => {
     ).toBeVisible()
   })
 
+  test('HOY-16 selector ejercicio con filtro', async ({ page }) => {
+    await entrar(page, USER, PASS)
+    await irASandboxQA(page, 'QA-sandbox filtro-ejercicio')
+
+    const formSerie = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+
+    // Verificar que existe el componente EjercicioSelector
+    const trigger = formSerie.locator('.ejercicio-selector button.trigger')
+    await expect(trigger).toBeVisible()
+    
+    // Abrir el selector
+    await trigger.click()
+    
+    // Verificar que aparece el dropdown con búsqueda
+    const dropdown = formSerie.locator('.ejercicio-selector .dropdown')
+    await expect(dropdown).toBeVisible()
+    const buscarInput = dropdown.getByPlaceholder('Buscar ejercicio')
+    await expect(buscarInput).toBeVisible()
+    
+    // Verificar que hay opciones visibles
+    const opciones = dropdown.locator('ul li')
+    const totalOpciones = await opciones.count()
+    expect(totalOpciones).toBeGreaterThan(0)
+    
+    // Buscar "press" (debe filtrar)
+    await buscarInput.fill('press')
+    await expect(opciones).not.toHaveCount(totalOpciones)
+    const opcionPress = opciones.filter({ hasText: /press/i }).first()
+    await expect(opcionPress).toBeVisible()
+    
+    // Seleccionar un ejercicio
+    await opcionPress.click()
+    
+    // Verificar que el dropdown se cierra
+    await expect(dropdown).toHaveCount(0)
+    
+    // Verificar que el ejercicio se seleccionó en el trigger
+    await expect(trigger.locator('strong')).toContainText(/press/i)
+    
+    // Guardar una serie para verificar integración completa
+    await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
+    await expect(page.getByText('Serie guardada')).toBeVisible()
+    
+    // Verificar que aparece en el acordeón
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
+  })
+
   test('RLS-01/02 y RT-01 dos miembros', async ({ browser }) => {
     const silvio = await browser.newContext({ ...test.info().project.use })
     const armando = await browser.newContext({ ...test.info().project.use })
