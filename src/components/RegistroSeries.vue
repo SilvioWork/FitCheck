@@ -176,14 +176,14 @@ async function borrar() {
       </div>
     </div>
 
-    <label>
-      Ejercicio
+    <div>
+      <p class="field-label">Ejercicio</p>
       <EjercicioSelector
         v-model="form.ejercicioId"
         :ejercicios="gym.ejercicios"
         :grupo-de-ejercicio="gym.grupoDeEjercicio"
       />
-    </label>
+    </div>
 
     <label>
       Equipo
@@ -231,14 +231,14 @@ async function borrar() {
   <div v-if="editando" class="overlay" @click.self="editando = null">
     <div class="sheet" role="dialog" aria-label="Editar serie">
       <h2>Editar serie</h2>
-      <label>
-        Ejercicio
+      <div>
+        <p class="field-label">Ejercicio</p>
         <EjercicioSelector
           v-model="editando.ejercicio_id"
           :ejercicios="gym.ejercicios"
           :grupo-de-ejercicio="gym.grupoDeEjercicio"
         />
-      </label>
+      </div>
       <label>
         Equipo
         <select v-model="editando.equipo_id">

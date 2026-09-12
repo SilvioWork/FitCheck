@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { Ejercicio } from '@/types/models'
 
 const props = defineProps<{
@@ -9,6 +9,7 @@ const props = defineProps<{
 
 const model = defineModel<string>({ required: true })
 
+const root = ref<HTMLElement | null>(null)
 const query = ref('')
 const abierto = ref(false)
 
@@ -22,30 +23,60 @@ const seleccionado = computed(() => {
   return props.ejercicios.find((ej) => ej.id === model.value)
 })
 
-watch(abierto, (open) => {
-  if (open) {
-    query.value = ''
-  }
-})
+function abrir() {
+  query.value = ''
+  abierto.value = true
+}
 
-function seleccionar(id: string) {
-  model.value = id
+function cerrar() {
   abierto.value = false
   query.value = ''
 }
 
-function toggle() {
-  abierto.value = !abierto.value
+function toggle(event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (abierto.value) cerrar()
+  else abrir()
 }
+
+function seleccionar(id: string, event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+  model.value = id
+  cerrar()
+}
+
+function onDocPointerDown(event: PointerEvent) {
+  if (!abierto.value) return
+  const target = event.target
+  if (target instanceof Node && root.value?.contains(target)) return
+  cerrar()
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && abierto.value) cerrar()
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocPointerDown, true)
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onDocPointerDown, true)
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <div class="ejercicio-selector" data-testid="ejercicio-selector">
+  <div ref="root" class="ejercicio-selector" data-testid="ejercicio-selector">
     <button
       type="button"
       class="trigger"
       data-testid="ejercicio-selector-trigger"
       aria-label="Ejercicio"
+      aria-haspopup="listbox"
       :aria-expanded="abierto"
       @click="toggle"
     >
@@ -57,7 +88,14 @@ function toggle() {
       <span class="chev" :class="{ open: abierto }" aria-hidden="true">▾</span>
     </button>
 
-    <div v-if="abierto" class="dropdown">
+    <div
+      v-if="abierto"
+      class="dropdown"
+      role="listbox"
+      aria-label="Lista de ejercicios"
+      @pointerdown.stop
+      @click.stop
+    >
       <input
         v-model="query"
         type="search"
@@ -68,9 +106,16 @@ function toggle() {
       />
       <div class="viewport">
         <p v-if="filtered.length === 0" class="empty">Nada coincide</p>
-        <ul v-else aria-label="Lista de ejercicios">
+        <ul v-else>
           <li v-for="ej in filtered" :key="ej.id">
-            <button type="button" class="opcion" @click="seleccionar(ej.id)">
+            <button
+              type="button"
+              class="opcion"
+              role="option"
+              :aria-selected="ej.id === model"
+              @pointerdown.prevent.stop="seleccionar(ej.id, $event)"
+              @click.prevent.stop="seleccionar(ej.id, $event)"
+            >
               <strong>{{ ej.nombre }}</strong>
               <small>{{ grupoDeEjercicio(ej.id) }}</small>
             </button>
@@ -78,8 +123,6 @@ function toggle() {
         </ul>
       </div>
     </div>
-
-    <div v-if="abierto" class="backdrop" @click="abierto = false" />
   </div>
 </template>
 
@@ -142,12 +185,6 @@ function toggle() {
 
 .chev.open {
   transform: rotate(0deg);
-}
-
-.backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 9;
 }
 
 .dropdown {
