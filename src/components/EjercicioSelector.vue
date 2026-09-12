@@ -40,8 +40,15 @@ function toggle() {
 </script>
 
 <template>
-  <div class="ejercicio-selector">
-    <button type="button" class="trigger" @click="toggle">
+  <div class="ejercicio-selector" data-testid="ejercicio-selector">
+    <button
+      type="button"
+      class="trigger"
+      data-testid="ejercicio-selector-trigger"
+      aria-label="Ejercicio"
+      :aria-expanded="abierto"
+      @click="toggle"
+    >
       <span v-if="seleccionado" class="seleccion">
         <strong>{{ seleccionado.nombre }}</strong>
         <small>{{ grupoDeEjercicio(seleccionado.id) }}</small>

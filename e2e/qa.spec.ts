@@ -136,6 +136,11 @@ async function nombreOpcion(select: Locator): Promise<string> {
   })
 }
 
+async function nombreEjercicioSeleccionado(scope: Locator): Promise<string> {
+  const texto = await scope.getByTestId('ejercicio-selector-trigger').locator('strong').textContent()
+  return (texto ?? '').trim()
+}
+
 function bloqueSeries(page: Page, miembro: string) {
   return page.locator('article').filter({
     has: page.getByRole('heading', { name: `Series de ${miembro}` }),
@@ -221,7 +226,7 @@ test.describe('FitCheck QA', () => {
     const formSerie = page
       .locator('article')
       .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
-    const ejercicio = await nombreOpcion(formSerie.getByLabel('Ejercicio'))
+    const ejercicio = await nombreEjercicioSeleccionado(formSerie)
     const equipo = await nombreOpcion(formSerie.getByLabel('Equipo'))
     const setsSilvio = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
     const grupo = () => regionGrupo(page, 'Silvio', ejercicio, equipo)
@@ -476,44 +481,30 @@ test.describe('FitCheck QA', () => {
       .locator('article')
       .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
 
-    // Verificar que existe el componente EjercicioSelector
-    const trigger = formSerie.locator('.ejercicio-selector button.trigger')
+    const trigger = formSerie.getByTestId('ejercicio-selector-trigger')
     await expect(trigger).toBeVisible()
-    
-    // Abrir el selector
     await trigger.click()
-    
-    // Verificar que aparece el dropdown con búsqueda
-    const dropdown = formSerie.locator('.ejercicio-selector .dropdown')
-    await expect(dropdown).toBeVisible()
-    const buscarInput = dropdown.getByPlaceholder('Buscar ejercicio')
+
+    const lista = formSerie.getByRole('list', { name: 'Lista de ejercicios' })
+    await expect(lista).toBeVisible()
+    const buscarInput = formSerie.getByPlaceholder('Buscar ejercicio')
     await expect(buscarInput).toBeVisible()
-    
-    // Verificar que hay opciones visibles
-    const opciones = dropdown.locator('ul li')
+
+    const opciones = lista.getByRole('listitem')
     const totalOpciones = await opciones.count()
     expect(totalOpciones).toBeGreaterThan(0)
-    
-    // Buscar "press" (debe filtrar)
+
     await buscarInput.fill('press')
     await expect(opciones).not.toHaveCount(totalOpciones)
     const opcionPress = opciones.filter({ hasText: /press/i }).first()
     await expect(opcionPress).toBeVisible()
-    
-    // Seleccionar un ejercicio
+
     await opcionPress.click()
-    
-    // Verificar que el dropdown se cierra
-    await expect(dropdown).toHaveCount(0)
-    
-    // Verificar que el ejercicio se seleccionó en el trigger
+    await expect(lista).toHaveCount(0)
     await expect(trigger.locator('strong')).toContainText(/press/i)
-    
-    // Guardar una serie para verificar integración completa
+
     await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(page.getByText('Serie guardada')).toBeVisible()
-    
-    // Verificar que aparece en el acordeón
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
   })
 

@@ -18,4 +18,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'off',
   },
+  webServer: process.env.QA_BASE_URL
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://127.0.0.1:5174',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 })
