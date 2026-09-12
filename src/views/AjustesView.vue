@@ -147,7 +147,12 @@ async function cambiarPassword() {
         <button
           class="ghost"
           type="button"
-          :disabled="enviando || !alta.nombre.trim() || !usuarioValido(alta.usuario) || alta.password.length < 8"
+          :disabled="
+            enviando ||
+            !alta.nombre.trim() ||
+            !usuarioValido(alta.usuario) ||
+            alta.password.length < 8
+          "
           @click="invitar"
         >
           Crear cuenta

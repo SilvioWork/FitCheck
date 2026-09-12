@@ -23,7 +23,9 @@ const rows = computed(() =>
 <template>
   <article class="card">
     <h2>Asistencia</h2>
-    <p class="hint">Cualquiera puede marcar a cualquiera. Quien aún no tiene Sí/No aparece como sin marcar.</p>
+    <p class="hint">
+      Cualquiera puede marcar a cualquiera. Quien aún no tiene Sí/No aparece como sin marcar.
+    </p>
     <ul>
       <li v-for="row in rows" :key="row.miembro.id">
         <div>

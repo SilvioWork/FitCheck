@@ -26,8 +26,8 @@ watch(
   },
 )
 
-const hayFiltro = computed(
-  () => Boolean(filtros.grupoId || filtros.equipoId || filtros.desde || filtros.hasta),
+const hayFiltro = computed(() =>
+  Boolean(filtros.grupoId || filtros.equipoId || filtros.desde || filtros.hasta),
 )
 
 async function cargar() {
@@ -104,7 +104,9 @@ watch(
       </label>
     </div>
 
-    <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">Quitar filtros</button>
+    <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">
+      Quitar filtros
+    </button>
   </article>
 
   <p v-if="!filtros.miembroId" class="empty">No hay miembros en el grupo.</p>

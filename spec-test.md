@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.5
+**Fuente de producto:** `SPEC.md` v1.6
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -144,6 +144,7 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | HOY-13 | Día con sesión | Cambiar a una fecha que ya tiene sesión (sandbox) | Muestra asistencia/series de ese día; se puede guardar otra serie | 6.1 | P 2026-09-08 e2e |
 | HOY-14 | Día siguiente / Ir a hoy | **Día siguiente** (o anterior); luego **Ir a hoy** | Cambia la fecha del selector; Ir a hoy restaura hoy y el `h1` **Hoy** | 6.1 | P 2026-09-08 e2e |
 | HOY-15 | Stepper hold-to-repeat | En sandbox: tap **Más Peso kg** = +2.5; mantener ≥ 1 s | Tras 1 s el peso sube **más de un paso** a ritmo constante; soltar detiene | 6.3 | P 2026-09-08 e2e |
+| HOY-16 | Filtro del selector de ejercicio | En sandbox: abrir selector → buscar `press` → elegir | Solo coincidencias por nombre; al elegir se cierra y el trigger muestra el ejercicio; se puede guardar la serie | 6.1 | Pendiente e2e |
 
 ### 4.3 Historial y consultas (`HIST`)
 
@@ -260,7 +261,7 @@ Si se creó basura `QA-*`:
 
 ## 9. Cómo sigue el QA
 
-1. Ronda e2e local v1.5 (acordeón + Duplicar, 10/10). Datos QA solo en días 1–5 del mes pasado. Pendiente: HIST-02, CAT-04, CAT-07..10, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
+1. Ronda e2e local v1.6 (filtro de ejercicio, HOY-16). Datos QA solo en días 1–5 del mes pasado. Pendiente: HIST-02, CAT-04, CAT-07..10, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
 2. Reejecutar `npm run test:e2e` tras cambios de UI o auth.
 3. Cada fail nuevo → BUG en sec. 7 y, si aplica, arreglo de código + retest del ID.
 

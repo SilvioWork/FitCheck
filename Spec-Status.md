@@ -17,11 +17,12 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.5) |
+| Spec y decisiones de producto | Hecho (v1.6) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
 | Flujo de sesión (alta en cualquier fecha, asistencia de grupo, series de cualquiera) | Hecho |
 | Chips de marcas (ayuda, fallo y técnicas) | Hecho |
+| Selector de ejercicio con filtro de búsqueda | Hecho |
 | Supabase: esquema, cliente, usuario/contraseña | Hecho (proyecto FitCheck, `zrbbmqowrjfnluzfybuc`) |
 | Realtime | Hecho |
 | Catálogo editable + seed idempotente + nombres únicos | Hecho |
@@ -41,7 +42,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.5 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, PWA).
+- Spec v1.6 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, **selector de ejercicio con filtro de búsqueda**, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -69,7 +70,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Entrar** — usuario y contraseña, o crear el grupo si está vacío. Sin nav inferior.
 
-**Hoy** — workspace por fecha (hoy por defecto; anterior / date / siguiente e Ir a hoy). Sin sesión ese día: alta con nota. Con sesión: asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie, listado en acordeón por ejercicio + equipo (steppers y Duplicar en cada SET; hoja para chips/borrar). Tras crear se permanece en ese día.
+**Hoy** — workspace por fecha (hoy por defecto; anterior / date / siguiente e Ir a hoy). Sin sesión ese día: alta con nota. Con sesión: asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie con **selector de ejercicio filtrable**, listado en acordeón por ejercicio + equipo (steppers y Duplicar en cada SET; hoja para editar ejercicio/equipo/chips/borrar). Tras crear se permanece en ese día.
 
 **Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
 
@@ -94,7 +95,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 ---
 
-## 3. Estado operativo actual (2026-09-05)
+## 3. Estado operativo actual (2026-09-12)
 
 ### 3.1 Supabase (FitCheck)
 

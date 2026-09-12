@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import EjercicioAcordeon from '@/components/EjercicioAcordeon.vue'
+import EjercicioSelector from '@/components/EjercicioSelector.vue'
 import NotaChips from '@/components/NotaChips.vue'
 import SerieSetRow from '@/components/SerieSetRow.vue'
 import StepperControl from '@/components/StepperControl.vue'
@@ -177,11 +178,11 @@ async function borrar() {
 
     <label>
       Ejercicio
-      <select v-model="form.ejercicioId">
-        <option v-for="ej in gym.ejercicios" :key="ej.id" :value="ej.id">
-          {{ ej.nombre }} · {{ gym.grupoDeEjercicio(ej.id) }}
-        </option>
-      </select>
+      <EjercicioSelector
+        v-model="form.ejercicioId"
+        :ejercicios="gym.ejercicios"
+        :grupo-de-ejercicio="gym.grupoDeEjercicio"
+      />
     </label>
 
     <label>
@@ -232,9 +233,11 @@ async function borrar() {
       <h2>Editar serie</h2>
       <label>
         Ejercicio
-        <select v-model="editando.ejercicio_id">
-          <option v-for="ej in gym.ejercicios" :key="ej.id" :value="ej.id">{{ ej.nombre }}</option>
-        </select>
+        <EjercicioSelector
+          v-model="editando.ejercicio_id"
+          :ejercicios="gym.ejercicios"
+          :grupo-de-ejercicio="gym.grupoDeEjercicio"
+        />
       </label>
       <label>
         Equipo

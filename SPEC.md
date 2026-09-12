@@ -1,7 +1,7 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.5 — fuente de la verdad
-**Última actualización:** 2026-09-08
+**Estado:** Borrador v1.6 — fuente de la verdad
+**Última actualización:** 2026-09-12
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
 ---
@@ -240,9 +240,9 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 ### 6.1 Flujo de sesión
 1. En Hoy, la fecha por defecto es hoy. Se cambia con el selector (día anterior / fecha / día siguiente; **Ir a hoy** si no es el día actual). Si ese día no tiene sesión, se crea (nota opcional); quien la crea queda marcado presente. Si ya hay sesión, se continúa anotando. Tras crear, se permanece en ese día.
 2. Asistencia **de grupo**: en cada fila hay Sí/No. Cualquier integrante puede marcar presente o ausente a cualquier compañero (una vez al empezar, no por ejercicio). Quien aún no tiene fila aparece como «sin marcar», distinto de ausente.
-3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → ejercicio (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes (tap o mantener pulsado) → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después.
+3. Durante el entreno se registran series eligiendo **a qué miembro** se anotan (chips de nombres; por defecto el logueado). Flujo: miembro → **ejercicio con filtro de búsqueda** (el grupo muscular se infiere) → equipo → repeticiones y peso con +/- grandes (tap o mantener pulsado) → chips opcionales de marcas (sec. 3.2) → guarda. Al guardar una serie, si ese miembro no está `presente`, se marca presente. Sigue pudiéndose marcar ausente a mano después. El selector de ejercicio incluye un **campo de búsqueda** que filtra por nombre en tiempo real, facilitando encontrar el ejercicio deseado cuando el catálogo es extenso.
 4. Las series guardadas se listan agrupadas por **ejercicio + equipo** (p. ej. Press banca con máquina es un grupo distinto de Press banca con barra). Cada grupo es un acordeón: cabecera con el ejercicio, el equipo y el recuento; al abrir, cada SET con steppers de reps/peso y **Duplicar**. Duplicar copia ejercicio, equipo, reps y peso de esa serie **de ese miembro**; la nota no se copia (queda vacía). No hay botón global «Repetir última».
-5. Una serie ya guardada se puede editar (reps y peso en el SET, o equipo/nota en la hoja) o borrar, **aunque la haya anotado otro**. El `numero_serie` es automático (1, 2, 3… por ejercicio, equipo y miembro en esa sesión): no se edita a mano. Tras borrar o al cambiar de grupo, se reordenan para que no queden huecos.
+5. Una serie ya guardada se puede editar (reps y peso en el SET, o ejercicio/equipo/nota en la hoja) o borrar, **aunque la haya anotado otro**. El editor también usa el **selector de ejercicio con filtro**. El `numero_serie` es automático (1, 2, 3… por ejercicio, equipo y miembro en esa sesión): no se edita a mano. Tras borrar o al cambiar de grupo, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
 
 ### 6.2 Flujo de consulta
@@ -280,7 +280,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), acordeón de series por ejercicio + equipo (SET con steppers compactos y Duplicar), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar equipo/nota o borrar una serie sin salir de la pantalla.
+Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), acordeón de series por ejercicio + equipo (SET con steppers compactos y Duplicar), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), **selector de ejercicio con búsqueda** (trigger que abre dropdown con campo de búsqueda y lista filtrable de opciones), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar ejercicio/equipo/nota o borrar una serie sin salir de la pantalla.
 
 ### 6.5 Tema claro y oscuro
 
@@ -342,9 +342,10 @@ Hecho:
 6. Vista por miembro: historial filtrable por grupo muscular, equipo o rango de fechas.
 7. Login usuario / contraseña, alta del grupo e invitación de compañeros.
 8. Historial de sesiones paginado, con filtros de fecha y grupo muscular y recuento de frecuencia.
+9. Selector de ejercicio con búsqueda para mejorar UX con catálogos extensos (v1.6).
 
 Pendiente:
-9. Instalación en los iPhones del grupo vía Safari (HTTPS ya está en https://fitcheck-silviowork89-4758.vercel.app).
+10. Instalación en los iPhones del grupo vía Safari (HTTPS ya está en https://fitcheck-silviowork89-4758.vercel.app).
 
 **Fase 2 — mejoras**
 10. Consulta por grupo muscular (además de equipo) a nivel de “quién no lo trabajó”.
@@ -377,6 +378,7 @@ Pendiente:
 | Filtro de catálogo solo por nombre | Filtrar también por subtítulo (grupo muscular, descripción) | Se busca lo que el grupo nombra al ítem; el subtítulo es contexto, no clave |
 | Scroll interno de altura fija en cada lista de catálogo | Dejar crecer la tarjeta de Catálogo | El scroll debe ser del componente que muestra los ítems, no de toda la vista de Ajustes |
 | Anillo de foco inset (`--accent`) en el filtro | Outline nativo del sistema | `overflow: hidden` del recuadro recorta el borde superior del outline nativo |
+| Selector de ejercicio con búsqueda (v1.6) | Select nativo o lista sin filtro | Al crecer el catálogo (20+ ejercicios) el scroll manual es lento; la búsqueda filtra en tiempo real y se cierra al elegir |
 | Ajustes con pestañas Catálogo / Users | Cuarto destino en la barra inferior, o una sola pantalla larga | Solo agrupación visual; la barra sigue en 3 destinos (sec. 6.3). Users: cuentas; Catálogo: catálogo, apariencia e instalar PWA |
 | Selector de fecha en Hoy (cualquier día) | Hoy solo carga el día local; alta de otra fecha invisible tras crear | Volcar histórico de papel y completar un día incompleto; no es un planificador (sec. 2.2). Si hay varias filas el mismo día, se muestra la más reciente |
 

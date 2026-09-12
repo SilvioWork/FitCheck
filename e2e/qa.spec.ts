@@ -136,6 +136,11 @@ async function nombreOpcion(select: Locator): Promise<string> {
   })
 }
 
+async function nombreEjercicioSeleccionado(scope: Locator): Promise<string> {
+  const texto = await scope.getByTestId('ejercicio-selector-trigger').locator('strong').textContent()
+  return (texto ?? '').trim()
+}
+
 function bloqueSeries(page: Page, miembro: string) {
   return page.locator('article').filter({
     has: page.getByRole('heading', { name: `Series de ${miembro}` }),
@@ -221,7 +226,7 @@ test.describe('FitCheck QA', () => {
     const formSerie = page
       .locator('article')
       .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
-    const ejercicio = await nombreOpcion(formSerie.getByLabel('Ejercicio'))
+    const ejercicio = await nombreEjercicioSeleccionado(formSerie)
     const equipo = await nombreOpcion(formSerie.getByLabel('Equipo'))
     const setsSilvio = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
     const grupo = () => regionGrupo(page, 'Silvio', ejercicio, equipo)
@@ -466,6 +471,41 @@ test.describe('FitCheck QA', () => {
         .filter({ hasText: equipoUsado! })
         .first(),
     ).toBeVisible()
+  })
+
+  test('HOY-16 selector ejercicio con filtro', async ({ page }) => {
+    await entrar(page, USER, PASS)
+    await irASandboxQA(page, 'QA-sandbox filtro-ejercicio')
+
+    const formSerie = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+
+    const trigger = formSerie.getByTestId('ejercicio-selector-trigger')
+    await expect(trigger).toBeVisible()
+    await trigger.click()
+
+    const lista = formSerie.getByRole('list', { name: 'Lista de ejercicios' })
+    await expect(lista).toBeVisible()
+    const buscarInput = formSerie.getByPlaceholder('Buscar ejercicio')
+    await expect(buscarInput).toBeVisible()
+
+    const opciones = lista.getByRole('listitem')
+    const totalOpciones = await opciones.count()
+    expect(totalOpciones).toBeGreaterThan(0)
+
+    await buscarInput.fill('press')
+    await expect(opciones).not.toHaveCount(totalOpciones)
+    const opcionPress = opciones.filter({ hasText: /press/i }).first()
+    await expect(opcionPress).toBeVisible()
+
+    await opcionPress.click()
+    await expect(lista).toHaveCount(0)
+    await expect(trigger.locator('strong')).toContainText(/press/i)
+
+    await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
+    await expect(page.getByText('Serie guardada')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
   })
 
   test('RLS-01/02 y RT-01 dos miembros', async ({ browser }) => {

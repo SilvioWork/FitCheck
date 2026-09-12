@@ -52,7 +52,11 @@ async function crearSesion() {
       <p class="eyebrow">Sesión</p>
       <h1>{{ titulo }}</h1>
       <p class="lede">
-        {{ gym.miembroActivo ? `Entraste como ${gym.miembroActivo.nombre}. Puedes anotar a cualquiera.` : 'Cargando perfil…' }}
+        {{
+          gym.miembroActivo
+            ? `Entraste como ${gym.miembroActivo.nombre}. Puedes anotar a cualquiera.`
+            : 'Cargando perfil…'
+        }}
         <span v-if="gym.enVivo"> · En vivo</span>
       </p>
     </header>
@@ -111,7 +115,9 @@ async function crearSesion() {
     </template>
 
     <template v-else>
-      <p class="meta">{{ formatFecha(sesion.fecha) }}<span v-if="sesion.nota"> · {{ sesion.nota }}</span></p>
+      <p class="meta">
+        {{ formatFecha(sesion.fecha) }}<span v-if="sesion.nota"> · {{ sesion.nota }}</span>
+      </p>
       <AsistenciaList :sesion-id="sesion.id" />
       <RegistroSeries :sesion-id="sesion.id" />
     </template>
