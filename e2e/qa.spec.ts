@@ -648,4 +648,105 @@ test.describe('FitCheck QA', () => {
     await silvio.close()
     await armando.close()
   })
+
+  test('HOY-17 clonar series a otro integrante en la misma sesión', async ({ page }) => {
+    await entrar(page, USER, PASS)
+    await irASandboxQA(page, 'QA-sandbox clonar-misma')
+
+    const formSerie = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+    // Origen = el logueado (Silvio). Asegurar que tiene al menos una serie.
+    await formSerie.getByRole('button', { name: 'Silvio', exact: true }).click()
+    await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
+    await expect(page.getByText('Serie guardada')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
+
+    const setsSilvio = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
+    const nSilvio = await setsSilvio.count()
+    expect(nSilvio).toBeGreaterThan(0)
+
+    // Baseline de Armando: en Hoy solo se ve la tarjeta del miembro seleccionado.
+    const setsArmando = bloqueSeries(page, 'Armando').getByTestId('serie-set')
+    await formSerie.getByRole('button', { name: 'Armando', exact: true }).click()
+    const nArmandoAntes = await setsArmando.count()
+    await formSerie.getByRole('button', { name: 'Silvio', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
+
+    await bloqueSeries(page, 'Silvio').getByRole('button', { name: 'Clonar a…' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Clonar series' })
+    await expect(dialog.getByRole('heading', { name: 'Clonar series de Silvio' })).toBeVisible()
+    // El origen aparece pero no está preseleccionado; se elige solo a Armando.
+    await dialog.getByRole('button', { name: 'Armando', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Clonar series' }).click()
+    await expect(page.getByText(/\d+ series clonadas/)).toBeVisible()
+
+    // El origen no se duplica (no se seleccionó a Silvio).
+    await expect(setsSilvio).toHaveCount(nSilvio)
+
+    // Al seleccionar a Armando se ven sus series clonadas.
+    await formSerie.getByRole('button', { name: 'Armando', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Series de Armando' })).toBeVisible()
+    await expect(setsArmando).toHaveCount(nArmandoAntes + nSilvio)
+
+    const asistencia = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Asistencia' }) })
+    const armandoAsis = asistencia.locator('li').filter({ hasText: 'Armando' })
+    await expect(armandoAsis.getByText('Presente')).toBeVisible()
+  })
+
+  test('HIST-11 clonar sesión a otro día del sandbox', async ({ page }) => {
+    await entrar(page, USER, PASS)
+    const sourceDay = await irASandboxQA(page, 'QA-sandbox clonar-origen')
+
+    const formSerie = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Anotar serie' }) })
+    await formSerie.getByRole('button', { name: 'Silvio', exact: true }).click()
+    await formSerie.getByRole('button', { name: 'Guardar serie' }).click()
+    await expect(page.getByText('Serie guardada')).toBeVisible()
+    const setsSilvio = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
+    const nSilvio = await setsSilvio.count()
+    expect(nSilvio).toBeGreaterThan(0)
+
+    const targetDay = fechasSandboxQA().find((d) => d !== sourceDay)
+    expect(targetDay).toBeTruthy()
+    assertSandbox(targetDay!)
+
+    // Abrir el detalle de la sesión origen desde el historial (filtrando por su día).
+    await irA(page, 'Historial')
+    const filtros = page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { name: 'Filtros' }) })
+    await filtros.getByLabel('Desde').fill(sourceDay)
+    await filtros.getByLabel('Hasta').fill(sourceDay)
+    await page.getByRole('button', { name: 'Aplicar' }).click()
+    const filas = page.locator('a.row')
+    await expect(filas.first()).toBeVisible()
+    await filas.first().click()
+
+    await expect(page.getByRole('heading', { name: 'Asistencia' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
+
+    // Clonar la rutina de Silvio a Silvio en otro día (mi martes → viernes).
+    await bloqueSeries(page, 'Silvio').getByRole('button', { name: 'Clonar a…' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Clonar series' })
+    const diaDestino = dialog.getByLabel('Día destino')
+    await diaDestino.fill(targetDay!)
+    await diaDestino.dispatchEvent('change')
+    await expect(diaDestino).toHaveValue(targetDay!)
+    await dialog.getByRole('button', { name: 'Silvio · origen', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Clonar series' }).click()
+    await expect(page.getByText(/\d+ series clonadas/)).toBeVisible()
+
+    // Verificar en Hoy, en el día destino, que las series se crearon.
+    await irA(page, 'Hoy')
+    await irAFecha(page, targetDay!)
+    await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
+    const setsDestino = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
+    await expect
+      .poll(async () => setsDestino.count())
+      .toBeGreaterThanOrEqual(nSilvio)
+  })
 })

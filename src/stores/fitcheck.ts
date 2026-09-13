@@ -583,6 +583,78 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     if (asis) asistencia.value.push(asis as Asistencia)
   }
 
+  async function asegurarSesionEnFecha(fecha: string): Promise<Sesion | null> {
+    const f = String(fecha).slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) {
+      fail('Fecha destino no válida')
+      return null
+    }
+    const enMemoria = () =>
+      sesiones.value
+        .filter((s) => s.fecha === f)
+        .sort((a, b) => b.creado_en.localeCompare(a.creado_en))[0] ?? null
+    const existente = enMemoria()
+    if (existente) return existente
+    await cargarSesionPorFecha(f)
+    const cargada = enMemoria()
+    if (cargada) return cargada
+    const { data, error: err } = await supabase
+      .from('sesiones')
+      .insert({ fecha: f, nota: null })
+      .select()
+      .single()
+    if (err || !data) {
+      fail(err?.message ?? 'No se pudo crear la sesión destino')
+      return null
+    }
+    mergeSesion(data as Sesion)
+    return enMemoria()
+  }
+
+  async function clonarSeriesDe(input: {
+    sourceSesionId: string
+    sourceMiembroId: string
+    targetFecha: string
+    targetMiembroIds: string[]
+  }): Promise<number> {
+    const plantilla = seriesDe(input.sourceSesionId, input.sourceMiembroId)
+    const destinos = [...new Set(input.targetMiembroIds)].filter(Boolean)
+    if (!plantilla.length || !destinos.length) return 0
+    const sesionDestino = await asegurarSesionEnFecha(input.targetFecha)
+    if (!sesionDestino) return 0
+    const contador = new Map<string, number>()
+    const rows = destinos.flatMap((mid) =>
+      plantilla.map((s) => {
+        const key = `${mid}:${s.ejercicio_id}:${s.equipo_id}`
+        const previo =
+          contador.get(key) ??
+          siguienteNumero(sesionDestino.id, mid, s.ejercicio_id, s.equipo_id) - 1
+        const numero = previo + 1
+        contador.set(key, numero)
+        return {
+          sesion_id: sesionDestino.id,
+          miembro_id: mid,
+          ejercicio_id: s.ejercicio_id,
+          equipo_id: s.equipo_id,
+          numero_serie: numero,
+          repeticiones: s.repeticiones,
+          peso_kg: s.peso_kg,
+          nota: null,
+        }
+      }),
+    )
+    const { data, error: err } = await supabase.from('series').insert(rows).select()
+    if (err || !data) {
+      fail(err?.message ?? 'No se pudieron clonar las series')
+      return 0
+    }
+    for (const row of data as (Serie & { peso_kg: number | string })[]) {
+      series.value.push(mapSerie(row))
+    }
+    await Promise.all(destinos.map((mid) => marcarAsistencia(sesionDestino.id, true, mid)))
+    return data.length
+  }
+
   async function marcarAsistencia(sesionId: string, presente: boolean, miembroId?: string) {
     const mid = miembroId ?? miembroActivoId.value
     if (!mid) return
@@ -911,6 +983,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     cargarConsultaSesiones,
     fetchSeriesDeMiembro,
     crearSesion,
+    asegurarSesionEnFecha,
+    clonarSeriesDe,
     sesionPorId,
     marcarAsistencia,
     asistenciaDe,

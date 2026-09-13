@@ -1,7 +1,7 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.6 — fuente de la verdad
-**Última actualización:** 2026-09-12
+**Estado:** Borrador v1.7 — fuente de la verdad
+**Última actualización:** 2026-09-13
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
 ---
@@ -244,6 +244,7 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 4. Las series guardadas se listan agrupadas por **ejercicio + equipo** (p. ej. Press banca con máquina es un grupo distinto de Press banca con barra). Cada grupo es un acordeón: cabecera con el ejercicio, el equipo y el recuento; al abrir, cada SET con steppers de reps/peso y **Duplicar**. Duplicar copia ejercicio, equipo, reps y peso de esa serie **de ese miembro**; la nota no se copia (queda vacía). No hay botón global «Repetir última».
 5. Una serie ya guardada se puede editar (reps y peso en el SET, o ejercicio/equipo/nota en la hoja) o borrar, **aunque la haya anotado otro**. El editor también usa el **selector de ejercicio con filtro**. El `numero_serie` es automático (1, 2, 3… por ejercicio, equipo y miembro en esa sesión): no se edita a mano. Tras borrar o al cambiar de grupo, se reordenan para que no queden huecos.
 6. Los demás miembros ven altas, ediciones y borrados en tiempo real si están en la app simultáneamente.
+7. **Clonar series de un miembro** a otros integrantes. En la tarjeta «Series de {miembro}» hay un botón **Clonar a…**: se elige un **día destino** (por defecto, el de la sesión actual) y uno o varios **integrantes destino**, y se replican las series de ese miembro (ejercicio + equipo + reps + peso, como referencia editable; la nota/chips queda vacía, igual que Duplicar). Cubre dos usos: (a) preparar la sesión de un día configurando a un integrante y clonando al resto; (b) copiar una sesión pasada a otro día eligiendo a quién. Si el día destino no tiene sesión, se crea; cada integrante destino queda marcado presente. La numeración de series continúa la que ya hubiera ese día. Sigue siendo **registro**, no un planificador (sec. 2.2): las series clonadas son un log editable, no una rutina programada.
 
 ### 6.2 Flujo de consulta
 - Lista de sesiones paginada (p. ej. 15 por página), con filtros de **desde / hasta** y **grupo muscular**. Cabecera de frecuencia: cuántas sesiones del filtro tocan ese grupo en el rango.
@@ -343,6 +344,7 @@ Hecho:
 7. Login usuario / contraseña, alta del grupo e invitación de compañeros.
 8. Historial de sesiones paginado, con filtros de fecha y grupo muscular y recuento de frecuencia.
 9. Selector de ejercicio con búsqueda para mejorar UX con catálogos extensos (v1.6).
+10. Clonar la rutina de un miembro a otros integrantes o a otro día (v1.7, sec. 6.1).
 
 Pendiente:
 10. Instalación en los iPhones del grupo vía Safari (HTTPS ya está en https://fitcheck-silviowork89-4758.vercel.app).
@@ -381,6 +383,7 @@ Pendiente:
 | Selector de ejercicio con búsqueda (v1.6) | Select nativo o lista sin filtro | Al crecer el catálogo (20+ ejercicios) el scroll manual es lento; la búsqueda filtra en tiempo real y se cierra al elegir |
 | Ajustes con pestañas Catálogo / Users | Cuarto destino en la barra inferior, o una sola pantalla larga | Solo agrupación visual; la barra sigue en 3 destinos (sec. 6.3). Users: cuentas; Catálogo: catálogo, apariencia e instalar PWA |
 | Selector de fecha en Hoy (cualquier día) | Hoy solo carga el día local; alta de otra fecha invisible tras crear | Volcar histórico de papel y completar un día incompleto; no es un planificador (sec. 2.2). Si hay varias filas el mismo día, se muestra la más reciente |
+| Clonar la rutina de un miembro a otros / a otro día (v1.7) | Rehacer a mano las mismas series por cada integrante; o clonar la sesión completa preservando por miembro | El equipo suele hacer la misma sección; configurar a uno y clonar al resto (o copiar el martes pasado a otro día) ahorra reescritura. Se copia reps/peso como referencia editable; la nota no. Reutiliza `series`/`asistencia`/`sesiones` sin esquema ni RLS nuevos |
 
 ## 11. Preguntas abiertas
 

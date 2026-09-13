@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import ClonarSeriesSheet from '@/components/ClonarSeriesSheet.vue'
 import EjercicioAcordeon from '@/components/EjercicioAcordeon.vue'
 import EjercicioSelector from '@/components/EjercicioSelector.vue'
 import NotaChips from '@/components/NotaChips.vue'
@@ -42,6 +43,9 @@ const editando = ref<Serie | null>(null)
 const editChips = ref<string[]>([])
 const confirmarBorrado = ref(false)
 const cerradoPorClave = ref<Record<string, boolean>>({})
+const clonando = ref(false)
+
+const fechaSesion = computed(() => gym.sesionPorId(props.sesionId)?.fecha ?? '')
 
 const grupos = computed(() =>
   gym.seriesAgrupadasPorEjercicioEquipo(props.sesionId, elegidoId.value || undefined),
@@ -152,6 +156,11 @@ async function borrar() {
   confirmarBorrado.value = false
   flash('Serie borrada')
 }
+
+function onClonado(count: number) {
+  clonando.value = false
+  flash(count ? `${count} series clonadas` : 'No se clonó ninguna serie')
+}
 </script>
 
 <template>
@@ -206,7 +215,10 @@ async function borrar() {
   </article>
 
   <article v-if="grupos.length" class="card">
-    <h2>Series de {{ elegido?.nombre ?? 'este miembro' }}</h2>
+    <div class="series-head">
+      <h2>Series de {{ elegido?.nombre ?? 'este miembro' }}</h2>
+      <button class="ghost small" type="button" @click="clonando = true">Clonar a…</button>
+    </div>
     <div class="grupos">
       <EjercicioAcordeon
         v-for="grupo in grupos"
@@ -260,6 +272,15 @@ async function borrar() {
       <button class="ghost" type="button" @click="editando = null">Cerrar</button>
     </div>
   </div>
+
+  <ClonarSeriesSheet
+    v-if="clonando"
+    :source-sesion-id="props.sesionId"
+    :source-miembro-id="elegidoId"
+    :default-fecha="fechaSesion"
+    @done="onClonado"
+    @close="clonando = false"
+  />
 </template>
 
 <style scoped>
@@ -354,6 +375,19 @@ input {
 
 .ghost:disabled {
   opacity: 0.45;
+}
+
+.series-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ghost.small {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
 }
 
 .grupos {
