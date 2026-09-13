@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.7
+**Fuente de producto:** `SPEC.md` v1.8
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -156,10 +156,10 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | HIST-03 | Filtro grupo muscular | Elegir Pecho (u otro) → Aplicar | Lista filtrada; texto de frecuencia `N sesiones de {grupo} en este rango` | 6.2 | P 2026-09-07 e2e |
 | HIST-04 | Quitar filtros | Con filtro activo → **Quitar filtros** | Vuelve la lista completa | 6.2 | P 2026-09-07 e2e |
 | HIST-05 | Paginación | Solo si hay **> 15** sesiones | Anterior/Siguiente; página N / M | 6.2, 8 | B (2 sesiones; hace falta volumen) |
-| HIST-06 | Detalle de sesión | Abrir una sesión | Asistencia, selector de miembro, series de cualquiera editables | 6.2 | P 2026-09-07 e2e |
+| HIST-06 | Detalle de sesión | Abrir una sesión | Asistencia, selector de miembro, series del elegido editables (acordeón + SET); otros integrantes en el mismo acordeón, SET compacto (sin Duplicar), grupos cerrados | 6.2 | P 2026-09-07 e2e |
 | HIST-07 | Consulta ausentes | Panel Consultas → elegir sesión | Ausentes y sin marcar; no mezcla «no usó equipo» | 3.3, 6.2 | P 2026-09-07 e2e |
 | HIST-08 | Consulta equipo | Presente que no usó el equipo Y | Sale en «quién no usó»; ausentes **no** cuentan | 3.3, 6.2 | P 2026-09-07 e2e |
-| HIST-09 | Por miembro | Pestaña Por miembro → filtros grupo/equipo/fechas | Series de ese miembro desde servidor; quitar filtros restaura | 6.2 | P 2026-09-07 e2e |
+| HIST-09 | Por miembro | Pestaña Por miembro → filtros grupo/equipo/fechas | Series de ese miembro desde servidor, agrupadas en acordeón ejercicio + equipo (SET compacto, cerrado, sin Duplicar); tap fecha abre detalle; quitar filtros restaura | 6.2 | P 2026-09-07 e2e |
 | HIST-10 | Consulta grupo muscular negativa | — | Fuera de v1 (SPEC 9.10) | 9 | N/A |
 | HIST-11 | Clonar sesión pasada a otro día | Detalle de una sesión (sandbox) → elegir miembro con series → **Clonar a…** → cambiar el **día destino** a un día vacío 1–5 del mes pasado → elegir integrantes → **Clonar series** | Se crea la sesión destino si no existía; los integrantes reciben las series (reps/peso como referencia editable); quedan Presente; la numeración continúa si el día ya tenía series | 6.1 | P 2026-09-13 e2e |
 

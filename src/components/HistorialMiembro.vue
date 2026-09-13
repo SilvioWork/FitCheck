@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import SerieLinea from '@/components/SerieLinea.vue'
+import SeriesGruposConsulta from '@/components/SeriesGruposConsulta.vue'
 import { formatFecha } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
 import type { Serie, Sesion } from '@/types/models'
@@ -120,11 +120,7 @@ watch(
       <strong>{{ formatFecha(bloque.sesion.fecha) }}</strong>
       <span>{{ bloque.sesion.nota || 'Sin nota' }}</span>
     </RouterLink>
-    <ul>
-      <li v-for="serie in bloque.series" :key="serie.id">
-        <SerieLinea :serie="serie" />
-      </li>
-    </ul>
+    <SeriesGruposConsulta :series="bloque.series" />
   </article>
 </template>
 
@@ -208,13 +204,5 @@ input {
   color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 500;
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
 }
 </style>

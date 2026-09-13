@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import AsistenciaList from '@/components/AsistenciaList.vue'
 import RegistroSeries from '@/components/RegistroSeries.vue'
-import SerieLinea from '@/components/SerieLinea.vue'
+import SeriesGruposConsulta from '@/components/SeriesGruposConsulta.vue'
 import { formatFecha } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
 
@@ -74,11 +74,7 @@ const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembro
         <p class="muted">Pulsa para anotar o editar sus series.</p>
       </button>
       <p v-if="!grupo.series.length" class="muted">Sin series en esta sesión.</p>
-      <ul v-else class="series">
-        <li v-for="serie in grupo.series" :key="serie.id">
-          <SerieLinea :serie="serie" />
-        </li>
-      </ul>
+      <SeriesGruposConsulta v-else :series="grupo.series" />
     </article>
   </section>
   <p v-else>Esa sesión no existe.</p>
@@ -151,13 +147,5 @@ h2 {
   color: var(--text-muted);
   display: grid;
   gap: 6px;
-}
-
-.series {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
 }
 </style>

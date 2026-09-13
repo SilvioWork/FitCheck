@@ -3,6 +3,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
 import { todayISO } from '@/lib/ids'
+import { agruparSeriesPorEjercicioEquipo } from '@/lib/seriesGrupos'
 import { emailDeUsuario, normalizarUsuario } from '@/lib/usuario'
 import { useAuthStore } from '@/stores/auth'
 import type {
@@ -745,34 +746,11 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     sesionId: string,
     miembroId?: string,
   ): GrupoSerieEjercicioEquipo[] {
-    const list = series.value.filter(
-      (s) => s.sesion_id === sesionId && (!miembroId || s.miembro_id === miembroId),
+    return agruparSeriesPorEjercicioEquipo(
+      series.value.filter(
+        (s) => s.sesion_id === sesionId && (!miembroId || s.miembro_id === miembroId),
+      ),
     )
-    const map = new Map<string, GrupoSerieEjercicioEquipo & { firstCreado: string }>()
-    for (const s of list) {
-      const key = `${s.ejercicio_id}:${s.equipo_id}`
-      const g = map.get(key)
-      if (g) {
-        g.series.push(s)
-        if (s.creado_en < g.firstCreado) g.firstCreado = s.creado_en
-      } else {
-        map.set(key, {
-          key,
-          ejercicioId: s.ejercicio_id,
-          equipoId: s.equipo_id,
-          series: [s],
-          firstCreado: s.creado_en,
-        })
-      }
-    }
-    return [...map.values()]
-      .sort((a, b) => a.firstCreado.localeCompare(b.firstCreado))
-      .map((g) => ({
-        key: g.key,
-        ejercicioId: g.ejercicioId,
-        equipoId: g.equipoId,
-        series: [...g.series].sort((x, y) => x.numero_serie - y.numero_serie),
-      }))
   }
 
   async function guardarSerie(input: {

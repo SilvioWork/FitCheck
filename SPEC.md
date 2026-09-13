@@ -1,6 +1,6 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.7 — fuente de la verdad
+**Estado:** Borrador v1.8 — fuente de la verdad
 **Última actualización:** 2026-09-13
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
@@ -248,9 +248,9 @@ La gestión en Ajustes no usa chips aglomerados: Equipos, Ejercicios y Grupos mu
 
 ### 6.2 Flujo de consulta
 - Lista de sesiones paginada (p. ej. 15 por página), con filtros de **desde / hasta** y **grupo muscular**. Cabecera de frecuencia: cuántas sesiones del filtro tocan ese grupo en el rango.
-- Vista por sesión: lista de presentes, ausentes y sin marcar + series de esa sesión, agrupadas por miembro.
+- Vista por sesión: lista de presentes, ausentes y sin marcar + series de esa sesión, agrupadas por miembro. El miembro elegido usa el acordeón interactivo de Hoy (steppers, Editar, Duplicar). Los demás se ven en el **mismo acordeón por ejercicio + equipo**, con SET compacto (`SET N` + reps × peso + nota) y grupos **cerrados** por defecto. Para anotar o editar se elige a ese integrante (o se va a Hoy).
 - Consulta negativa de equipo: quién, estando presente, no usó el equipo Y en la sesión X (regla de la sec. 3.3).
-- Vista por miembro: historial de sus series, filtrable por grupo muscular, equipo o rango de fechas (consulta al servidor, no un dump en memoria).
+- Vista por miembro: historial de sus series, filtrable por grupo muscular, equipo o rango de fechas (consulta al servidor, no un dump en memoria). Cada día se lista con las **mismas secciones** que en Hoy (acordeón ejercicio + equipo). SET compacto, sin steppers ni Duplicar; tap en la fecha abre el detalle para editar. Los grupos empiezan cerrados para escanear sin inflar la página.
 - Vista por grupo muscular: quién lo ha trabajado y cuándo; análogo negativo «quién no lo trabajó» (pendiente; ver sec. 9). El filtro de historial ya cubre frecuencia de sesiones por grupo.
 
 ### 6.3 Principios de diseño (v1)
@@ -281,7 +281,7 @@ Tokens (CSS custom properties) para color, radio, espacio y tipo; los componente
 
 Tipografía: sistema nativo iOS (`-apple-system` / `ui-sans-serif`) para que se sienta nativa y rinda bien. Números de reps/peso en tabular lining, tamaño destacado.
 
-Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), acordeón de series por ejercicio + equipo (SET con steppers compactos y Duplicar), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), **selector de ejercicio con búsqueda** (trigger que abre dropdown con campo de búsqueda y lista filtrable de opciones), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar ejercicio/equipo/nota o borrar una serie sin salir de la pantalla.
+Componentes de referencia: selector de fecha en Hoy (anterior / date / siguiente, Ir a hoy), acordeón de series por ejercicio + equipo (SET con steppers compactos y Duplicar en registro; SET compacto de consulta en Historial), stepper +/- grande (tap = un paso; mantener 1 s = avance constante), selector de miembro (chips de nombres), **selector de ejercicio con búsqueda** (trigger que abre dropdown con campo de búsqueda y lista filtrable de opciones), lista de asistencia con Sí/No en **todas** las filas, buscador/filtro compacto en historial, lista filtrable de catálogo en Ajustes (sec. 6.6), hoja inferior (bottom sheet) para editar ejercicio/equipo/nota o borrar una serie sin salir de la pantalla.
 
 ### 6.5 Tema claro y oscuro
 
@@ -345,6 +345,7 @@ Hecho:
 8. Historial de sesiones paginado, con filtros de fecha y grupo muscular y recuento de frecuencia.
 9. Selector de ejercicio con búsqueda para mejorar UX con catálogos extensos (v1.6).
 10. Clonar la rutina de un miembro a otros integrantes o a otro día (v1.7, sec. 6.1).
+11. Historial consulta: mismo acordeón por ejercicio + equipo que Hoy, SET compacto, grupos cerrados (v1.8, sec. 6.2).
 
 Pendiente:
 10. Instalación en los iPhones del grupo vía Safari (HTTPS ya está en https://fitcheck-silviowork89-4758.vercel.app).
@@ -384,10 +385,11 @@ Pendiente:
 | Ajustes con pestañas Catálogo / Users | Cuarto destino en la barra inferior, o una sola pantalla larga | Solo agrupación visual; la barra sigue en 3 destinos (sec. 6.3). Users: cuentas; Catálogo: catálogo, apariencia e instalar PWA |
 | Selector de fecha en Hoy (cualquier día) | Hoy solo carga el día local; alta de otra fecha invisible tras crear | Volcar histórico de papel y completar un día incompleto; no es un planificador (sec. 2.2). Si hay varias filas el mismo día, se muestra la más reciente |
 | Clonar la rutina de un miembro a otros / a otro día (v1.7) | Rehacer a mano las mismas series por cada integrante; o clonar la sesión completa preservando por miembro | El equipo suele hacer la misma sección; configurar a uno y clonar al resto (o copiar el martes pasado a otro día) ahorra reescritura. Se copia reps/peso como referencia editable; la nota no. Reutiliza `series`/`asistencia`/`sesiones` sin esquema ni RLS nuevos |
+| Historial consulta: mismo acordeón que Hoy, SET compacto (v1.8) | Lista plana por serie (`SerieLinea`) | Las secciones de ejercicio + equipo son el patrón de escaneo; Historial no es el sitio de anotar (sin steppers ni Duplicar). Grupos cerrados para no inflar la página (lección sec. 6.6) |
 
 ## 11. Preguntas abiertas
 
-Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-09-05, 2026-09-07 y 2026-09-08:
+Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-09-05, 2026-09-07, 2026-09-08 y 2026-09-13:
 
 - Tamaño del grupo: entre 1 y 5 personas.
 - Una serie ya guardada se puede editar y borrar (no es append-only), por cualquier miembro del grupo.
@@ -397,6 +399,7 @@ Ninguna pendiente de la ronda inicial. Decisiones cerradas el 2026-09-04, 2026-0
 - Asistencia y series de grupo: cualquiera marca y anota a cualquiera; al guardar una serie se marca presente a ese miembro (sec. 6.1 y 7).
 - `numero_serie` automático por ejercicio **y** equipo: se editan reps, peso, equipo y nota; el número no se toca a mano (sec. 6.1).
 - Listado de series en Hoy: acordeón por ejercicio + equipo; Duplicar en cada SET (nota vacía); sin botón «Repetir última» (sec. 6.1).
+- Historial (detalle de otros integrantes y pestaña Por miembro): el mismo acordeón; SET compacto de consulta; edición en el detalle del miembro elegido o en Hoy (sec. 6.2).
 - Login con usuario y contraseña; sin magic link en el uso diario (sec. 7). El login no limita a quién se anota.
 - Seed de catálogo inicial, una sola vez por nombre (sec. 5).
 - Historial de sesiones paginado, filtrable por fechas y grupo muscular (sec. 6.2).

@@ -17,7 +17,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.6) |
+| Spec y decisiones de producto | Hecho (v1.8) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
 | Flujo de sesión (alta en cualquier fecha, asistencia de grupo, series de cualquiera) | Hecho |
@@ -42,7 +42,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.6 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, **selector de ejercicio con filtro de búsqueda**, PWA).
+- Spec v1.8 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, **selector de ejercicio con filtro de búsqueda**, Historial consulta con el mismo acordeón y SET compacto, PWA).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
@@ -72,7 +72,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Hoy** — workspace por fecha (hoy por defecto; anterior / date / siguiente e Ir a hoy). Sin sesión ese día: alta con nota. Con sesión: asistencia de cualquiera (Sí/No en todas las filas), selector de miembro, registro de serie con **selector de ejercicio filtrable**, listado en acordeón por ejercicio + equipo (steppers y Duplicar en cada SET; hoja para editar ejercicio/equipo/chips/borrar). Tras crear se permanece en ese día.
 
-**Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id`. Por miembro: filtros al servidor.
+**Historial** — pestañas Sesiones / Por miembro. Sesiones: filtros de fecha y grupo muscular, recuento, paginación; panel **Consultas**; detalle `/historial/:id` (miembro elegido: acordeón interactivo; otros integrantes: mismo acordeón, SET compacto, cerrado). Por miembro: filtros al servidor; series en acordeón por ejercicio + equipo, SET compacto, grupos cerrados; tap en la fecha para editar.
 
 **Ajustes** — pestañas **Catálogo** (listas filtrables, apariencia, **En el iPhone**) y **Users** (perfil, invitar / resetear compañero, cambiar contraseña, cerrar sesión). Query `?vista=users` para Users.
 
@@ -92,6 +92,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Hoy anclado a una fecha elegible (pasado, hoy o futuro); si ese día ya tiene sesión, se continúa; si no, se crea. No es un planificador de rutinas.
 - Stepper de reps/peso: tap = un paso; mantener ≥ 1 s avanza a ritmo constante (100 ms) hasta soltar.
 - Series del miembro en Hoy: acordeón por ejercicio + equipo; `numero_serie` 1, 2, 3… por ese grupo; Duplicar en el SET (nota vacía); sin botón «Repetir última».
+- Historial consulta (Por miembro y otros integrantes en el detalle): el mismo acordeón; SET compacto (`SET N` + reps × peso + nota); grupos cerrados; sin steppers ni Duplicar.
 - Selector de ejercicio con búsqueda (cierra al elegir y al tocar fuera).
 - Barra de fecha en Hoy: flechas y `input type="date"` en una fila que no se desborda en iPhone.
 

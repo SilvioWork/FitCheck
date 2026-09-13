@@ -137,7 +137,10 @@ async function nombreOpcion(select: Locator): Promise<string> {
 }
 
 async function nombreEjercicioSeleccionado(scope: Locator): Promise<string> {
-  const texto = await scope.getByTestId('ejercicio-selector-trigger').locator('strong').textContent()
+  const texto = await scope
+    .getByTestId('ejercicio-selector-trigger')
+    .locator('strong')
+    .textContent()
   return (texto ?? '').trim()
 }
 
@@ -418,9 +421,33 @@ test.describe('FitCheck QA', () => {
     await expect(page.getByRole('heading', { name: 'Anotar serie' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Historial' }).first()).toBeVisible()
 
+    const otros = page.locator('article').filter({
+      has: page.getByText('Pulsa para anotar o editar sus series.'),
+    })
+    const otrosConSeries = otros.filter({ hasNot: page.getByText('Sin series en esta sesión.') })
+    if ((await otrosConSeries.count()) > 0) {
+      const preview = otrosConSeries.first()
+      await expect(preview.getByRole('region', { name: /^Series de / })).toBeVisible()
+      await expect(preview.getByRole('button', { name: 'Duplicar' })).toHaveCount(0)
+      await preview
+        .getByRole('region', { name: /^Series de / })
+        .first()
+        .getByRole('button')
+        .click()
+      await expect(preview.getByTestId('serie-consulta').first()).toBeVisible()
+      await expect(preview.getByTestId('serie-consulta').first()).toContainText(/SET /)
+    }
+
     await page.getByRole('link', { name: 'Historial' }).first().click()
     await page.getByRole('tab', { name: 'Por miembro' }).click()
     await expect(page.getByRole('heading', { name: 'Por miembro' })).toBeVisible()
+    const gruposConsulta = page.getByRole('region', { name: /^Series de / })
+    await expect(gruposConsulta.first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Duplicar' })).toHaveCount(0)
+    await gruposConsulta.first().getByRole('button').click()
+    await expect(page.getByTestId('serie-consulta').first()).toBeVisible()
+    await expect(page.getByTestId('serie-consulta').first()).toContainText(/SET /)
+    await expect(page.getByTestId('serie-consulta').first()).toContainText(/×/)
     await page.getByLabel('Grupo muscular').selectOption({ label: 'Pierna' })
     await expect(page.getByText(/Ninguna serie encaja|Cargando series|×/)).toBeVisible()
     if (await page.getByRole('button', { name: 'Quitar filtros' }).isVisible()) {
@@ -523,7 +550,11 @@ test.describe('FitCheck QA', () => {
       test.skip(true, 'CAT-06: no hay serie propia para comprobar borrado en uso')
     }
     const ariaGrupo = (await gruposSerie.first().getAttribute('aria-label')) ?? ''
-    const equipoUsado = ariaGrupo.replace(/^Series de /, '').split(' · ').pop()?.trim()
+    const equipoUsado = ariaGrupo
+      .replace(/^Series de /, '')
+      .split(' · ')
+      .pop()
+      ?.trim()
     test.skip(!equipoUsado, 'CAT-06: no hay serie propia para comprobar borrado en uso')
     await irA(page, 'Ajustes')
     const buscarUsado = page.getByPlaceholder('Buscar equipo')
@@ -745,8 +776,6 @@ test.describe('FitCheck QA', () => {
     await irAFecha(page, targetDay!)
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
     const setsDestino = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
-    await expect
-      .poll(async () => setsDestino.count())
-      .toBeGreaterThanOrEqual(nSilvio)
+    await expect.poll(async () => setsDestino.count()).toBeGreaterThanOrEqual(nSilvio)
   })
 })
