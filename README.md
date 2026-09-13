@@ -28,4 +28,18 @@ En iPhone: Safari → esa URL → Compartir → Añadir a pantalla de inicio. En
 
 El esquema está en `supabase/schema.sql`. Realtime ya está publicado en el proyecto FitCheck; `supabase/realtime.sql` queda como referencia. El borrado de catálogo está en el esquema y en `supabase/catalogo_delete.sql`. Alta de miembros: Edge Function `invitar-miembro`.
 
-La Spec de producto está en `SPEC.md`. El estado de lo implementado y lo pendiente está en `Spec-Status.md`.
+La Spec de producto está en `SPEC.md`. El estado de lo implementado y lo pendiente está en `Spec-Status.md`. El cuaderno de QA está en `spec-test.md`; el runner es `e2e/qa.spec.ts`.
+
+## Pruebas
+
+```sh
+npm run type-check
+npm run lint
+```
+
+E2E (dev server en `http://127.0.0.1:5174`, credenciales **fuera de git**):
+
+```sh
+npx playwright install chromium
+QA_USER=silvio QA_PASS=… QA_USER2=armando QA_PASS2=… npm run test:e2e
+```

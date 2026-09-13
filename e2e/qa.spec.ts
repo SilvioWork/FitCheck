@@ -188,6 +188,7 @@ test.describe('FitCheck QA', () => {
   test('AUTH-01 login válido y AUTH-05 / AUTH-08 / AUTH-03', async ({ page }) => {
     await entrar(page, USER, PASS)
     await expect(page.getByText(/Entraste como /)).toBeVisible()
+    await expect(page.getByText('En vivo')).toBeVisible({ timeout: 20_000 })
 
     await page.goto('/entrar')
     await esperarHoy(page)
@@ -289,6 +290,18 @@ test.describe('FitCheck QA', () => {
     await expect(fecha).toHaveValue(hoy)
     await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
 
+    const prev = page.getByRole('button', { name: 'Día anterior' })
+    const next = page.getByRole('button', { name: 'Día siguiente' })
+    const bPrev = await prev.boundingBox()
+    const bNext = await next.boundingBox()
+    const bDate = await fecha.boundingBox()
+    expect(bPrev && bNext && bDate).toBeTruthy()
+    expect(bPrev!.x).toBeGreaterThanOrEqual(0)
+    expect(bPrev!.x + bPrev!.width).toBeLessThanOrEqual(bDate!.x + 1)
+    expect(bDate!.x + bDate!.width).toBeLessThanOrEqual(bNext!.x + 1)
+    expect(Math.abs(bPrev!.y - bDate!.y)).toBeLessThanOrEqual(2)
+    expect(Math.abs(bPrev!.height - bDate!.height)).toBeLessThanOrEqual(2)
+
     const nueva = page.getByRole('heading', { name: 'Nueva sesión' })
     const anotar = page.getByRole('heading', { name: 'Anotar serie' })
     if (await anotar.isVisible().catch(() => false)) {
@@ -298,22 +311,34 @@ test.describe('FitCheck QA', () => {
     }
 
     const vacio = await irADiaVacioSandbox(page)
-    test.skip(!vacio, 'HOY-12: los días 1–5 del mes pasado ya tienen sesión')
-    assertSandbox(vacio!)
-    await expect(nueva).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Ir a hoy' })).toBeVisible()
-    await page.getByLabel('Nota (opcional)').fill('QA-sandbox historico')
-    await page.getByRole('button', { name: 'Crear sesión' }).click()
-    await expect(anotar).toBeVisible()
-    await expect(fecha).toHaveValue(vacio!)
+    let diaConSesion = vacio
+    if (vacio) {
+      assertSandbox(vacio)
+      await expect(nueva).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Ir a hoy' })).toBeVisible()
+      await page.getByLabel('Nota (opcional)').fill('QA-sandbox historico')
+      await page.getByRole('button', { name: 'Crear sesión' }).click()
+      await expect(anotar).toBeVisible()
+      await expect(fecha).toHaveValue(vacio)
+    } else {
+      test.info().annotations.push({
+        type: 'HOY-12',
+        description: 'blocked: los días 1–5 del mes pasado ya tienen sesión',
+      })
+      diaConSesion = await irASandboxQA(page, 'QA-sandbox fecha')
+      await expect(anotar).toBeVisible()
+      await expect(fecha).toHaveValue(diaConSesion)
+    }
 
     await page.getByRole('button', { name: 'Día siguiente' }).click()
-    await expect(fecha).toHaveValue(addDaysISO(vacio!, 1))
+    await expect(fecha).toHaveValue(addDaysISO(diaConSesion!, 1))
     await esperarFechaCargada(page)
-    await irAFecha(page, vacio!)
+    await irAFecha(page, diaConSesion!)
     await expect(anotar).toBeVisible()
-    await expect(page.getByText('QA-sandbox historico')).toBeVisible()
+    if (vacio) {
+      await expect(page.getByText('QA-sandbox historico')).toBeVisible()
+    }
     await page.getByRole('button', { name: 'Guardar serie' }).click()
     await expect(page.getByText('Serie guardada')).toBeVisible()
 
@@ -370,6 +395,13 @@ test.describe('FitCheck QA', () => {
     await page.getByRole('button', { name: 'Quitar filtros' }).click()
     await expect(filas.first()).toBeVisible()
 
+    await filtros.getByLabel('Desde').fill('2099-01-01')
+    await filtros.getByLabel('Hasta').fill('2099-01-31')
+    await page.getByRole('button', { name: 'Aplicar' }).click()
+    await expect(page.getByText('Ninguna sesión encaja con esos filtros.')).toBeVisible()
+    await page.getByRole('button', { name: 'Quitar filtros' }).click()
+    await expect(filas.first()).toBeVisible()
+
     await expect(page.getByRole('heading', { name: 'Consultas' })).toBeVisible()
     await expect(page.getByRole('heading', { name: '¿Quién no asistió?' })).toBeVisible()
     await expect(page.getByRole('heading', { name: '¿Quién no usó un equipo?' })).toBeVisible()
@@ -422,25 +454,67 @@ test.describe('FitCheck QA', () => {
       await expect(grupos.getByRole('listitem').filter({ hasText: nombre }).first()).toBeVisible()
     }
 
+    const filaEquipo = equipos.getByRole('listitem').first()
+    await expect(filaEquipo.getByRole('button', { name: 'Editar' })).toBeVisible()
+    await expect(filaEquipo.getByRole('button', { name: 'Quitar' })).toBeVisible()
+
     const buscarEquipo = catalogo.getByPlaceholder('Buscar equipo')
-    await buscarEquipo.fill('QA-banco-tmp')
-    const tmp = equipos.getByRole('listitem').filter({ hasText: 'QA-banco-tmp' })
-    if ((await tmp.count()) === 0) {
-      await buscarEquipo.fill('')
-      await page.getByPlaceholder('Máquina press banca Technogym').fill('QA-banco-tmp')
-      await page.getByRole('button', { name: 'Añadir equipo' }).click()
-      await buscarEquipo.fill('QA-banco-tmp')
+    const buscarEjercicio = catalogo.getByPlaceholder('Buscar ejercicio')
+    const ejercicios = catalogo.getByRole('list', { name: 'Ejercicios' })
+    await expect
+      .poll(async () =>
+        buscarEquipo.evaluate((el) => {
+          const viewport = el.closest('.catalog-list')?.querySelector('.viewport')
+          return viewport ? getComputedStyle(viewport).height : ''
+        }),
+      )
+      .toBe('240px')
+    await buscarEjercicio.fill('press')
+    const filtrados = ejercicios.getByRole('listitem')
+    await expect(filtrados.first()).toBeVisible()
+    const titulosPress = await filtrados.locator('strong').allTextContents()
+    expect(titulosPress.length).toBeGreaterThan(0)
+    expect(titulosPress.every((t) => t.toLocaleLowerCase('es').includes('press'))).toBeTruthy()
+    await buscarEjercicio.fill('zzz-no-existe-qa')
+    await expect(catalogo.getByText('Nada coincide')).toBeVisible()
+    await buscarEjercicio.fill('')
+
+    await buscarEquipo.focus()
+    await expect
+      .poll(async () => buscarEquipo.evaluate((el) => getComputedStyle(el).outlineWidth))
+      .toBe('2px')
+
+    for (const resto of ['QA-tmp-edit-2', 'QA-tmp-edit']) {
+      await buscarEquipo.fill(resto)
+      const filaResto = equipos.getByRole('listitem').filter({ hasText: resto })
+      if ((await filaResto.count()) > 0) {
+        await filaResto.first().getByRole('button', { name: 'Quitar' }).click()
+        await filaResto.first().getByRole('button', { name: 'Confirmar' }).click()
+      }
     }
+    await buscarEquipo.fill('')
+    await page.getByPlaceholder('Máquina press banca Technogym').fill('QA-tmp-edit')
+    await page.getByRole('button', { name: 'Añadir equipo' }).click()
+    await buscarEquipo.fill('QA-tmp-edit')
+    const tmp = equipos.getByRole('listitem').filter({ hasText: 'QA-tmp-edit' })
     await expect(tmp).toBeVisible()
+    await tmp.getByRole('button', { name: 'Editar' }).click()
+    const editorCat = page.getByRole('dialog', { name: 'Editar catálogo' })
+    await expect(editorCat.getByRole('heading', { name: 'Editar' })).toBeVisible()
+    await editorCat.getByLabel('Nombre').fill('QA-tmp-edit-2')
+    await editorCat.getByRole('button', { name: 'Guardar' }).click()
+    await buscarEquipo.fill('QA-tmp-edit-2')
+    const tmpRenombrado = equipos.getByRole('listitem').filter({ hasText: 'QA-tmp-edit-2' })
+    await expect(tmpRenombrado).toBeVisible()
 
     await catalogo.getByPlaceholder('Core').fill('Hombro')
     await catalogo.getByRole('button', { name: 'Añadir grupo' }).click()
     await expect(page.locator('.toast')).toContainText('Ya existe «Hombro» en el catálogo.')
     await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
-    await tmp.getByRole('button', { name: 'Quitar' }).click()
-    await tmp.getByRole('button', { name: 'Confirmar' }).click()
-    await buscarEquipo.fill('QA-banco-tmp')
-    await expect(equipos.getByRole('listitem').filter({ hasText: 'QA-banco-tmp' })).toHaveCount(0)
+    await tmpRenombrado.getByRole('button', { name: 'Quitar' }).click()
+    await tmpRenombrado.getByRole('button', { name: 'Confirmar' }).click()
+    await buscarEquipo.fill('QA-tmp-edit-2')
+    await expect(equipos.getByRole('listitem').filter({ hasText: 'QA-tmp-edit-2' })).toHaveCount(0)
 
     await irA(page, 'Hoy')
     await irASandboxQA(page, 'QA-sandbox cat')
@@ -501,6 +575,9 @@ test.describe('FitCheck QA', () => {
     await expect(formSerie.getByRole('listbox', { name: 'Lista de ejercicios' })).toBeVisible()
     await buscarInput.fill('press')
     await expect(opciones).not.toHaveCount(totalOpciones)
+    const textos = await opciones.allTextContents()
+    expect(textos.length).toBeGreaterThan(0)
+    expect(textos.every((t) => t.toLocaleLowerCase('es').includes('press'))).toBeTruthy()
     const opcionPress = opciones.filter({ hasText: /press/i }).first()
     await expect(opcionPress).toBeVisible()
 

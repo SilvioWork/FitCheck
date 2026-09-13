@@ -137,21 +137,21 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | HOY-06 | Editar serie | En el SET, **Editar** → cambiar reps/peso/equipo/nota → **Guardar cambios** | Lista actualizada; no se edita `numero_serie` a mano | 6.1 | P 2026-09-09 e2e |
 | HOY-07 | Borrar serie | Editar → borrar (confirmación) | Pide confirmación; desaparece; números de ese ejercicio se compactan | 6.1 | P 2026-09-09 e2e |
 | HOY-08 | Día elegido sin sesión | Con sesión hoy: elegir un día vacío | Formulario **Nueva sesión** (sin input de fecha duplicado), no el registro de hoy | 6.1 | P 2026-09-08 e2e |
-| HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-07 e2e |
+| HOY-09 | En vivo | Con red, tras load | Texto **En vivo** si Realtime `SUBSCRIBED` | 4.4 | P 2026-09-13 e2e |
 | HOY-10 | Serie de otro miembro | Selector → otro compañero → guardar serie | Aparece en «Series de {ese}»; no en las del logueado; ese miembro queda **Presente** | 6.1 | P 2026-09-09 e2e (Armando) |
-| HOY-11 | Default hoy | Abrir Hoy | El date input vale la fecha local; `h1` **Hoy**; si hay sesión hoy, se ve el registro | 6.1 | P 2026-09-08 e2e |
-| HOY-12 | Día vacío pasado | Elegir un día vacío en **días 1–5 del mes pasado** → nota `QA-…` → **Crear sesión** | Asistencia + «Anotar serie»; el selector **no** vuelve a hoy solo | 6.1 | P 2026-09-08 e2e |
-| HOY-13 | Día con sesión | Cambiar a una fecha que ya tiene sesión (sandbox) | Muestra asistencia/series de ese día; se puede guardar otra serie | 6.1 | P 2026-09-08 e2e |
-| HOY-14 | Día siguiente / Ir a hoy | **Día siguiente** (o anterior); luego **Ir a hoy** | Cambia la fecha del selector; Ir a hoy restaura hoy y el `h1` **Hoy** | 6.1 | P 2026-09-08 e2e |
-| HOY-15 | Stepper hold-to-repeat | En sandbox: tap **Más Peso kg** = +2.5; mantener ≥ 1 s | Tras 1 s el peso sube **más de un paso** a ritmo constante; soltar detiene | 6.3 | P 2026-09-08 e2e |
-| HOY-16 | Filtro del selector de ejercicio | En sandbox: abrir selector → buscar `press` → elegir | Solo coincidencias por nombre; al elegir se cierra y el trigger muestra el ejercicio; se puede guardar la serie | 6.1 | Pendiente e2e |
+| HOY-11 | Default hoy | Abrir Hoy | El date input vale la fecha local; `h1` **Hoy**; si hay sesión hoy, se ve el registro | 6.1 | P 2026-09-13 e2e |
+| HOY-12 | Día vacío pasado | Elegir un día vacío en **días 1–5 del mes pasado** → nota `QA-…` → **Crear sesión** | Asistencia + «Anotar serie»; el selector **no** vuelve a hoy solo | 6.1 | P 2026-09-13 e2e |
+| HOY-13 | Día con sesión | Cambiar a una fecha que ya tiene sesión (sandbox) | Muestra asistencia/series de ese día; se puede guardar otra serie | 6.1 | P 2026-09-13 e2e |
+| HOY-14 | Día siguiente / Ir a hoy | **Día siguiente** (o anterior); luego **Ir a hoy** | Cambia la fecha del selector; Ir a hoy restaura hoy y el `h1` **Hoy** | 6.1 | P 2026-09-13 e2e |
+| HOY-15 | Stepper hold-to-repeat | En sandbox: tap **Más Peso kg** = +2.5; mantener ≥ 1 s | Tras 1 s el peso sube **más de un paso** a ritmo constante; soltar detiene | 6.3 | P 2026-09-13 e2e |
+| HOY-16 | Filtro del selector de ejercicio | En sandbox: abrir selector → buscar `press` → elegir | Solo coincidencias por nombre; al elegir se cierra y el trigger muestra el ejercicio; se puede guardar la serie | 6.1 | P 2026-09-13 e2e |
 
 ### 4.3 Historial y consultas (`HIST`)
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
 | HIST-01 | Lista de sesiones | Historial → pestaña Sesiones | Filas fecha + nota; tap abre `/historial/:id` | 6.2 | P 2026-09-07 e2e |
-| HIST-02 | Filtro fechas | Desde / Hasta → **Aplicar** | Solo sesiones en rango; vacío: «Ninguna sesión encaja…» | 6.2 | Pendiente (no se rellenó desde/hasta en esta ronda) |
+| HIST-02 | Filtro fechas | Desde / Hasta → **Aplicar** | Solo sesiones en rango; vacío: «Ninguna sesión encaja…» | 6.2 | P 2026-09-13 e2e |
 | HIST-03 | Filtro grupo muscular | Elegir Pecho (u otro) → Aplicar | Lista filtrada; texto de frecuencia `N sesiones de {grupo} en este rango` | 6.2 | P 2026-09-07 e2e |
 | HIST-04 | Quitar filtros | Con filtro activo → **Quitar filtros** | Vuelve la lista completa | 6.2 | P 2026-09-07 e2e |
 | HIST-05 | Paginación | Solo si hay **> 15** sesiones | Anterior/Siguiente; página N / M | 6.2, 8 | B (2 sesiones; hace falta volumen) |
@@ -173,13 +173,13 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | CAT-01 | Seed visible | Ajustes → **Catálogo** | Grupos/equipos/ejercicios del seed en **listas** (no chips), **sin duplicados**. Recuadro de altura fija por sección | 5, 6.6 | P 2026-09-09 e2e |
 | CAT-02 | Alta equipo/ejercicio/grupo | Nombre `QA-tmp-…`; buscarlo en el filtro de esa sección | Aparece en la lista filtrada y en selectores de Hoy | 5, 6.0, 6.6 | P 2026-09-09 e2e |
 | CAT-03 | Nombre duplicado | Crear «Hombro» otra vez (cualquier casing) | Error «ya existe»; no duplica | 5, 10 | P 2026-09-09 e2e |
-| CAT-04 | Editar ítem | En la fila: **Editar** (sin tap previo al ítem) → cambiar nombre de un `QA-tmp-…` | Se actualiza | 5, 6.6 | Pendiente |
-| CAT-05 | Borrar sin uso | Filtro → **Quitar** → **Confirmar** en `QA-tmp-…` no usado | Desaparece; confirmación en dos toques | 5, 6.6 | P 2026-09-09 e2e |
-| CAT-06 | Borrar en uso | Filtro por el equipo de una serie → Quitar → Confirmar | Se impide (mensaje); no rompe historial; la fila sigue | 5, 6.6 | P 2026-09-09 e2e |
-| CAT-07 | Filtro por nombre | Escribir un fragmento del nombre (p. ej. «press») | Solo filas cuyo **título** coincide (case-insensitive, locale `es`); el subtítulo no filtra; «Nada coincide» si no hay match | 6.6 | Pendiente |
-| CAT-08 | Scroll interno | Catálogo con más ítems de los que caben (~5 filas) | El recuadro mide `--catalog-list-h` (240px); el scroll es de la lista, no de toda la vista de Ajustes; el input de buscar no se mueve | 6.6 | Pendiente |
-| CAT-09 | Acciones de fila | Sin hover ni tap extra | **Editar** y **Quitar** visibles en cada fila; Quitar pide Confirmar | 6.6 | Pendiente |
-| CAT-10 | Foco del filtro | Tap en Buscar equipo/ejercicio/grupo | Anillo de 2px `--accent` en los **cuatro** lados (inset); no se pierde el borde superior | 6.6 | Pendiente |
+| CAT-04 | Editar ítem | En la fila: **Editar** (sin tap previo al ítem) → cambiar nombre de un `QA-tmp-…` | Se actualiza | 5, 6.6 | P 2026-09-13 e2e |
+| CAT-05 | Borrar sin uso | Filtro → **Quitar** → **Confirmar** en `QA-tmp-…` no usado | Desaparece; confirmación en dos toques | 5, 6.6 | P 2026-09-13 e2e |
+| CAT-06 | Borrar en uso | Filtro por el equipo de una serie → Quitar → Confirmar | Se impide (mensaje); no rompe historial; la fila sigue | 5, 6.6 | P 2026-09-13 e2e |
+| CAT-07 | Filtro por nombre | Escribir un fragmento del nombre (p. ej. «press») | Solo filas cuyo **título** coincide (case-insensitive, locale `es`); el subtítulo no filtra; «Nada coincide» si no hay match | 6.6 | P 2026-09-13 e2e (ejercicios) |
+| CAT-08 | Scroll interno | Catálogo con más ítems de los que caben (~5 filas) | El recuadro mide `--catalog-list-h` (240px); el scroll es de la lista, no de toda la vista de Ajustes; el input de buscar no se mueve | 6.6 | P 2026-09-13 e2e (altura 240px) |
+| CAT-09 | Acciones de fila | Sin hover ni tap extra | **Editar** y **Quitar** visibles en cada fila; Quitar pide Confirmar | 6.6 | P 2026-09-13 e2e |
+| CAT-10 | Foco del filtro | Tap en Buscar equipo/ejercicio/grupo | Anillo de 2px `--accent` en los **cuatro** lados (inset); no se pierde el borde superior | 6.6 | P 2026-09-13 e2e |
 | TEM-01 | Tema Claro / Oscuro / Auto | Ajustes → **Catálogo** → segmented | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | P 2026-09-09 e2e |
 
 ### 4.5 Seguridad y realtime (`RLS`, `RT`)
@@ -206,7 +206,8 @@ Bugs ya vistos en esta ronda; se reejecutan para no reabrirlos.
 | ID | Caso | Esperado | Último |
 |---|---|---|---|
 | REG-01 | Tras login, `ensureMiembro` no hace upsert si ya existe la fila | Entra a Hoy; no «No formas parte del grupo» | P 2026-09-07 e2e (retest) |
-| REG-02 | Logout → login no deja parado en `/entrar` | Navega a Hoy | P 2026-09-07 e2e (retest) |
+| REG-02 | Logout → login no deja parado en `/entrar` | Navega a Hoy | P 2026-09-13 e2e (retest) |
+| REG-03 | Barra de fecha en iPhone | Flechas y date input a la misma altura, sin recorte ni solape (viewport 390×844) | P 2026-09-13 e2e |
 
 ---
 
@@ -234,6 +235,7 @@ Con 2 usuarios y permiso de datos: RLS-01, RLS-02, RT-01, HIST-08.
 | 2026-09-07 | local `5174` + Supabase vivo | QA (Playwright, 8/8) | AUTH-01..06, AUTH-08, HOY-01..07, HOY-09..10, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.2: escritura de grupo + 9 chips. Chromium viewport 390×844. RLS vivo `asistencia grupo *` / `series grupo *`. 3 miembros (Silvio, Armando, Pia). HOY-10: serie de Armando anotada por Silvio. Chips «Con ayuda · Rest-pause + dropset» sin falso positivo de Rest-pause. CAT-03 con «Hombro» (hay varios grupos Pecho*). HIST-05 no cubierto. PWA-* pendiente. |
 | 2026-09-08 | local `5174` + Supabase vivo | QA (Playwright, 9/9) | AUTH-01..06, AUTH-08, HOY-01..14, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.4: selector de fecha en Hoy. Chromium viewport 390×844. HOY-08 y HOY-11..14: default hoy, alta en día vacío, continuar día con sesión, Ir a hoy. El locator de series ya no usa `.last()` de toda la lista (hoy hay varios ejercicios). HIST-05 no cubierto. PWA-* pendiente. |
 | 2026-09-09 | local `5174` + Supabase vivo | QA (Playwright, 10/10) | AUTH-01..06, AUTH-08, HOY-02..07, HOY-10..15, HIST-01, HIST-03..04, HIST-06..09, AJU-01, CAT-01..03, CAT-05..06, TEM-01, RLS-01..02, RT-01, REG-01..02 | P | Spec v1.5: acordeón por ejercicio + equipo; **Duplicar** sustituye Repetir última. Chromium 390×844. HOY-05 P. CAT-06 lee el equipo del `region` del acordeón (ya no `.row small`). Datos QA solo en mes pasado días 1–5. HIST-02, CAT-04, HIST-05, PWA-* no cubiertos. |
+| 2026-09-13 | local `5174` + Supabase vivo | QA (Playwright, 11/11) | AUTH-01..06, AUTH-08, HOY-02..16, HIST-01..04, HIST-06..09, AJU-01, CAT-01..10, TEM-01, RLS-01..02, RT-01, REG-01..03 | P | Spec v1.6: filtro de ejercicio (HOY-16) + barra de fecha alineada (REG-03). Chromium 390×844. Cerrados HIST-02 y CAT-04/07..10. `type-check` y `lint` OK. HIST-05 sigue sin volumen (>15 sesiones). AJU-02..05 y PWA-* igual. |
 
 ---
 
@@ -261,7 +263,7 @@ Si se creó basura `QA-*`:
 
 ## 9. Cómo sigue el QA
 
-1. Ronda e2e local v1.6 (filtro de ejercicio, HOY-16). Datos QA solo en días 1–5 del mes pasado. Pendiente: HIST-02, CAT-04, CAT-07..10, HIST-05 (volumen), AJU-02..05 (solo si se pide), PWA-* en iPhone.
+1. Ronda e2e local v1.6 **hecha** (2026-09-13, 11/11). Pendiente a propósito: HIST-05 (hace falta >15 sesiones), AJU-02..05 (no se tocan claves ni `qa_tmp`), PWA-* en iPhone real.
 2. Reejecutar `npm run test:e2e` tras cambios de UI o auth.
 3. Cada fail nuevo → BUG en sec. 7 y, si aplica, arreglo de código + retest del ID.
 

@@ -1,7 +1,7 @@
 # FitCheck — Spec-Status
 
 **Tipo:** estado de desarrollo (no sustituye a `SPEC.md`)
-**Fecha:** 2026-09-08
+**Fecha:** 2026-09-13
 **Repo:** [github.com/SilvioWork/FitCheck](https://github.com/SilvioWork/FitCheck)
 **Carpeta:** `FitCheck/` (producto **FitCheck**; la Spec original vive aquí como `SPEC.md`)
 
@@ -92,6 +92,8 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Hoy anclado a una fecha elegible (pasado, hoy o futuro); si ese día ya tiene sesión, se continúa; si no, se crea. No es un planificador de rutinas.
 - Stepper de reps/peso: tap = un paso; mantener ≥ 1 s avanza a ritmo constante (100 ms) hasta soltar.
 - Series del miembro en Hoy: acordeón por ejercicio + equipo; `numero_serie` 1, 2, 3… por ese grupo; Duplicar en el SET (nota vacía); sin botón «Repetir última».
+- Selector de ejercicio con búsqueda (cierra al elegir y al tocar fuera).
+- Barra de fecha en Hoy: flechas y `input type="date"` en una fila que no se desborda en iPhone.
 
 ---
 
@@ -101,7 +103,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 - Proyecto `zrbbmqowrjfnluzfybuc`, región `eu-west-2`.
 - Auth: usuario/contraseña. Panel: [URL Configuration](https://supabase.com/dashboard/project/zrbbmqowrjfnluzfybuc/auth/url-configuration) y [Providers → Email](https://supabase.com/dashboard/project/zrbbmqowrjfnluzfybuc/auth/providers): **desactivar Confirm email**.
-- Cuentas actuales: `silvio` y `armando` (emails internos `@fitcheck.local`). Contraseña temporal de migración: cambiarla en Ajustes al entrar.
+- Cuentas de Auth documentadas: `silvio` y `armando` (emails internos `@fitcheck.local`). El grupo de producto tiene más miembros (QA ve al menos Silvio, Armando y Pia). Contraseña: coordinar en persona; no está en git.
 - Realtime publicado sobre `sesiones`, `asistencia`, `series`, `miembros`, `grupos_musculares`, `equipos`, `ejercicios`.
 
 ### 3.2 Vercel
@@ -111,7 +113,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 - Alias antiguo, mismo deploy: `https://temporary-nimble-basin-ycmrd13.vercel.app`
 - `fitcheck.vercel.app` está ocupado por otro producto ajeno; no usarlo.
 - Local enlazado (`.vercel` gitignored). **Auto-deploy desde GitHub está conectado:** repo [`SilvioWork/FitCheck`](https://github.com/SilvioWork/FitCheck), rama de producción `main`. Un `git push` a `main` dispara el build (fuente `git`, no CLI). Alias de rama: `https://fitcheck-git-main-silviowork89-4758.vercel.app`. `npx vercel deploy --prod` solo hace falta si se quiere publicar sin pasar por GitHub.
-- Comprobado 2026-09-09: producción **Ready** con commit `d90c133` (acordeón v1.5 + registro QA), `githubDeployment=1`.
+- Comprobado 2026-09-13: `main` en `8091e41` (v1.6 selector de ejercicio + barra de fecha iPhone). Auto-deploy GitHub → Vercel en cada push a `main`.
 - Variables de build: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
 
 ### 3.3 Dashboard Auth (manual, una vez)
@@ -155,4 +157,5 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 1. Leer `SPEC.md` para el *qué* y *por qué*.
 2. Leer este archivo para el *dónde estamos*.
-3. Prioridad recomendada: **instalar la PWA en los iPhones** → cambiar contraseñas temporales → invitar al resto del grupo.
+3. Leer `spec-test.md` para casos QA y `e2e/qa.spec.ts` para la batería.
+4. Prioridad recomendada: **instalar la PWA en los iPhones** → cambiar contraseñas temporales → invitar al resto del grupo.
