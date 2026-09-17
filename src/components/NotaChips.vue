@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { NOTA_CHIPS, type NotaChip } from '@/lib/notaChips'
+import { cn } from '@/lib/cn'
 
 const selected = defineModel<string[]>({ default: () => [] })
 
@@ -17,13 +18,12 @@ function toggle(chip: NotaChip) {
 </script>
 
 <template>
-  <div class="chips" role="group" aria-label="Marcas de la serie">
+  <div class="flex flex-wrap gap-2" role="group" aria-label="Marcas de la serie">
     <button
       v-for="chip in NOTA_CHIPS"
       :key="chip"
       type="button"
-      class="chip"
-      :class="{ on: isOn(chip) }"
+      :class="cn('chip px-3 text-[0.85rem]', isOn(chip) && 'chip-on')"
       :aria-pressed="isOn(chip)"
       @click="toggle(chip)"
     >
@@ -31,28 +31,3 @@ function toggle(chip: NotaChip) {
     </button>
   </div>
 </template>
-
-<style scoped>
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip {
-  min-height: var(--tap);
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.chip.on {
-  border-color: transparent;
-  background: var(--accent-soft);
-  color: var(--text);
-}
-</style>

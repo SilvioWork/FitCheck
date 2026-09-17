@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { Copy, Pencil } from '@lucide/vue'
 import { onUnmounted, ref, watch } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 import StepperControl from '@/components/StepperControl.vue'
 import { useFitcheckStore } from '@/stores/fitcheck'
 import type { Serie } from '@/types/models'
@@ -104,67 +106,33 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="set" data-testid="serie-set">
-    <div class="top">
-      <p class="label">SET {{ serie.numero_serie }}</p>
-      <button type="button" class="ghost" @click="onEditar">Editar</button>
+  <div
+    class="grid gap-2 rounded-sm border border-border bg-background p-2.5"
+    data-testid="serie-set"
+  >
+    <div class="grid grid-cols-[1fr_auto] items-center gap-2">
+      <p class="m-0 text-[0.9rem] font-extrabold text-accent">SET {{ serie.numero_serie }}</p>
+      <button type="button" class="btn-ghost min-w-tap px-3" aria-label="Editar" @click="onEditar">
+        <span class="inline-flex items-center justify-center">
+          <AppIcon :icon="Pencil" size="sm" />
+        </span>
+        <span class="sr-only">Editar</span>
+      </button>
     </div>
-    <div class="pair">
+    <div class="grid grid-cols-2 gap-2">
       <StepperControl v-model="reps" compact label="Reps" :min="1" />
       <StepperControl v-model="peso" compact label="Peso kg" :step="2.5" :min="0" />
     </div>
-    <p v-if="serie.nota" class="nota">{{ serie.nota }}</p>
-    <button type="button" class="ghost duplicar" @click="onDuplicar">Duplicar</button>
+    <p v-if="serie.nota" class="m-0 text-[0.85rem] font-medium text-muted-foreground">
+      {{ serie.nota }}
+    </p>
+    <button
+      type="button"
+      class="btn-ghost inline-flex w-full items-center justify-center gap-2"
+      @click="onDuplicar"
+    >
+      <AppIcon :icon="Copy" size="sm" />
+      Duplicar
+    </button>
   </div>
 </template>
-
-<style scoped>
-.set {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  border: 1px solid var(--border);
-}
-
-.top {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-
-.label {
-  margin: 0;
-  font-weight: 800;
-  color: var(--accent);
-  font-size: 0.9rem;
-}
-
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.nota {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.duplicar {
-  width: 100%;
-}
-</style>

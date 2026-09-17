@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { CalendarDays, History, Settings } from '@lucide/vue'
 import { useRoute } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
+import { cn } from '@/lib/cn'
 
 const route = useRoute()
 
 const tabs = [
-  { to: '/', label: 'Hoy' },
-  { to: '/historial', label: 'Historial' },
-  { to: '/ajustes', label: 'Ajustes' },
+  { to: '/', label: 'Hoy', icon: CalendarDays },
+  { to: '/historial', label: 'Historial', icon: History },
+  { to: '/ajustes', label: 'Ajustes', icon: Settings },
 ] as const
 
 function isActive(to: string) {
@@ -15,42 +18,23 @@ function isActive(to: string) {
 </script>
 
 <template>
-  <nav class="nav" aria-label="Principal">
+  <nav
+    class="grid grid-cols-3 gap-2 border-t border-border bg-card px-3 pt-2 pb-[calc(8px+var(--safe-bottom))]"
+    aria-label="Principal"
+  >
     <RouterLink
       v-for="tab in tabs"
       :key="tab.to"
       :to="tab.to"
-      class="tab"
-      :class="{ 'tab-active': isActive(tab.to) }"
+      :class="
+        cn(
+          'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-sm px-1 text-[0.7rem] leading-none font-semibold whitespace-nowrap no-underline',
+          isActive(tab.to) ? 'bg-accent-soft text-foreground' : 'text-muted-foreground',
+        )
+      "
     >
+      <AppIcon :icon="tab.icon" />
       {{ tab.label }}
     </RouterLink>
   </nav>
 </template>
-
-<style scoped>
-.nav {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 8px 12px calc(8px + var(--safe-bottom));
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-}
-
-.tab {
-  min-height: var(--tap);
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.tab-active {
-  color: var(--text);
-  background: var(--accent-soft);
-}
-</style>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { Monitor, Moon, Sun } from '@lucide/vue'
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
 import CatalogoPanel from '@/components/CatalogoPanel.vue'
 import InstalarPwa from '@/components/InstalarPwa.vue'
 import { usuarioValido } from '@/lib/usuario'
+import { cn } from '@/lib/cn'
 import { useThemeStore, type ThemePreference } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import { useFitcheckStore } from '@/stores/fitcheck'
@@ -17,10 +20,10 @@ const gym = useFitcheckStore()
 
 const vista = computed(() => (route.query.vista === 'users' ? 'users' : 'catalogo'))
 
-const options: { value: ThemePreference; label: string }[] = [
-  { value: 'light', label: 'Claro' },
-  { value: 'dark', label: 'Oscuro' },
-  { value: 'auto', label: 'Auto' },
+const options: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Claro', icon: Sun },
+  { value: 'dark', label: 'Oscuro', icon: Moon },
+  { value: 'auto', label: 'Auto', icon: Monitor },
 ]
 
 const alta = reactive({ nombre: '', usuario: '', password: '' })
@@ -72,30 +75,40 @@ async function cambiarPassword() {
 </script>
 
 <template>
-  <section class="page">
+  <section class="grid gap-4">
     <header>
       <h1>Ajustes</h1>
-      <p v-if="vista === 'users'">Cuentas del grupo{{ gym.enVivo ? ' · en vivo' : '' }}.</p>
-      <p v-else>Catálogo del grupo y apariencia{{ gym.enVivo ? ' · en vivo' : '' }}.</p>
+      <p class="m-0 leading-snug text-muted-foreground">
+        <template v-if="vista === 'users'"
+          >Cuentas del grupo{{ gym.enVivo ? ' · en vivo' : '' }}.</template
+        >
+        <template v-else
+          >Catálogo del grupo y apariencia{{ gym.enVivo ? ' · en vivo' : '' }}.</template
+        >
+      </p>
     </header>
 
-    <div class="tabs" role="tablist" aria-label="Sección de ajustes">
+    <div
+      class="grid grid-cols-2 gap-2 rounded-sm bg-muted p-1"
+      role="tablist"
+      aria-label="Sección de ajustes"
+    >
       <button
         type="button"
-        class="tab-btn"
+        class="btn-seg"
         role="tab"
         :aria-selected="vista === 'catalogo'"
-        :class="{ active: vista === 'catalogo' }"
+        :class="{ 'btn-seg-active': vista === 'catalogo' }"
         @click="setVista('catalogo')"
       >
         Catálogo
       </button>
       <button
         type="button"
-        class="tab-btn"
+        class="btn-seg"
         role="tab"
         :aria-selected="vista === 'users'"
-        :class="{ active: vista === 'users' }"
+        :class="{ 'btn-seg-active': vista === 'users' }"
         @click="setVista('users')"
       >
         Users
@@ -105,47 +118,78 @@ async function cambiarPassword() {
     <template v-if="vista === 'users'">
       <article class="card">
         <h2>Tu perfil</h2>
-        <p class="hint">{{ gym.miembroActivo?.nombre }} · @{{ gym.miembroActivo?.usuario }}</p>
-        <p class="hint">Cada uno entra con su usuario y contraseña en su iPhone.</p>
-        <ul>
+        <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
+          {{ gym.miembroActivo?.nombre }} · @{{ gym.miembroActivo?.usuario }}
+        </p>
+        <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
+          Cada uno entra con su usuario y contraseña en su iPhone.
+        </p>
+        <ul class="m-0 grid list-none gap-2 p-0">
           <li v-for="miembro in gym.miembros" :key="miembro.id">
-            <span :class="{ on: gym.miembroActivoId === miembro.id }">
+            <span
+              :class="
+                cn(
+                  'grid min-h-tap items-center rounded-sm px-3 font-bold',
+                  gym.miembroActivoId === miembro.id
+                    ? 'bg-accent-soft text-foreground'
+                    : 'bg-muted text-muted-foreground',
+                )
+              "
+            >
               {{ miembro.nombre }} · @{{ miembro.usuario }}
             </span>
           </li>
         </ul>
-        <label>
+        <label class="field">
           Nueva contraseña
-          <input v-model="nuevaPassword" type="password" autocomplete="new-password" />
+          <input
+            v-model="nuevaPassword"
+            class="field-input"
+            type="password"
+            autocomplete="new-password"
+          />
         </label>
         <button
-          class="ghost"
+          class="btn-ghost"
           type="button"
           :disabled="enviando || nuevaPassword.length < 8"
           @click="cambiarPassword"
         >
           Cambiar mi contraseña
         </button>
-        <button class="ghost" type="button" @click="salir">Cerrar sesión</button>
+        <button class="btn-ghost" type="button" @click="salir">Cerrar sesión</button>
       </article>
 
       <article v-if="gym.miembros.length < 5" class="card">
         <h2>Invitar compañero</h2>
-        <p class="hint">Se lo dices en persona. Tope de 5. {{ gym.miembros.length }}/5.</p>
-        <label>
+        <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
+          Se lo dices en persona. Tope de 5. {{ gym.miembros.length }}/5.
+        </p>
+        <label class="field">
           Nombre
-          <input v-model="alta.nombre" type="text" maxlength="40" />
+          <input v-model="alta.nombre" class="field-input" type="text" maxlength="40" />
         </label>
-        <label>
+        <label class="field">
           Usuario
-          <input v-model="alta.usuario" type="text" maxlength="24" autocapitalize="off" />
+          <input
+            v-model="alta.usuario"
+            class="field-input"
+            type="text"
+            maxlength="24"
+            autocapitalize="off"
+          />
         </label>
-        <label>
+        <label class="field">
           Contraseña inicial
-          <input v-model="alta.password" type="password" autocomplete="new-password" />
+          <input
+            v-model="alta.password"
+            class="field-input"
+            type="password"
+            autocomplete="new-password"
+          />
         </label>
         <button
-          class="ghost"
+          class="btn-ghost"
           type="button"
           :disabled="
             enviando ||
@@ -161,17 +205,30 @@ async function cambiarPassword() {
 
       <article class="card">
         <h2>Resetear contraseña</h2>
-        <p class="hint">Si alguien olvida la suya, otro miembro puede ponerle una nueva.</p>
-        <label>
+        <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
+          Si alguien olvida la suya, otro miembro puede ponerle una nueva.
+        </p>
+        <label class="field">
           Usuario
-          <input v-model="reset.usuario" type="text" maxlength="24" autocapitalize="off" />
+          <input
+            v-model="reset.usuario"
+            class="field-input"
+            type="text"
+            maxlength="24"
+            autocapitalize="off"
+          />
         </label>
-        <label>
+        <label class="field">
           Nueva contraseña
-          <input v-model="reset.password" type="password" autocomplete="new-password" />
+          <input
+            v-model="reset.password"
+            class="field-input"
+            type="password"
+            autocomplete="new-password"
+          />
         </label>
         <button
-          class="ghost"
+          class="btn-ghost"
           type="button"
           :disabled="enviando || !usuarioValido(reset.usuario) || reset.password.length < 8"
           @click="resetear"
@@ -180,8 +237,8 @@ async function cambiarPassword() {
         </button>
       </article>
 
-      <p v-if="auth.aviso" class="ok">{{ auth.aviso }}</p>
-      <p v-if="auth.error" class="err">{{ auth.error }}</p>
+      <p v-if="auth.aviso" class="m-0 font-bold text-success">{{ auth.aviso }}</p>
+      <p v-if="auth.error" class="m-0 font-bold text-danger">{{ auth.error }}</p>
     </template>
 
     <template v-else>
@@ -191,15 +248,20 @@ async function cambiarPassword() {
 
       <article class="card">
         <h2>Apariencia</h2>
-        <div class="segment" role="group" aria-label="Tema">
+        <div class="grid grid-cols-3 gap-2 rounded-sm bg-muted p-1" role="group" aria-label="Tema">
           <button
             v-for="option in options"
             :key="option.value"
             type="button"
-            class="seg-btn"
-            :class="{ active: theme.preference === option.value }"
+            :class="
+              cn(
+                'btn-seg inline-grid grid-flow-col items-center justify-center gap-1',
+                theme.preference === option.value && 'btn-seg-active',
+              )
+            "
             @click="theme.setPreference(option.value)"
           >
+            <AppIcon :icon="option.icon" size="sm" />
             {{ option.label }}
           </button>
         </div>
@@ -207,158 +269,3 @@ async function cambiarPassword() {
     </template>
   </section>
 </template>
-
-<style scoped>
-.page {
-  display: grid;
-  gap: 16px;
-}
-
-h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
-}
-
-header p,
-.hint,
-h2 {
-  margin: 0;
-}
-
-header p,
-.hint {
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.hint {
-  font-size: 0.85rem;
-}
-
-.tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.tab-btn {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.tab-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-h2 {
-  font-size: 1.05rem;
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-ul span {
-  min-height: var(--tap);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--text-muted);
-  font-weight: 700;
-  display: grid;
-  align-items: center;
-  padding: 0 12px;
-}
-
-ul span.on {
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.ghost:disabled {
-  opacity: 0.45;
-}
-
-.ok {
-  margin: 0;
-  color: var(--success);
-  font-weight: 700;
-}
-
-.err {
-  margin: 0;
-  color: var(--danger);
-  font-weight: 700;
-}
-
-.segment {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.seg-btn {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.seg-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-</style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { formatFecha } from '@/lib/ids'
+import { cn } from '@/lib/cn'
 import { useFitcheckStore } from '@/stores/fitcheck'
 
 const props = defineProps<{
@@ -24,9 +25,6 @@ const origen = computed(() => gym.miembros.find((m) => m.id === props.sourceMiem
 
 const plantilla = computed(() => gym.seriesDe(props.sourceSesionId, props.sourceMiembroId))
 
-// Todos los integrantes son destinos posibles: el origen no viene preseleccionado
-// (para no duplicar en la misma sesión), pero se puede añadir (p. ej. clonar mi
-// rutina de un día a otro día para mí mismo).
 const destinos = computed(() => gym.miembrosOrdenados)
 
 const totalSeries = computed(() => plantilla.value.length * seleccion.value.length)
@@ -67,24 +65,33 @@ async function clonar() {
     <div class="sheet" role="dialog" aria-label="Clonar series">
       <h2>Clonar series de {{ origen?.nombre ?? 'este miembro' }}</h2>
 
-      <p v-if="!plantilla.length" class="muted">Este miembro no tiene series en esta sesión.</p>
+      <p v-if="!plantilla.length" class="m-0 leading-snug text-muted-foreground">
+        Este miembro no tiene series en esta sesión.
+      </p>
 
       <template v-else>
-        <label>
+        <label class="field">
           Día destino
-          <input :value="fecha" type="date" @change="onFechaInput" @input="onFechaInput" />
+          <input
+            :value="fecha"
+            class="field-input"
+            type="date"
+            @change="onFechaInput"
+            @input="onFechaInput"
+          />
         </label>
 
         <div>
-          <p class="field-label">Copiar a</p>
-          <p v-if="!destinos.length" class="muted">No hay integrantes en el grupo.</p>
-          <div v-else class="chips" role="group" aria-label="Integrantes destino">
+          <p class="field mb-1.5">Copiar a</p>
+          <p v-if="!destinos.length" class="m-0 leading-snug text-muted-foreground">
+            No hay integrantes en el grupo.
+          </p>
+          <div v-else class="flex flex-wrap gap-2" role="group" aria-label="Integrantes destino">
             <button
               v-for="m in destinos"
               :key="m.id"
               type="button"
-              class="chip"
-              :class="{ on: seleccion.includes(m.id) }"
+              :class="cn('chip', seleccion.includes(m.id) && 'chip-on')"
               :aria-pressed="seleccion.includes(m.id)"
               @click="toggle(m.id)"
             >
@@ -93,118 +100,17 @@ async function clonar() {
           </div>
         </div>
 
-        <p class="muted resumen">
-          {{ plantilla.length }} series · {{ seleccion.length }} integrantes ·
-          {{ totalSeries }} a crear el {{ formatFecha(fecha) }}
+        <p class="m-0 font-bold leading-snug text-muted-foreground">
+          {{ plantilla.length }} series · {{ seleccion.length }} integrantes · {{ totalSeries }} a
+          crear el {{ formatFecha(fecha) }}
         </p>
 
-        <button class="primary" type="button" :disabled="!puedeClonar" @click="clonar">
+        <button class="btn-primary" type="button" :disabled="!puedeClonar" @click="clonar">
           {{ clonando ? 'Clonando…' : 'Clonar series' }}
         </button>
       </template>
 
-      <button class="ghost" type="button" @click="emit('close')">Cerrar</button>
+      <button class="btn-ghost" type="button" @click="emit('close')">Cerrar</button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  align-items: end;
-  z-index: 20;
-}
-
-.sheet {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + var(--safe-bottom));
-  display: grid;
-  gap: 12px;
-  max-height: 85dvh;
-  overflow: auto;
-}
-
-h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-label,
-.field-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.field-label {
-  margin: 0 0 6px;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.muted {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.resumen {
-  font-weight: 700;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip {
-  min-height: var(--tap);
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.chip.on {
-  border-color: transparent;
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-.primary,
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  font-weight: 700;
-}
-
-.primary {
-  background: var(--accent);
-  color: #06210f;
-}
-
-.primary:disabled {
-  opacity: 0.45;
-}
-
-.ghost {
-  background: var(--surface-2);
-  color: var(--text);
-}
-</style>

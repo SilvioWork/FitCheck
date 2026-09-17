@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 import AsistenciaList from '@/components/AsistenciaList.vue'
 import RegistroSeries from '@/components/RegistroSeries.vue'
 import { addDaysISO, formatFecha, todayISO } from '@/lib/ids'
@@ -47,11 +49,11 @@ async function crearSesion() {
 </script>
 
 <template>
-  <section class="page">
-    <header class="header">
-      <p class="eyebrow">Sesión</p>
+  <section class="grid gap-4 pb-2">
+    <header>
+      <p class="m-0 text-xs font-bold tracking-wide text-accent uppercase">Sesión</p>
       <h1>{{ titulo }}</h1>
-      <p class="lede">
+      <p class="m-0 leading-snug text-muted-foreground">
         {{
           gym.miembroActivo
             ? `Entraste como ${gym.miembroActivo.nombre}. Puedes anotar a cualquiera.`
@@ -61,22 +63,22 @@ async function crearSesion() {
       </p>
     </header>
 
-    <div class="fecha-bar" role="group" aria-label="Fecha de la sesión">
-      <label class="fecha-label" for="fecha-sesion">Fecha</label>
-      <div class="fecha-row">
+    <div class="grid min-w-0 gap-1.5" role="group" aria-label="Fecha de la sesión">
+      <label class="text-[0.9rem] font-bold" for="fecha-sesion">Fecha</label>
+      <div class="grid min-w-0 grid-cols-[var(--tap)_minmax(0,1fr)_var(--tap)] items-stretch gap-2">
         <button
-          class="fecha-step"
+          class="grid h-tap min-h-tap w-full place-items-center rounded-sm border border-border bg-card p-0 text-foreground disabled:opacity-45"
           type="button"
           aria-label="Día anterior"
           :disabled="cambiando"
           @click="diaAnterior"
         >
-          ‹
+          <AppIcon :icon="ChevronLeft" />
         </button>
-        <div class="fecha-input-wrap">
+        <div class="relative min-w-0 max-w-full overflow-hidden">
           <input
             id="fecha-sesion"
-            class="fecha-input"
+            class="fecha-input field-input"
             :value="gym.fechaActiva"
             type="date"
             :disabled="cambiando"
@@ -85,37 +87,45 @@ async function crearSesion() {
           />
         </div>
         <button
-          class="fecha-step"
+          class="grid h-tap min-h-tap w-full place-items-center rounded-sm border border-border bg-card p-0 text-foreground disabled:opacity-45"
           type="button"
           aria-label="Día siguiente"
           :disabled="cambiando"
           @click="diaSiguiente"
         >
-          ›
+          <AppIcon :icon="ChevronRight" />
         </button>
       </div>
     </div>
-    <button v-if="!esHoy" class="ghost" type="button" :disabled="cambiando" @click="irAHoy">
+    <button v-if="!esHoy" class="btn-ghost" type="button" :disabled="cambiando" @click="irAHoy">
       Ir a hoy
     </button>
 
     <article v-if="!gym.listo || cambiando" class="card">
-      <p>{{ gym.listo ? 'Cargando sesión…' : 'Sincronizando con Supabase…' }}</p>
+      <p class="m-0 text-muted-foreground">
+        {{ gym.listo ? 'Cargando sesión…' : 'Sincronizando con Supabase…' }}
+      </p>
     </article>
 
     <template v-else-if="!sesion">
       <article class="card">
         <h2>Nueva sesión</h2>
-        <label>
+        <label class="field">
           Nota (opcional)
-          <input v-model="nota" type="text" maxlength="80" placeholder="pierna + hombro" />
+          <input
+            v-model="nota"
+            class="field-input"
+            type="text"
+            maxlength="80"
+            placeholder="pierna + hombro"
+          />
         </label>
-        <button class="primary" type="button" @click="crearSesion">Crear sesión</button>
+        <button class="btn-primary" type="button" @click="crearSesion">Crear sesión</button>
       </article>
     </template>
 
     <template v-else>
-      <p class="meta">
+      <p class="m-0 leading-snug text-muted-foreground">
         {{ formatFecha(sesion.fecha) }}<span v-if="sesion.nota"> · {{ sesion.nota }}</span>
       </p>
       <AsistenciaList :sesion-id="sesion.id" />
@@ -123,164 +133,3 @@ async function crearSesion() {
     </template>
   </section>
 </template>
-
-<style scoped>
-.page {
-  display: grid;
-  gap: 16px;
-  padding-bottom: 8px;
-}
-
-.header h1 {
-  margin: 4px 0 8px;
-  font-size: 2rem;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-}
-
-.lede,
-.meta,
-.card p {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.fecha-bar {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.fecha-label {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.fecha-row {
-  display: grid;
-  grid-template-columns: var(--tap) minmax(0, 1fr) var(--tap);
-  gap: 8px;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.fecha-step {
-  width: 100%;
-  height: var(--tap);
-  min-height: var(--tap);
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 1.6rem;
-  line-height: 1;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-}
-
-.fecha-step:disabled {
-  opacity: 0.45;
-}
-
-.fecha-input-wrap {
-  position: relative;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.fecha-input {
-  position: relative;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.fecha-input::-webkit-date-and-time-value {
-  text-align: left;
-  min-width: 0;
-}
-
-.fecha-input::-webkit-datetime-edit {
-  min-width: 0;
-  padding: 0;
-}
-
-.fecha-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  color: transparent;
-  cursor: pointer;
-}
-
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.ghost:disabled {
-  opacity: 0.45;
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.primary {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: #06210f;
-  font-weight: 700;
-}
-</style>

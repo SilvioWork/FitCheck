@@ -1,7 +1,7 @@
 # FitCheck — Spec del proyecto
 
-**Estado:** Borrador v1.8 — fuente de la verdad
-**Última actualización:** 2026-09-13
+**Estado:** Borrador v1.9 — fuente de la verdad
+**Última actualización:** 2026-09-17
 **Propósito de este documento:** contexto de entrada para cualquier trabajo futuro (desarrollo, IA, onboarding de colaboradores) sobre el proyecto. Toda decisión de arquitectura, modelo de datos o alcance debería quedar reflejada aquí antes de darse por válida.
 
 ---
@@ -186,6 +186,8 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 ┌─────────────────────────────────────────┐
 │  Cliente: Vue 3 (PWA) en iPhone          │
 │  - Pinia (estado)                        │
+│  - Tailwind CSS v4 (tokens via @theme)   │
+│  - Lucide (iconos)                       │
 │  - Supabase JS client                    │
 └───────────────┬───────────────────────────┘
                 │ HTTPS / WebSocket (realtime)
@@ -209,7 +211,7 @@ Regla de negocio derivada: las preguntas de tipo "¿quién no usó el equipo X?"
 
 ### 4.3 Por qué Vue 3 como PWA y no app nativa directamente
 
-- Vue 3 (con Pinia para estado y el cliente JS de Supabase) es suficiente como capa de interfaz — la sincronización real la resuelve Supabase, no el framework de frontend.
+- Vue 3 (con Pinia para estado, Tailwind CSS v4 sobre los tokens del sistema visual, Lucide para iconos y el cliente JS de Supabase) es suficiente como capa de interfaz — la sincronización real la resuelve Supabase, no el framework de frontend.
 - Instalar como PWA ("Añadir a pantalla de inicio" desde Safari en iPhone) da una experiencia casi nativa (pantalla completa, icono propio) sin pasar por App Store: sin cuenta de desarrollador Apple, sin revisión, sin coste de $99/año.
 - Ruta de evolución: si más adelante se necesitan notificaciones push nativas o distribución más amplia, el mismo código Vue se envuelve con **Capacitor** para generar un build nativo iOS, reutilizando la base existente.
 - Se descartó React Native / Flutter por sobrecoste de aprendizaje y de mantenimiento sin necesidad clara en v1.
@@ -262,18 +264,19 @@ Contexto de uso: iPhone en el gimnasio, entre series, a menudo con una sola mano
 - **Jerarquía obvia:** en la pantalla de registro, lo primero que se ve es la fecha de la sesión, el ejercicio activo, la serie actual y los controles de reps/peso. Historial, catálogo y ajustes quedan un tap más atrás.
 - **Menos teclado:** selectores, steppers y chips en lugar de inputs de texto siempre que se pueda. El teclado para notas, login, altas de catálogo y el **filtro por nombre** del catálogo en Ajustes.
 - **Feedback inmediato:** al guardar/editar/borrar, confirmación visual en < 1 s (toast o estado en la propia tarjeta). Acciones destructivas (borrar serie) piden confirmación breve, no un modal pesado.
-- **Navegación simple:** barra inferior con 3 destinos como máximo (**Hoy / Historial / Ajustes**). Sin hamburger menu. El selector de fecha vive en Hoy (no es un destino extra de la barra). Crear sesión y registrar serie no deben estar a más de un tap desde “Hoy”. Dentro de Historial y de Ajustes hay pestañas de agrupación (no son destinos extra de la barra).
-- **Estética moderna, no recargada:** superficies limpias, radios consistentes, sombras suaves, acento único (energía / entrenamiento), iconos reconocibles. Evitar ilustraciones decorativas que restan espacio a los controles.
+- **Navegación simple:** barra inferior con 3 destinos como máximo (**Hoy / Historial / Ajustes**), cada uno con **icono Lucide + etiqueta**. Sin hamburger menu. El selector de fecha vive en Hoy (no es un destino extra de la barra). Crear sesión y registrar serie no deben estar a más de un tap desde “Hoy”. Dentro de Historial y de Ajustes hay pestañas de agrupación (no son destinos extra de la barra).
+- **Estética moderna, no recargada:** superficies limpias, radios consistentes, sombras suaves, acento único (energía / entrenamiento), iconos reconocibles y pocos. Lucide en nav, empty states, acciones de fila (Editar/Quitar/Duplicar), back, tema y chevrons. No en chips, Sí/No, steppers ± ni CTAs primarios de texto. Evitar ilustraciones decorativas que restan espacio a los controles.
 
 ### 6.4 Sistema visual
 
-Tokens (CSS custom properties) para color, radio, espacio y tipo; los componentes no llevan hex hardcodeados. Así el cambio claro/oscuro es un cambio de tokens, no de pantallas distintas.
+Tokens (CSS custom properties) para color, radio, espacio y tipo, mapeados a Tailwind CSS v4 (`@theme inline`) para clases (`bg-card`, `text-accent`, `min-h-tap`). Los componentes no llevan hex hardcodeados. Así el cambio claro/oscuro es un cambio de tokens, no de pantallas distintas. Iconos de producto: **Lucide** (`@lucide/vue`) vía `AppIcon.vue` (16/20/32 px). Acciones de fila del catálogo son icono + nombre accesible (`Editar` / `Quitar`); **Confirmar** sigue siendo texto.
 
 | Token | Uso |
 |---|---|
 | `--bg`, `--surface`, `--surface-2` | Fondo de app, tarjetas, filas elevadas |
 | `--text`, `--text-muted` | Texto principal y secundario |
 | `--accent` | Acciones primarias (guardar, presente, serie activa) y anillo de foco inset del filtro de catálogo |
+| `--accent-foreground` | Texto sobre `--accent` (botón primary) |
 | `--danger` | Borrar, ausente, errores |
 | `--success` | Guardado ok, sincronizado |
 | `--border` | Separadores sutiles |

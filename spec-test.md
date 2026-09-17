@@ -1,7 +1,7 @@
 # FitCheck — Spec de pruebas (QA)
 
 **Tipo:** plan y registro de pruebas (no sustituye a `SPEC.md`)
-**Fuente de producto:** `SPEC.md` v1.8
+**Fuente de producto:** `SPEC.md` v1.9
 **Estado de código:** `Spec-Status.md`
 **Fecha de apertura:** 2026-09-05
 **QA responsable:** agente en Cursor (rol QA)
@@ -103,7 +103,7 @@ Al ejecutar: actualizar la tabla de la sección 4 (`Último`) **y** añadir fila
 
 1. Grupo no vacío; login muestra **Entrar**, no **Crear el grupo**.
 2. Seed de catálogo presente: grupos Pecho / Espalda / Pierna / Hombro; equipos y ejercicios del seed (SPEC sec. 5).
-3. Barra inferior: Hoy / Historial / Ajustes; en `/entrar` no se ve.
+3. Barra inferior: Hoy / Historial / Ajustes (icono Lucide + texto; el nombre accesible no cambia); en `/entrar` no se ve.
 4. Red disponible (v1 no es offline-first).
 
 ---
@@ -116,7 +116,7 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 
 | ID | Caso | Pasos | Esperado | Spec | Último |
 |---|---|---|---|---|---|
-| AUTH-01 | Login válido | `/entrar` → usuario + contraseña ≥ 8 → **Entrar** | Va a **Hoy**; nav visible; lede «Entraste como {nombre}. Puedes anotar a cualquiera.» | 6.0, 7 | P 2026-09-07 e2e |
+| AUTH-01 | Login válido | `/entrar` → usuario + contraseña ≥ 8 → **Entrar** | Va a **Hoy**; nav visible (icono + etiqueta **Hoy / Historial / Ajustes**); lede «Entraste como {nombre}. Puedes anotar a cualquiera.» | 6.0, 7 | P 2026-09-07 e2e |
 | AUTH-02 | Login inválido | Contraseña incorrecta | Se queda en Entrar; mensaje de error; no entra a Hoy | 6.0 | P 2026-09-07 e2e |
 | AUTH-03 | Cerrar sesión y volver a entrar | Ajustes → pestaña **Users** → **Cerrar sesión** → login correcto | Login → Hoy (no se queda en `/entrar`) | 6.0 | P 2026-09-09 e2e |
 | AUTH-04 | Guard de rutas | Sin sesión, ir a `/`, `/historial`, `/ajustes` | Redirect a `/entrar` | 7 | P 2026-09-07 e2e |
@@ -180,9 +180,9 @@ Trazabilidad: columna **Spec** apunta a `SPEC.md`.
 | CAT-06 | Borrar en uso | Filtro por el equipo de una serie → Quitar → Confirmar | Se impide (mensaje); no rompe historial; la fila sigue | 5, 6.6 | P 2026-09-13 e2e |
 | CAT-07 | Filtro por nombre | Escribir un fragmento del nombre (p. ej. «press») | Solo filas cuyo **título** coincide (case-insensitive, locale `es`); el subtítulo no filtra; «Nada coincide» si no hay match | 6.6 | P 2026-09-13 e2e (ejercicios) |
 | CAT-08 | Scroll interno | Catálogo con más ítems de los que caben (~5 filas) | El recuadro mide `--catalog-list-h` (240px); el scroll es de la lista, no de toda la vista de Ajustes; el input de buscar no se mueve | 6.6 | P 2026-09-13 e2e (altura 240px) |
-| CAT-09 | Acciones de fila | Sin hover ni tap extra | **Editar** y **Quitar** visibles en cada fila; Quitar pide Confirmar | 6.6 | P 2026-09-13 e2e |
+| CAT-09 | Acciones de fila | Sin hover ni tap extra | **Editar** y **Quitar** accesibles por nombre en cada fila (icono Lucide + `aria-label` / texto oculto); Quitar pide **Confirmar** en texto | 6.6 | P 2026-09-13 e2e |
 | CAT-10 | Foco del filtro | Tap en Buscar equipo/ejercicio/grupo | Anillo de 2px `--accent` en los **cuatro** lados (inset); no se pierde el borde superior | 6.6 | P 2026-09-13 e2e |
-| TEM-01 | Tema Claro / Oscuro / Auto | Ajustes → **Catálogo** → segmented | Cambio instantáneo; persiste tras F5 (`localStorage`) | 6.5 | P 2026-09-09 e2e |
+| TEM-01 | Tema Claro / Oscuro / Auto | Ajustes → **Catálogo** → segmented Claro / Oscuro / Auto (icono + etiqueta) | Cambio instantáneo; persiste tras F5 (`localStorage`); el botón sigue llamándose **Oscuro** | 6.5 | P 2026-09-09 e2e |
 
 ### 4.5 Seguridad y realtime (`RLS`, `RT`)
 

@@ -1,3 +1,7 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 :root {
   color-scheme: light;
   --bg: #f3f6f2;
@@ -6,6 +10,7 @@
   --text: #121714;
   --text-muted: #5b6a61;
   --accent: #1f8a4c;
+  --accent-foreground: #06210f;
   --accent-soft: #d7f3e3;
   --danger: #c43d3d;
   --success: #1f8a4c;
@@ -29,6 +34,7 @@ html[data-theme='dark'] {
   --text: #f1f5f1;
   --text-muted: #9aaba0;
   --accent: #3ddc84;
+  --accent-foreground: #06210f;
   --accent-soft: #163524;
   --danger: #ff6b6b;
   --success: #3ddc84;
@@ -36,71 +42,274 @@ html[data-theme='dark'] {
   --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --font-sans: var(--font);
+  --radius-lg: var(--radius);
+  --radius-sm: var(--radius-sm);
+  --radius-xl: 20px;
+  --shadow-card: var(--shadow);
+  --spacing-tap: var(--tap);
+  --spacing-catalog: var(--catalog-list-h);
 }
 
-html,
-body {
-  margin: 0;
-  min-height: 100%;
+@layer base {
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    min-height: 100dvh;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  h1 {
+    margin: 4px 0 8px;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  input[type='date'] {
+    min-width: 0;
+    max-width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type='date']::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  input[type='date']::-webkit-datetime-edit {
+    min-width: 0;
+    padding: 0;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    min-height: var(--tap);
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    line-height: normal;
+    padding: 0 2.5rem 0 12px;
+    background-color: var(--bg);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%235b6a61' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px 14px;
+  }
+
+  html[data-theme='dark'] select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%239aaba0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
+}
+
+@utility card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+@utility btn-primary {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+
+@utility btn-ghost {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+
+@utility btn-ghost-sm {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+@utility btn-danger {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+@utility btn-seg {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+@utility btn-seg-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+@utility overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  align-items: end;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+@utility sheet {
+  display: grid;
+  gap: 12px;
+  max-height: 85dvh;
+  overflow: auto;
+  padding: 16px 16px calc(16px + var(--safe-bottom));
+  border-radius: 20px 20px 0 0;
+  background: var(--surface);
+}
+
+@utility field {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+@utility field-input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font);
-  -webkit-font-smoothing: antialiased;
 }
 
-#app {
-  min-height: 100dvh;
+@utility chip {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+@utility chip-on {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--text);
 }
 
-input[type='date'] {
+@utility empty-panel {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.fecha-input {
+  position: relative;
   min-width: 0;
+  width: 100%;
   max-width: 100%;
   appearance: none;
   -webkit-appearance: none;
 }
 
-input[type='date']::-webkit-date-and-time-value {
+.fecha-input::-webkit-date-and-time-value {
   text-align: left;
+  min-width: 0;
 }
 
-input[type='date']::-webkit-datetime-edit {
+.fecha-input::-webkit-datetime-edit {
   min-width: 0;
   padding: 0;
 }
 
-select {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  min-height: var(--tap);
+.fecha-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
   margin: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  line-height: normal;
-  padding: 0 2.5rem 0 12px;
-  background-color: var(--bg);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%235b6a61' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px 14px;
-}
-
-html[data-theme='dark'] select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25 8 10.75l4.5-4.5' stroke='%239aaba0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
 }

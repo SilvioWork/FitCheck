@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ChevronLeft } from '@lucide/vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
 import AsistenciaList from '@/components/AsistenciaList.vue'
 import RegistroSeries from '@/components/RegistroSeries.vue'
 import SeriesGruposConsulta from '@/components/SeriesGruposConsulta.vue'
@@ -40,12 +42,18 @@ const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembro
 </script>
 
 <template>
-  <p v-if="cargando" class="muted">Cargando sesión…</p>
-  <section v-else-if="sesion" class="page">
+  <p v-if="cargando" class="m-0 text-muted-foreground">Cargando sesión…</p>
+  <section v-else-if="sesion" class="grid gap-4 pb-2">
     <header>
-      <RouterLink class="back" to="/historial">Historial</RouterLink>
+      <RouterLink
+        class="inline-grid min-h-tap grid-flow-col items-center gap-1 text-[0.9rem] font-bold text-accent no-underline"
+        to="/historial"
+      >
+        <AppIcon :icon="ChevronLeft" size="sm" />
+        Historial
+      </RouterLink>
       <h1>{{ formatFecha(sesion.fecha) }}</h1>
-      <p>{{ sesion.nota || 'Sesión sin nota' }}</p>
+      <p class="m-0 text-muted-foreground">{{ sesion.nota || 'Sesión sin nota' }}</p>
     </header>
 
     <AsistenciaList :sesion-id="sesion.id" />
@@ -54,7 +62,7 @@ const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembro
       class="card"
     >
       <h2>Quién no asistió</h2>
-      <ul class="plain">
+      <ul class="m-0 grid list-disc gap-1.5 pl-[1.1rem] text-muted-foreground">
         <li v-for="m in gym.ausentesDe(sesion.id)" :key="m.id">{{ m.nombre }} · ausente</li>
         <li v-for="m in gym.sinMarcarDe(sesion.id)" :key="'s' + m.id">
           {{ m.nombre }} · sin marcar
@@ -69,83 +77,21 @@ const otros = computed(() => grupos.value.filter((g) => g.miembro.id !== miembro
     />
 
     <article v-for="grupo in otros" :key="grupo.miembro.id" class="card">
-      <button type="button" class="pick" @click="miembroElegidoId = grupo.miembro.id">
+      <button
+        type="button"
+        class="mb-2 grid min-h-tap w-full gap-0.5 border-0 bg-transparent p-0 text-left text-inherit"
+        @click="miembroElegidoId = grupo.miembro.id"
+      >
         <h2>{{ grupo.miembro.nombre }}</h2>
-        <p class="muted">Pulsa para anotar o editar sus series.</p>
+        <p class="m-0 text-[0.85rem] text-muted-foreground">
+          Pulsa para anotar o editar sus series.
+        </p>
       </button>
-      <p v-if="!grupo.series.length" class="muted">Sin series en esta sesión.</p>
+      <p v-if="!grupo.series.length" class="m-0 text-muted-foreground">
+        Sin series en esta sesión.
+      </p>
       <SeriesGruposConsulta v-else :series="grupo.series" />
     </article>
   </section>
   <p v-else>Esa sesión no existe.</p>
 </template>
-
-<style scoped>
-.page {
-  display: grid;
-  gap: 16px;
-  padding-bottom: 8px;
-}
-
-.back {
-  display: inline-grid;
-  align-items: center;
-  min-height: var(--tap);
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
-}
-
-header p,
-.muted {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-h2 {
-  margin: 0 0 8px;
-  font-size: 1.05rem;
-}
-
-.pick {
-  display: grid;
-  gap: 2px;
-  width: 100%;
-  margin: 0 0 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  min-height: var(--tap);
-}
-
-.pick h2 {
-  margin: 0;
-}
-
-.pick .muted {
-  font-size: 0.85rem;
-}
-
-.plain {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: var(--text-muted);
-  display: grid;
-  gap: 6px;
-}
-</style>

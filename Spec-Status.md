@@ -1,7 +1,7 @@
 # FitCheck — Spec-Status
 
 **Tipo:** estado de desarrollo (no sustituye a `SPEC.md`)
-**Fecha:** 2026-09-13
+**Fecha:** 2026-09-17
 **Repo:** [github.com/SilvioWork/FitCheck](https://github.com/SilvioWork/FitCheck)
 **Carpeta:** `FitCheck/` (producto **FitCheck**; la Spec original vive aquí como `SPEC.md`)
 
@@ -17,7 +17,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 | Área | Estado |
 |---|---|
-| Spec y decisiones de producto | Hecho (v1.8) |
+| Spec y decisiones de producto | Hecho (v1.9) |
 | Scaffold Vue 3 + Pinia + Router + PWA | Hecho |
 | UI Hoy / Historial / Ajustes + tema | Hecho |
 | Flujo de sesión (alta en cualquier fecha, asistencia de grupo, series de cualquiera) | Hecho |
@@ -42,13 +42,15 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 ### 2.1 Producto y repo
 
 - Nombre de producto: **FitCheck**.
-- Spec v1.8 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, **selector de ejercicio con filtro de búsqueda**, Historial consulta con el mismo acordeón y SET compacto, PWA).
+- Spec v1.9 en `SPEC.md` (grupo 1–5, escritura de grupo en series/asistencia, chips de técnicas, usuario/contraseña, seed único, historial paginado, catálogo en Ajustes como listas filtrables, Hoy con selector de fecha, series en acordeón por ejercicio + equipo con Duplicar por SET, **selector de ejercicio con filtro de búsqueda**, Historial consulta con el mismo acordeón y SET compacto, PWA, **Tailwind v4 + iconos Lucide**).
 - Git en `main`, remoto `https://github.com/SilvioWork/FitCheck.git`.
 - `.env` local (gitignored) con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (publishable).
 
 ### 2.2 Stack
 
 - Vue 3 + Vite + TypeScript + Vue Router + Pinia.
+- Tailwind CSS v4 (`@tailwindcss/vite`) sobre tokens en `src/styles/tokens.css`; utilidades compartidas `card`, `btn-primary`, `btn-ghost`, `overlay`, `sheet`.
+- Iconos Lucide (`@lucide/vue`) vía `AppIcon.vue`.
 - `@supabase/supabase-js`.
 - `vite-plugin-pwa` (standalone, iconos 192/512, `apple-touch-icon` 180).
 - SQL: `supabase/schema.sql` (tablas + RLS + unique de catálogo + RPCs), `supabase/realtime.sql`, `supabase/catalogo_delete.sql`.
@@ -76,7 +78,7 @@ Hay un deploy HTTPS en Vercel y el proyecto Supabase está en uso. El magic link
 
 **Ajustes** — pestañas **Catálogo** (listas filtrables, apariencia, **En el iPhone**) y **Users** (perfil, invitar / resetear compañero, cambiar contraseña, cerrar sesión). Query `?vista=users` para Users.
 
-**Navegación** — barra inferior Hoy / Historial / Ajustes; toques ≥ 44 pt; tokens CSS.
+**Navegación** — barra inferior Hoy / Historial / Ajustes con icono + etiqueta; toques ≥ 44 pt; tokens CSS mapeados a Tailwind. Acciones de fila del catálogo: icono lápiz/papelera con nombre accesible Editar/Quitar; Confirmar sigue en texto.
 
 ### 2.5 Decisiones ya cerradas en código (respecto a la Spec)
 

@@ -7,6 +7,7 @@ import NotaChips from '@/components/NotaChips.vue'
 import SerieSetRow from '@/components/SerieSetRow.vue'
 import StepperControl from '@/components/StepperControl.vue'
 import { parseNotaChips, serializeNotaChips } from '@/lib/notaChips'
+import { cn } from '@/lib/cn'
 import { useFitcheckStore } from '@/stores/fitcheck'
 import type { Serie } from '@/types/models'
 
@@ -166,17 +167,16 @@ function onClonado(count: number) {
 <template>
   <article class="card">
     <h2>Anotar serie</h2>
-    <p v-if="feedback" class="ok">{{ feedback }}</p>
+    <p v-if="feedback" class="m-0 font-bold text-success">{{ feedback }}</p>
 
     <div>
-      <p class="field-label">Anotar a</p>
-      <div class="chips" role="group" aria-label="Miembro de la serie">
+      <p class="field mb-1.5">Anotar a</p>
+      <div class="flex flex-wrap gap-2" role="group" aria-label="Miembro de la serie">
         <button
           v-for="miembro in gym.miembrosOrdenados"
           :key="miembro.id"
           type="button"
-          class="chip"
-          :class="{ on: elegidoId === miembro.id }"
+          :class="cn('chip', elegidoId === miembro.id && 'chip-on')"
           :aria-pressed="elegidoId === miembro.id"
           @click="elegir(miembro.id)"
         >
@@ -186,7 +186,7 @@ function onClonado(count: number) {
     </div>
 
     <div>
-      <p class="field-label">Ejercicio</p>
+      <p class="field mb-1.5">Ejercicio</p>
       <EjercicioSelector
         v-model="form.ejercicioId"
         :ejercicios="gym.ejercicios"
@@ -194,32 +194,32 @@ function onClonado(count: number) {
       />
     </div>
 
-    <label>
+    <label class="field">
       Equipo
       <select v-model="form.equipoId">
         <option v-for="eq in gym.equipos" :key="eq.id" :value="eq.id">{{ eq.nombre }}</option>
       </select>
     </label>
 
-    <div class="pair">
+    <div class="grid grid-cols-2 gap-3">
       <StepperControl v-model="form.repeticiones" label="Reps" :min="1" />
       <StepperControl v-model="form.pesoKg" label="Peso kg" :step="2.5" :min="0" />
     </div>
 
     <div>
-      <p class="field-label">Marcas</p>
+      <p class="field mb-1.5">Marcas</p>
       <NotaChips v-model="form.chips" />
     </div>
 
-    <button class="primary" type="button" @click="guardar">Guardar serie</button>
+    <button class="btn-primary" type="button" @click="guardar">Guardar serie</button>
   </article>
 
   <article v-if="grupos.length" class="card">
-    <div class="series-head">
+    <div class="flex items-center justify-between gap-2">
       <h2>Series de {{ elegido?.nombre ?? 'este miembro' }}</h2>
-      <button class="ghost small" type="button" @click="clonando = true">Clonar a…</button>
+      <button class="btn-ghost-sm" type="button" @click="clonando = true">Clonar a…</button>
     </div>
-    <div class="grupos">
+    <div class="grid gap-2.5">
       <EjercicioAcordeon
         v-for="grupo in grupos"
         :key="grupo.key"
@@ -244,32 +244,32 @@ function onClonado(count: number) {
     <div class="sheet" role="dialog" aria-label="Editar serie">
       <h2>Editar serie</h2>
       <div>
-        <p class="field-label">Ejercicio</p>
+        <p class="field mb-1.5">Ejercicio</p>
         <EjercicioSelector
           v-model="editando.ejercicio_id"
           :ejercicios="gym.ejercicios"
           :grupo-de-ejercicio="gym.grupoDeEjercicio"
         />
       </div>
-      <label>
+      <label class="field">
         Equipo
         <select v-model="editando.equipo_id">
           <option v-for="eq in gym.equipos" :key="eq.id" :value="eq.id">{{ eq.nombre }}</option>
         </select>
       </label>
-      <div class="pair">
+      <div class="grid grid-cols-2 gap-3">
         <StepperControl v-model="editando.repeticiones" label="Reps" :min="1" />
         <StepperControl v-model="editando.peso_kg" label="Peso kg" :step="2.5" :min="0" />
       </div>
       <div>
-        <p class="field-label">Marcas</p>
+        <p class="field mb-1.5">Marcas</p>
         <NotaChips v-model="editChips" />
       </div>
-      <button class="primary" type="button" @click="guardarEdicion">Guardar cambios</button>
-      <button class="danger" type="button" @click="borrar">
+      <button class="btn-primary" type="button" @click="guardarEdicion">Guardar cambios</button>
+      <button class="btn-danger" type="button" @click="borrar">
         {{ confirmarBorrado ? 'Confirmar borrado' : 'Borrar' }}
       </button>
-      <button class="ghost" type="button" @click="editando = null">Cerrar</button>
+      <button class="btn-ghost" type="button" @click="editando = null">Cerrar</button>
     </div>
   </div>
 
@@ -282,140 +282,3 @@ function onClonado(count: number) {
     @close="clonando = false"
   />
 </template>
-
-<style scoped>
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.ok {
-  margin: 0;
-  color: var(--success);
-  font-weight: 700;
-}
-
-label,
-.field-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.field-label {
-  margin: 0 0 6px;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip {
-  min-height: var(--tap);
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.chip.on {
-  border-color: transparent;
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.primary,
-.ghost,
-.danger {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  font-weight: 700;
-}
-
-.primary {
-  background: var(--accent);
-  color: #06210f;
-}
-
-.ghost {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.ghost:disabled {
-  opacity: 0.45;
-}
-
-.series-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.ghost.small {
-  min-height: 36px;
-  padding: 0 12px;
-  font-size: 0.85rem;
-}
-
-.grupos {
-  display: grid;
-  gap: 10px;
-}
-
-.danger {
-  background: transparent;
-  color: var(--danger);
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  align-items: end;
-  z-index: 20;
-}
-
-.sheet {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + var(--safe-bottom));
-  display: grid;
-  gap: 12px;
-  max-height: 85dvh;
-  overflow: auto;
-}
-</style>

@@ -46,29 +46,36 @@ async function enviar() {
 </script>
 
 <template>
-  <section class="page">
+  <section class="grid gap-4">
     <header>
-      <p class="eyebrow">FitCheck</p>
+      <p class="m-0 text-xs font-bold tracking-wide text-accent uppercase">FitCheck</p>
       <h1>{{ modo === 'crear' ? 'Crear el grupo' : 'Entrar' }}</h1>
-      <p v-if="modo === 'crear'">
+      <p v-if="modo === 'crear'" class="m-0 text-muted-foreground">
         El primero da de alta la cuenta. Luego invita al resto en Ajustes.
       </p>
-      <p v-else>Usuario y contraseña. Sin correo.</p>
+      <p v-else class="m-0 text-muted-foreground">Usuario y contraseña. Sin correo.</p>
     </header>
 
     <article v-if="vacio === null" class="card">
-      <p>Comprobando el grupo…</p>
+      <p class="m-0 text-muted-foreground">Comprobando el grupo…</p>
     </article>
 
     <article v-else class="card">
-      <label v-if="modo === 'crear'">
+      <label v-if="modo === 'crear'" class="field">
         Tu nombre
-        <input v-model="nombre" type="text" maxlength="40" autocomplete="name" />
+        <input
+          v-model="nombre"
+          class="field-input"
+          type="text"
+          maxlength="40"
+          autocomplete="name"
+        />
       </label>
-      <label>
+      <label class="field">
         Usuario
         <input
           v-model="usuario"
+          class="field-input"
           type="text"
           maxlength="24"
           autocapitalize="off"
@@ -76,92 +83,25 @@ async function enviar() {
           placeholder="silvio"
         />
       </label>
-      <label>
+      <label class="field">
         Contraseña
-        <input v-model="password" type="password" autocomplete="current-password" />
+        <input
+          v-model="password"
+          class="field-input"
+          type="password"
+          autocomplete="current-password"
+        />
       </label>
-      <button class="primary" type="button" :disabled="enviando || !puedeEnviar()" @click="enviar">
+      <button
+        class="btn-primary"
+        type="button"
+        :disabled="enviando || !puedeEnviar()"
+        @click="enviar"
+      >
         {{ enviando ? 'Un momento…' : modo === 'crear' ? 'Crear grupo' : 'Entrar' }}
       </button>
-      <p v-if="auth.aviso" class="ok">{{ auth.aviso }}</p>
-      <p v-if="auth.error" class="err">{{ auth.error }}</p>
+      <p v-if="auth.aviso" class="m-0 font-bold text-success">{{ auth.aviso }}</p>
+      <p v-if="auth.error" class="m-0 text-danger">{{ auth.error }}</p>
     </article>
   </section>
 </template>
-
-<style scoped>
-.page {
-  display: grid;
-  gap: 16px;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-}
-
-h1 {
-  margin: 4px 0 8px;
-  font-size: 2rem;
-}
-
-header p:last-child,
-.card p {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.primary {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: #06210f;
-  font-weight: 700;
-}
-
-.primary:disabled {
-  opacity: 0.45;
-}
-
-.ok {
-  margin: 0;
-  color: var(--success);
-  font-weight: 700;
-}
-
-.err {
-  margin: 0;
-  color: var(--danger);
-}
-</style>

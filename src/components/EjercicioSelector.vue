@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ChevronDown, SearchX } from '@lucide/vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 import type { Ejercicio } from '@/types/models'
+import { cn } from '@/lib/cn'
 
 const props = defineProps<{
   ejercicios: Ejercicio[]
@@ -80,8 +83,6 @@ function marcarScroll() {
 function onListaPointerDown(event: PointerEvent) {
   pointerStartY.value = event.clientY
   fueScroll.value = false
-  // Con el filtro enfocado, el teclado virtual bloquea el overflow.
-  // Soltar el foco permite scrollear sin cerrar el listado.
   if (event.target !== searchInput.value) {
     searchInput.value?.blur()
   }
@@ -119,27 +120,38 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="root" class="ejercicio-selector" data-testid="ejercicio-selector">
+  <div ref="root" class="relative" data-testid="ejercicio-selector">
     <button
       type="button"
-      class="trigger"
+      class="grid min-h-tap w-full grid-cols-[1fr_28px] items-center gap-2 rounded-sm border border-border bg-background px-2.5 py-2 text-left text-foreground"
       data-testid="ejercicio-selector-trigger"
       aria-label="Ejercicio"
       aria-haspopup="listbox"
       :aria-expanded="abierto"
       @click="toggle"
     >
-      <span v-if="seleccionado" class="seleccion">
-        <strong>{{ seleccionado.nombre }}</strong>
-        <small>{{ grupoDeEjercicio(seleccionado.id) }}</small>
+      <span v-if="seleccionado" class="grid min-w-0 gap-0.5">
+        <strong class="block truncate text-[0.95rem]">{{ seleccionado.nombre }}</strong>
+        <small class="block truncate text-xs font-medium text-muted-foreground">
+          {{ grupoDeEjercicio(seleccionado.id) }}
+        </small>
       </span>
-      <span v-else class="placeholder">Selecciona un ejercicio</span>
-      <span class="chev" :class="{ open: abierto }" aria-hidden="true">▾</span>
+      <span v-else class="text-[0.95rem] text-muted-foreground">Selecciona un ejercicio</span>
+      <AppIcon
+        :icon="ChevronDown"
+        size="sm"
+        :class="
+          cn(
+            'justify-self-center text-accent transition-transform duration-150',
+            abierto ? 'rotate-0' : '-rotate-90',
+          )
+        "
+      />
     </button>
 
     <div
       v-if="abierto"
-      class="dropdown"
+      class="absolute top-[calc(100%+4px)] right-0 left-0 z-10 grid min-h-0 grid-rows-[auto_1fr] overflow-hidden rounded-sm border border-border bg-card shadow-card"
       role="listbox"
       aria-label="Lista de ejercicios"
       @pointerdown.stop
@@ -149,6 +161,7 @@ onUnmounted(() => {
       <input
         ref="searchInput"
         v-model="query"
+        class="m-0 min-h-tap w-full appearance-none rounded-t-sm border-0 border-b border-border bg-background px-3 text-foreground outline-none focus:outline-2 focus:-outline-offset-2 focus:outline-accent"
         type="search"
         placeholder="Buscar ejercicio"
         aria-label="Buscar ejercicio"
@@ -156,25 +169,33 @@ onUnmounted(() => {
         enterkeyhint="search"
       />
       <div
-        class="viewport"
+        class="max-h-[280px] min-h-0 overflow-y-auto overscroll-contain touch-pan-y"
         @pointerdown="onListaPointerDown"
         @pointermove="onListaPointerMove"
         @scroll.passive="marcarScroll"
         @wheel.stop
       >
-        <p v-if="filtered.length === 0" class="empty">Nada coincide</p>
-        <ul v-else>
-          <li v-for="ej in filtered" :key="ej.id">
+        <p
+          v-if="filtered.length === 0"
+          class="m-0 grid min-h-[100px] place-items-center gap-2 p-4 text-center text-[0.85rem] font-semibold text-muted-foreground"
+        >
+          <AppIcon :icon="SearchX" class="text-muted-foreground" />
+          Nada coincide
+        </p>
+        <ul v-else class="m-0 list-none p-0">
+          <li v-for="ej in filtered" :key="ej.id" class="border-b border-border last:border-b-0">
             <button
               type="button"
-              class="opcion"
+              class="grid min-h-tap w-full touch-pan-y gap-0.5 border-0 bg-card px-3 py-2 text-left text-inherit hover:bg-muted focus:bg-muted"
               role="option"
               :aria-selected="ej.id === model"
               @pointerup="onOpcionPointerUp(ej.id, $event)"
               @click="onOpcionClick(ej.id, $event)"
             >
-              <strong>{{ ej.nombre }}</strong>
-              <small>{{ grupoDeEjercicio(ej.id) }}</small>
+              <strong class="block truncate text-[0.92rem]">{{ ej.nombre }}</strong>
+              <small class="block truncate text-xs font-medium text-muted-foreground">
+                {{ grupoDeEjercicio(ej.id) }}
+              </small>
             </button>
           </li>
         </ul>
@@ -182,169 +203,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.ejercicio-selector {
-  position: relative;
-}
-
-.trigger {
-  width: 100%;
-  min-height: var(--tap);
-  display: grid;
-  grid-template-columns: 1fr 28px;
-  gap: 8px;
-  align-items: center;
-  text-align: left;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 8px 10px;
-}
-
-.seleccion {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.seleccion strong,
-.seleccion small {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.seleccion strong {
-  font-size: 0.95rem;
-}
-
-.seleccion small {
-  font-weight: 500;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.placeholder {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.chev {
-  justify-self: center;
-  color: var(--accent);
-  font-size: 0.85rem;
-  transform: rotate(-90deg);
-  transition: transform 0.15s ease;
-}
-
-.chev.open {
-  transform: rotate(0deg);
-}
-
-.dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-input {
-  width: 100%;
-  min-height: var(--tap);
-  margin: 0;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  appearance: none;
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-  outline: none;
-}
-
-input:focus,
-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.viewport {
-  max-height: 280px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.opcion {
-  width: 100%;
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  min-height: var(--tap);
-  padding: 8px 12px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  color: inherit;
-  touch-action: pan-y;
-}
-
-li:last-child .opcion {
-  border-bottom: 0;
-}
-
-.opcion:hover,
-.opcion:focus {
-  background: var(--surface-2);
-}
-
-.opcion strong,
-.opcion small {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.opcion strong {
-  font-size: 0.92rem;
-}
-
-.opcion small {
-  font-weight: 500;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.empty {
-  margin: 0;
-  min-height: 100px;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-}
-</style>

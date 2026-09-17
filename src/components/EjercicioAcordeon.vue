@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { ChevronDown } from '@lucide/vue'
+import AppIcon from '@/components/AppIcon.vue'
+import { cn } from '@/lib/cn'
+
 defineProps<{
   abierto: boolean
   titulo: string
@@ -12,72 +16,33 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="acc" role="region" :aria-label="`Series de ${titulo} · ${subtitulo}`">
+  <div class="grid gap-2" role="region" :aria-label="`Series de ${titulo} · ${subtitulo}`">
     <button
       type="button"
-      class="head"
+      class="grid min-h-tap w-full grid-cols-[1fr_28px] items-center gap-2 rounded-sm border-0 bg-muted px-2.5 py-2 text-left text-inherit"
       :aria-expanded="abierto"
       :aria-label="`${titulo} · ${subtitulo}`"
       @click="$emit('toggle')"
     >
       <span>
-        <strong>{{ titulo }}</strong>
-        <small>{{ subtitulo }} · {{ recuento }} {{ recuento === 1 ? 'serie' : 'series' }}</small>
+        <strong class="block">{{ titulo }}</strong>
+        <small class="block font-medium text-muted-foreground">
+          {{ subtitulo }} · {{ recuento }} {{ recuento === 1 ? 'serie' : 'series' }}
+        </small>
       </span>
-      <span class="chev" :class="{ open: abierto }" aria-hidden="true">▾</span>
+      <AppIcon
+        :icon="ChevronDown"
+        size="sm"
+        :class="
+          cn(
+            'justify-self-center text-accent transition-transform duration-150',
+            abierto ? 'rotate-0' : '-rotate-90',
+          )
+        "
+      />
     </button>
-    <div v-show="abierto" class="panel">
+    <div v-show="abierto" class="grid gap-2 pl-0.5">
       <slot />
     </div>
   </div>
 </template>
-
-<style scoped>
-.acc {
-  display: grid;
-  gap: 8px;
-}
-
-.head {
-  width: 100%;
-  min-height: var(--tap);
-  display: grid;
-  grid-template-columns: 1fr 28px;
-  gap: 8px;
-  align-items: center;
-  text-align: left;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: inherit;
-  padding: 8px 10px;
-}
-
-.head strong,
-.head small {
-  display: block;
-}
-
-.head small {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.chev {
-  justify-self: center;
-  color: var(--accent);
-  font-size: 0.85rem;
-  transform: rotate(-90deg);
-  transition: transform 0.15s ease;
-}
-
-.chev.open {
-  transform: rotate(0deg);
-}
-
-.panel {
-  display: grid;
-  gap: 8px;
-  padding-left: 2px;
-}
-</style>

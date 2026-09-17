@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import type { Serie } from '@/types/models'
 import EjercicioAcordeon from '@/components/EjercicioAcordeon.vue'
 import SerieConsultaRow from '@/components/SerieConsultaRow.vue'
 import { agruparSeriesPorEjercicioEquipo } from '@/lib/seriesGrupos'
 import { useFitcheckStore } from '@/stores/fitcheck'
-import type { Serie } from '@/types/models'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
   series: Serie[]
@@ -33,7 +33,7 @@ function nombreEquipo(id: string) {
 </script>
 
 <template>
-  <div v-if="grupos.length" class="grupos">
+  <div v-if="grupos.length" class="grid gap-2.5">
     <EjercicioAcordeon
       v-for="grupo in grupos"
       :key="grupo.key"
@@ -47,10 +47,3 @@ function nombreEquipo(id: string) {
     </EjercicioAcordeon>
   </div>
 </template>
-
-<style scoped>
-.grupos {
-  display: grid;
-  gap: 10px;
-}
-</style>

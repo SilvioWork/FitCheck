@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { Inbox, SearchX } from '@lucide/vue'
 import { computed, onMounted, reactive, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
 import ConsultasPanel from '@/components/ConsultasPanel.vue'
 import HistorialMiembro from '@/components/HistorialMiembro.vue'
 import { formatFecha } from '@/lib/ids'
 import { HISTORIAL_PAGE, useFitcheckStore } from '@/stores/fitcheck'
+import { cn } from '@/lib/cn'
 
 const gym = useFitcheckStore()
 const route = useRoute()
@@ -62,29 +65,33 @@ watch(vista, (next) => {
 </script>
 
 <template>
-  <section class="page">
+  <section class="grid gap-4">
     <header>
       <h1>Historial</h1>
-      <p>Sesiones del grupo, por miembro, y consultas de asistencia y equipos.</p>
+      <p class="m-0 leading-snug text-muted-foreground">
+        Sesiones del grupo, por miembro, y consultas de asistencia y equipos.
+      </p>
     </header>
 
-    <div class="segment" role="tablist" aria-label="Vista de historial">
+    <div
+      class="grid grid-cols-2 gap-2 rounded-sm bg-muted p-1"
+      role="tablist"
+      aria-label="Vista de historial"
+    >
       <button
         type="button"
-        class="seg-btn"
         role="tab"
         :aria-selected="vista === 'sesiones'"
-        :class="{ active: vista === 'sesiones' }"
+        :class="cn('btn-seg', vista === 'sesiones' && 'btn-seg-active')"
         @click="setVista('sesiones')"
       >
         Sesiones
       </button>
       <button
         type="button"
-        class="seg-btn"
         role="tab"
         :aria-selected="vista === 'miembro'"
-        :class="{ active: vista === 'miembro' }"
+        :class="cn('btn-seg', vista === 'miembro' && 'btn-seg-active')"
         @click="setVista('miembro')"
       >
         Por miembro
@@ -98,59 +105,71 @@ watch(vista, (next) => {
     <template v-else>
       <article class="card">
         <h2>Filtros</h2>
-        <label>
+        <label class="field">
           Grupo muscular
           <select v-model="filtros.grupoId">
             <option value="">Todos</option>
             <option v-for="g in gym.grupos" :key="g.id" :value="g.id">{{ g.nombre }}</option>
           </select>
         </label>
-        <div class="pair">
-          <label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="field">
             Desde
-            <input v-model="filtros.desde" type="date" />
+            <input v-model="filtros.desde" class="field-input" type="date" />
           </label>
-          <label>
+          <label class="field">
             Hasta
-            <input v-model="filtros.hasta" type="date" />
+            <input v-model="filtros.hasta" class="field-input" type="date" />
           </label>
         </div>
-        <button class="ghost" type="button" @click="aplicar">Aplicar</button>
-        <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">
+        <button class="btn-ghost" type="button" @click="aplicar">Aplicar</button>
+        <button v-if="hayFiltro" class="btn-ghost" type="button" @click="limpiarFiltros">
           Quitar filtros
         </button>
-        <p v-if="frecuencia" class="freq">{{ frecuencia }}</p>
+        <p v-if="frecuencia" class="m-0 text-[0.9rem] font-bold text-muted-foreground">
+          {{ frecuencia }}
+        </p>
       </article>
 
       <ConsultasPanel />
 
-      <article v-if="vacio" class="empty">
-        <p>Todavía no hay sesiones guardadas.</p>
+      <article v-if="vacio" class="empty-panel">
+        <AppIcon :icon="Inbox" size="lg" class="text-muted-foreground" />
+        <p class="m-0 text-muted-foreground">Todavía no hay sesiones guardadas.</p>
       </article>
-      <article v-else-if="!gym.historialSesiones.length" class="empty">
-        <p>Ninguna sesión encaja con esos filtros.</p>
+      <article v-else-if="!gym.historialSesiones.length" class="empty-panel">
+        <AppIcon :icon="SearchX" size="lg" class="text-muted-foreground" />
+        <p class="m-0 text-muted-foreground">Ninguna sesión encaja con esos filtros.</p>
       </article>
-      <ul v-else>
+      <ul v-else class="m-0 grid list-none gap-2 p-0">
         <li v-for="sesion in gym.historialSesiones" :key="sesion.id">
-          <RouterLink :to="`/historial/${sesion.id}`" class="row">
+          <RouterLink
+            :to="`/historial/${sesion.id}`"
+            class="grid min-h-tap gap-1 rounded-lg border border-border bg-card px-3.5 py-3 text-inherit no-underline shadow-card"
+          >
             <strong>{{ formatFecha(sesion.fecha) }}</strong>
-            <span>{{ sesion.nota || 'Sin nota' }}</span>
+            <span class="text-[0.9rem] text-muted-foreground">{{ sesion.nota || 'Sin nota' }}</span>
           </RouterLink>
         </li>
       </ul>
 
-      <div v-if="gym.historialTotal > HISTORIAL_PAGE" class="pager">
+      <div
+        v-if="gym.historialTotal > HISTORIAL_PAGE"
+        class="grid grid-cols-[1fr_auto_1fr] items-center gap-2"
+      >
         <button
-          class="ghost"
+          class="btn-ghost"
           type="button"
           :disabled="gym.historialPagina === 0"
           @click="gym.listarSesiones(gym.historialPagina - 1)"
         >
           Anterior
         </button>
-        <p>{{ gym.historialPagina + 1 }} / {{ totalPaginas }}</p>
+        <p class="m-0 text-center font-bold text-muted-foreground">
+          {{ gym.historialPagina + 1 }} / {{ totalPaginas }}
+        </p>
         <button
-          class="ghost"
+          class="btn-ghost"
           type="button"
           :disabled="gym.historialPagina + 1 >= totalPaginas"
           @click="gym.listarSesiones(gym.historialPagina + 1)"
@@ -161,159 +180,3 @@ watch(vista, (next) => {
     </template>
   </section>
 </template>
-
-<style scoped>
-.page {
-  display: grid;
-  gap: 16px;
-}
-
-h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
-}
-
-header p,
-.freq {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.freq {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.segment {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.seg-btn {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.seg-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-
-.card,
-.empty {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.card {
-  display: grid;
-  gap: 12px;
-}
-
-h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.ghost:disabled {
-  opacity: 0.45;
-}
-
-.empty {
-  min-height: 120px;
-  display: grid;
-  place-items: center;
-  border-style: dashed;
-  text-align: center;
-  box-shadow: none;
-}
-
-.empty p {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.row {
-  display: grid;
-  gap: 4px;
-  min-height: var(--tap);
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  text-decoration: none;
-  color: inherit;
-  box-shadow: var(--shadow);
-}
-
-.row span {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.pager {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 8px;
-  align-items: center;
-}
-
-.pager p {
-  margin: 0;
-  text-align: center;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-</style>

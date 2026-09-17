@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { Inbox, Pencil, SearchX, Trash2 } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 export type CatalogListItem = {
   id: string
@@ -66,27 +68,62 @@ function onRemove(id: string) {
 </script>
 
 <template>
-  <div class="catalog-list">
+  <div
+    class="grid min-h-0 grid-rows-[auto_1fr] overflow-hidden rounded-sm border border-border bg-muted"
+  >
     <input
       v-model="query"
+      class="m-0 min-h-tap w-full appearance-none rounded-t-sm border-0 border-b border-border bg-background px-3 text-foreground outline-none focus:outline-2 focus:-outline-offset-2 focus:outline-accent"
       type="search"
       :placeholder="placeholder"
       :aria-label="placeholder"
       autocomplete="off"
       enterkeyhint="search"
     />
-    <div class="viewport">
-      <p v-if="filtered.length === 0" class="empty">{{ emptyMessage }}</p>
-      <ul v-else :aria-label="label">
-        <li v-for="item in filtered" :key="item.id">
-          <div class="text">
-            <strong>{{ item.title }}</strong>
-            <small v-if="item.subtitle">{{ item.subtitle }}</small>
+    <div class="h-catalog overflow-y-auto overscroll-contain">
+      <p
+        v-if="filtered.length === 0"
+        class="m-0 grid min-h-full place-items-center gap-2 p-4 text-center text-[0.85rem] font-semibold text-muted-foreground"
+      >
+        <AppIcon :icon="props.items.length === 0 ? Inbox : SearchX" class="text-muted-foreground" />
+        {{ emptyMessage }}
+      </p>
+      <ul v-else class="m-0 list-none p-0" :aria-label="label">
+        <li
+          v-for="item in filtered"
+          :key="item.id"
+          class="flex min-h-tap items-center justify-between gap-2 border-b border-border py-1.5 pr-2 pl-3 last:border-b-0"
+        >
+          <div class="grid min-w-0 flex-1 gap-px">
+            <strong class="block truncate text-[0.92rem]">{{ item.title }}</strong>
+            <small
+              v-if="item.subtitle"
+              class="block truncate text-xs font-medium text-muted-foreground"
+            >
+              {{ item.subtitle }}
+            </small>
           </div>
-          <div class="actions">
-            <button type="button" class="act" @click="onEdit(item.id)">Editar</button>
-            <button type="button" class="act danger" @click="onRemove(item.id)">
-              {{ confirmId === item.id ? 'Confirmar' : 'Quitar' }}
+          <div class="flex shrink-0 gap-1">
+            <button
+              type="button"
+              class="inline-flex min-h-tap min-w-tap items-center justify-center rounded-[10px] border-0 bg-card px-2.5 text-[0.8rem] font-bold text-foreground"
+              aria-label="Editar"
+              @click="onEdit(item.id)"
+            >
+              <AppIcon :icon="Pencil" size="sm" />
+              <span class="sr-only">Editar</span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-tap min-w-tap items-center justify-center rounded-[10px] border-0 bg-card px-2.5 text-[0.8rem] font-bold text-danger"
+              :aria-label="confirmId === item.id ? 'Confirmar' : 'Quitar'"
+              @click="onRemove(item.id)"
+            >
+              <template v-if="confirmId === item.id">Confirmar</template>
+              <template v-else>
+                <AppIcon :icon="Trash2" size="sm" />
+                <span class="sr-only">Quitar</span>
+              </template>
             </button>
           </div>
         </li>
@@ -94,121 +131,3 @@ function onRemove(id: string) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.catalog-list {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-input {
-  width: 100%;
-  min-height: var(--tap);
-  margin: 0;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  appearance: none;
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-  outline: none;
-}
-
-input:focus,
-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.viewport {
-  height: var(--catalog-list-h);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: var(--tap);
-  padding: 6px 8px 6px 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-li:last-child {
-  border-bottom: 0;
-}
-
-.text {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-}
-
-strong,
-small {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-strong {
-  font-size: 0.92rem;
-}
-
-small {
-  font-weight: 500;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.actions {
-  display: flex;
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.act {
-  min-height: var(--tap);
-  min-width: var(--tap);
-  padding: 0 10px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-.act.danger {
-  color: var(--danger);
-}
-
-.empty {
-  margin: 0;
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-}
-</style>

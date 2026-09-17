@@ -131,11 +131,11 @@ async function guardarEdicion() {
 <template>
   <article class="card">
     <h2>Catálogo</h2>
-    <p class="hint">
+    <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
       Busca por nombre. Editar o quitar en cada fila. Si ya hay series, no se puede borrar.
     </p>
 
-    <h3>Equipos</h3>
+    <h3 class="pt-1">Equipos</h3>
     <CatalogList
       :items="equiposItems"
       label="Equipos"
@@ -144,24 +144,25 @@ async function guardarEdicion() {
       @edit="editarEquipoPorId"
       @remove="gym.borrarEquipo"
     />
-    <label>
+    <label class="field">
       Nombre
       <input
         v-model="equipoNombre"
+        class="field-input"
         type="text"
         maxlength="60"
         placeholder="Máquina press banca Technogym"
       />
     </label>
-    <label>
+    <label class="field">
       Descripción (opcional)
-      <input v-model="equipoDesc" type="text" maxlength="80" />
+      <input v-model="equipoDesc" class="field-input" type="text" maxlength="80" />
     </label>
-    <button class="ghost" type="button" :disabled="!equipoNombre.trim()" @click="addEquipo">
+    <button class="btn-ghost" type="button" :disabled="!equipoNombre.trim()" @click="addEquipo">
       Añadir equipo
     </button>
 
-    <h3>Ejercicios</h3>
+    <h3 class="pt-1">Ejercicios</h3>
     <CatalogList
       :items="ejerciciosItems"
       label="Ejercicios"
@@ -170,18 +171,24 @@ async function guardarEdicion() {
       @edit="editarEjercicioPorId"
       @remove="gym.borrarEjercicio"
     />
-    <label>
+    <label class="field">
       Nombre
-      <input v-model="ejercicioNombre" type="text" maxlength="60" placeholder="Press banca" />
+      <input
+        v-model="ejercicioNombre"
+        class="field-input"
+        type="text"
+        maxlength="60"
+        placeholder="Press banca"
+      />
     </label>
-    <label>
+    <label class="field">
       Grupo muscular
       <select v-model="ejercicioGrupo">
         <option v-for="g in gruposOrden" :key="g.id" :value="g.id">{{ g.nombre }}</option>
       </select>
     </label>
     <button
-      class="ghost"
+      class="btn-ghost"
       type="button"
       :disabled="!ejercicioNombre.trim() || !ejercicioGrupo"
       @click="addEjercicio"
@@ -189,7 +196,7 @@ async function guardarEdicion() {
       Añadir ejercicio
     </button>
 
-    <h3>Grupos musculares</h3>
+    <h3 class="pt-1">Grupos musculares</h3>
     <CatalogList
       :items="gruposItems"
       label="Grupos musculares"
@@ -198,11 +205,17 @@ async function guardarEdicion() {
       @edit="editarGrupoPorId"
       @remove="gym.borrarGrupo"
     />
-    <label>
+    <label class="field">
       Nombre
-      <input v-model="grupoNombre" type="text" maxlength="40" placeholder="Core" />
+      <input
+        v-model="grupoNombre"
+        class="field-input"
+        type="text"
+        maxlength="40"
+        placeholder="Core"
+      />
     </label>
-    <button class="ghost" type="button" :disabled="!grupoNombre.trim()" @click="addGrupo">
+    <button class="btn-ghost" type="button" :disabled="!grupoNombre.trim()" @click="addGrupo">
       Añadir grupo
     </button>
   </article>
@@ -211,21 +224,21 @@ async function guardarEdicion() {
     <div class="sheet" role="dialog" aria-label="Editar catálogo">
       <h2>Editar</h2>
       <template v-if="editando.kind === 'equipo'">
-        <label>
+        <label class="field">
           Nombre
-          <input v-model="editando.nombre" type="text" maxlength="60" />
+          <input v-model="editando.nombre" class="field-input" type="text" maxlength="60" />
         </label>
-        <label>
+        <label class="field">
           Descripción
-          <input v-model="editando.descripcion" type="text" maxlength="80" />
+          <input v-model="editando.descripcion" class="field-input" type="text" maxlength="80" />
         </label>
       </template>
       <template v-else-if="editando.kind === 'ejercicio'">
-        <label>
+        <label class="field">
           Nombre
-          <input v-model="editando.nombre" type="text" maxlength="60" />
+          <input v-model="editando.nombre" class="field-input" type="text" maxlength="60" />
         </label>
-        <label>
+        <label class="field">
           Grupo muscular
           <select v-model="editando.grupoId">
             <option v-for="g in gruposOrden" :key="g.id" :value="g.id">{{ g.nombre }}</option>
@@ -233,101 +246,13 @@ async function guardarEdicion() {
         </label>
       </template>
       <template v-else>
-        <label>
+        <label class="field">
           Nombre
-          <input v-model="editando.nombre" type="text" maxlength="40" />
+          <input v-model="editando.nombre" class="field-input" type="text" maxlength="40" />
         </label>
       </template>
-      <button class="primary" type="button" @click="guardarEdicion">Guardar</button>
-      <button class="ghost" type="button" @click="editando = null">Cerrar</button>
+      <button class="btn-primary" type="button" @click="guardarEdicion">Guardar</button>
+      <button class="btn-ghost" type="button" @click="editando = null">Cerrar</button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-h2,
-h3,
-.hint {
-  margin: 0;
-}
-
-h2 {
-  font-size: 1.05rem;
-}
-
-h3 {
-  font-size: 0.95rem;
-  padding-top: 4px;
-}
-
-.hint {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.ghost,
-.primary {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  font-weight: 700;
-}
-
-.ghost {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.ghost:disabled {
-  opacity: 0.45;
-}
-
-.primary {
-  background: var(--accent);
-  color: #06210f;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  align-items: end;
-  z-index: 20;
-}
-
-.sheet {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + var(--safe-bottom));
-  display: grid;
-  gap: 12px;
-}
-</style>

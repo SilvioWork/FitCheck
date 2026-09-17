@@ -1,6 +1,6 @@
 # FitCheck
 
-PWA Vue 3 para registrar entrenos del grupo (asistencia, series, historial).
+PWA Vue 3 + Tailwind CSS v4 para registrar entrenos del grupo (asistencia, series, historial). Iconos Lucide en nav, empty states y acciones de fila.
 
 ## Arranque
 

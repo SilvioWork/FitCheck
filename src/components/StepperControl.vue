@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onUnmounted } from 'vue'
+import { cn } from '@/lib/cn'
 
 const HOLD_DELAY_MS = 1000
 const REPEAT_MS = 100
@@ -102,12 +103,16 @@ function display(value: number) {
 </script>
 
 <template>
-  <div class="stepper" :class="{ compact }">
-    <p class="label">{{ label }}</p>
-    <div class="row">
+  <div :class="cn('grid', compact ? 'gap-1' : 'gap-2')">
+    <p :class="cn('m-0 font-bold', compact ? 'text-xs' : 'text-[0.9rem]')">{{ label }}</p>
+    <div
+      :class="
+        cn('grid grid-cols-[var(--tap)_1fr_var(--tap)] items-center', compact ? 'gap-1' : 'gap-2')
+      "
+    >
       <button
         type="button"
-        class="btn"
+        class="min-h-tap touch-manipulation select-none rounded-sm border-0 bg-muted text-[1.4rem] font-bold text-foreground [-webkit-touch-callout:none] [-webkit-user-select:none]"
         :aria-label="'Menos ' + label"
         @pointerdown="onPointerDown(-1, $event)"
         @pointerup="onPointerUp(-1)"
@@ -117,10 +122,16 @@ function display(value: number) {
       >
         −
       </button>
-      <span class="value tabular">{{ display(model) }}</span>
+      <span
+        :class="
+          cn('tabular text-center font-extrabold', compact ? 'text-[1.2rem]' : 'text-[1.6rem]')
+        "
+      >
+        {{ display(model) }}
+      </span>
       <button
         type="button"
-        class="btn"
+        class="min-h-tap touch-manipulation select-none rounded-sm border-0 bg-muted text-[1.4rem] font-bold text-foreground [-webkit-touch-callout:none] [-webkit-user-select:none]"
         :aria-label="'Más ' + label"
         @pointerdown="onPointerDown(1, $event)"
         @pointerup="onPointerUp(1)"
@@ -133,59 +144,3 @@ function display(value: number) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.stepper {
-  display: grid;
-  gap: 8px;
-}
-
-.label {
-  margin: 0;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: var(--tap) 1fr var(--tap);
-  gap: 8px;
-  align-items: center;
-}
-
-.btn {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 1.4rem;
-  font-weight: 700;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.value {
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-
-.compact {
-  gap: 4px;
-}
-
-.compact .label {
-  font-size: 0.75rem;
-}
-
-.compact .row {
-  gap: 4px;
-}
-
-.compact .value {
-  font-size: 1.2rem;
-}
-</style>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Inbox, SearchX } from '@lucide/vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
 import SeriesGruposConsulta from '@/components/SeriesGruposConsulta.vue'
 import { formatFecha } from '@/lib/ids'
 import { useFitcheckStore } from '@/stores/fitcheck'
@@ -68,16 +70,18 @@ watch(
 <template>
   <article class="card">
     <h2>Por miembro</h2>
-    <p class="hint">Historial de series, filtrable por grupo, equipo o fechas.</p>
+    <p class="m-0 text-[0.85rem] leading-snug text-muted-foreground">
+      Historial de series, filtrable por grupo, equipo o fechas.
+    </p>
 
-    <label>
+    <label class="field">
       Miembro
       <select v-model="filtros.miembroId">
         <option v-for="m in gym.miembrosOrdenados" :key="m.id" :value="m.id">{{ m.nombre }}</option>
       </select>
     </label>
 
-    <label>
+    <label class="field">
       Grupo muscular
       <select v-model="filtros.grupoId">
         <option value="">Todos</option>
@@ -85,7 +89,7 @@ watch(
       </select>
     </label>
 
-    <label>
+    <label class="field">
       Equipo
       <select v-model="filtros.equipoId">
         <option value="">Todos</option>
@@ -93,116 +97,42 @@ watch(
       </select>
     </label>
 
-    <div class="pair">
-      <label>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="field">
         Desde
-        <input v-model="filtros.desde" type="date" />
+        <input v-model="filtros.desde" class="field-input" type="date" />
       </label>
-      <label>
+      <label class="field">
         Hasta
-        <input v-model="filtros.hasta" type="date" />
+        <input v-model="filtros.hasta" class="field-input" type="date" />
       </label>
     </div>
 
-    <button v-if="hayFiltro" class="ghost" type="button" @click="limpiarFiltros">
+    <button v-if="hayFiltro" class="btn-ghost" type="button" @click="limpiarFiltros">
       Quitar filtros
     </button>
   </article>
 
-  <p v-if="!filtros.miembroId" class="empty">No hay miembros en el grupo.</p>
-  <p v-else-if="cargando" class="empty">Cargando series…</p>
-  <p v-else-if="!bloques.length" class="empty">
+  <p v-if="!filtros.miembroId" class="empty-panel">
+    <AppIcon :icon="Inbox" size="lg" class="text-muted-foreground" />
+    No hay miembros en el grupo.
+  </p>
+  <p v-else-if="cargando" class="empty-panel">Cargando series…</p>
+  <p v-else-if="!bloques.length" class="empty-panel">
+    <AppIcon :icon="hayFiltro ? SearchX : Inbox" size="lg" class="text-muted-foreground" />
     {{ hayFiltro ? 'Ninguna serie encaja con esos filtros.' : 'Este miembro aún no tiene series.' }}
   </p>
 
   <article v-for="bloque in bloques" :key="bloque.sesion.id" class="card">
-    <RouterLink :to="`/historial/${bloque.sesion.id}`" class="sesion">
+    <RouterLink
+      :to="`/historial/${bloque.sesion.id}`"
+      class="grid min-h-tap content-center gap-0.5 text-inherit no-underline"
+    >
       <strong>{{ formatFecha(bloque.sesion.fecha) }}</strong>
-      <span>{{ bloque.sesion.nota || 'Sin nota' }}</span>
+      <span class="text-[0.9rem] font-medium text-muted-foreground">
+        {{ bloque.sesion.nota || 'Sin nota' }}
+      </span>
     </RouterLink>
     <SeriesGruposConsulta :series="bloque.series" />
   </article>
 </template>
-
-<style scoped>
-.card {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 12px;
-}
-
-h2,
-.hint {
-  margin: 0;
-}
-
-h2 {
-  font-size: 1.05rem;
-}
-
-.hint {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-input {
-  min-height: var(--tap);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  padding: 0 12px;
-}
-
-.pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.ghost {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.empty {
-  margin: 0;
-  padding: 24px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.sesion {
-  display: grid;
-  gap: 2px;
-  min-height: var(--tap);
-  align-content: center;
-  text-decoration: none;
-  color: inherit;
-}
-
-.sesion span {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-</style>
