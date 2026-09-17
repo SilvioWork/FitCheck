@@ -10,8 +10,12 @@ const props = defineProps<{
 const model = defineModel<string>({ required: true })
 
 const root = ref<HTMLElement | null>(null)
+const searchInput = ref<HTMLInputElement | null>(null)
 const query = ref('')
 const abierto = ref(false)
+const pointerStartY = ref<number | null>(null)
+const fueScroll = ref(false)
+let ignoreToggleUntil = 0
 
 const filtered = computed(() => {
   const q = query.value.trim().toLocaleLowerCase('es')
@@ -26,36 +30,81 @@ const seleccionado = computed(() => {
 function abrir() {
   query.value = ''
   abierto.value = true
+  fueScroll.value = false
+  pointerStartY.value = null
 }
 
 function cerrar() {
   abierto.value = false
   query.value = ''
+  fueScroll.value = false
+  pointerStartY.value = null
+  ignoreToggleUntil = Date.now() + 350
 }
 
 function toggle(event: Event) {
   event.preventDefault()
   event.stopPropagation()
+  if (Date.now() < ignoreToggleUntil) return
   if (abierto.value) cerrar()
   else abrir()
 }
 
-function seleccionar(id: string, event: Event) {
-  event.preventDefault()
-  event.stopPropagation()
+function seleccionar(id: string) {
   model.value = id
   cerrar()
 }
 
+function isInsideRoot(event: Event) {
+  const rootEl = root.value
+  if (!rootEl) return false
+  if (event.composedPath().includes(rootEl)) return true
+  const target = event.target
+  return target instanceof Node && rootEl.contains(target)
+}
+
 function onDocPointerDown(event: PointerEvent) {
   if (!abierto.value) return
-  const target = event.target
-  if (target instanceof Node && root.value?.contains(target)) return
+  if (isInsideRoot(event)) return
   cerrar()
 }
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && abierto.value) cerrar()
+}
+
+function marcarScroll() {
+  fueScroll.value = true
+}
+
+function onListaPointerDown(event: PointerEvent) {
+  pointerStartY.value = event.clientY
+  fueScroll.value = false
+  // Con el filtro enfocado, el teclado virtual bloquea el overflow.
+  // Soltar el foco permite scrollear sin cerrar el listado.
+  if (event.target !== searchInput.value) {
+    searchInput.value?.blur()
+  }
+}
+
+function onListaPointerMove(event: PointerEvent) {
+  if (pointerStartY.value == null) return
+  if (Math.abs(event.clientY - pointerStartY.value) > 8) marcarScroll()
+}
+
+function onOpcionPointerUp(id: string, event: PointerEvent) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (fueScroll.value) return
+  if (pointerStartY.value != null && Math.abs(event.clientY - pointerStartY.value) > 8) return
+  seleccionar(id)
+}
+
+function onOpcionClick(id: string, event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (!abierto.value || fueScroll.value) return
+  seleccionar(id)
 }
 
 onMounted(() => {
@@ -95,8 +144,10 @@ onUnmounted(() => {
       aria-label="Lista de ejercicios"
       @pointerdown.stop
       @click.stop
+      @wheel.stop
     >
       <input
+        ref="searchInput"
         v-model="query"
         type="search"
         placeholder="Buscar ejercicio"
@@ -104,7 +155,13 @@ onUnmounted(() => {
         autocomplete="off"
         enterkeyhint="search"
       />
-      <div class="viewport">
+      <div
+        class="viewport"
+        @pointerdown="onListaPointerDown"
+        @pointermove="onListaPointerMove"
+        @scroll.passive="marcarScroll"
+        @wheel.stop
+      >
         <p v-if="filtered.length === 0" class="empty">Nada coincide</p>
         <ul v-else>
           <li v-for="ej in filtered" :key="ej.id">
@@ -113,8 +170,8 @@ onUnmounted(() => {
               class="opcion"
               role="option"
               :aria-selected="ej.id === model"
-              @pointerdown.prevent.stop="seleccionar(ej.id, $event)"
-              @click.prevent.stop="seleccionar(ej.id, $event)"
+              @pointerup="onOpcionPointerUp(ej.id, $event)"
+              @click="onOpcionClick(ej.id, $event)"
             >
               <strong>{{ ej.nombre }}</strong>
               <small>{{ grupoDeEjercicio(ej.id) }}</small>
@@ -225,9 +282,11 @@ input:focus-visible {
 
 .viewport {
   max-height: 280px;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 ul {
@@ -247,6 +306,7 @@ ul {
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   color: inherit;
+  touch-action: pan-y;
 }
 
 li:last-child .opcion {
