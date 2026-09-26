@@ -80,7 +80,7 @@ function onRemove(id: string) {
       autocomplete="off"
       enterkeyhint="search"
     />
-    <div class="h-catalog overflow-y-auto overscroll-contain">
+    <div class="h-catalog min-h-0 overflow-y-auto overscroll-contain contain-paint">
       <p
         v-if="filtered.length === 0"
         class="m-0 grid min-h-full place-items-center gap-2 p-4 text-center text-[0.85rem] font-semibold text-muted-foreground"

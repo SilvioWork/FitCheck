@@ -169,7 +169,7 @@ onUnmounted(() => {
         enterkeyhint="search"
       />
       <div
-        class="max-h-[280px] min-h-0 overflow-y-auto overscroll-contain touch-pan-y"
+        class="max-h-[280px] min-h-0 overflow-y-auto overscroll-contain contain-paint touch-pan-y"
         @pointerdown="onListaPointerDown"
         @pointermove="onListaPointerMove"
         @scroll.passive="marcarScroll"
