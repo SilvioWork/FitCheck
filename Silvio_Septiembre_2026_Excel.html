@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Silvio - Septiembre 2026</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f5f5f5;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+h1 {
+  color: #2c3e50;
+  text-align: center;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 10px;
+}
+h2 {
+  color: #34495e;
+  background: #ecf0f1;
+  padding: 10px;
+  border-left: 4px solid #3498db;
+  margin-top: 30px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+th {
+  background: #3498db;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+tr:hover {
+  background: #f8f9fa;
+}
+.stat-box {
+  display: inline-block;
+  background: #3498db;
+  color: white;
+  padding: 15px 20px;
+  margin: 10px;
+  border-radius: 8px;
+  text-align: center;
+  min-width: 120px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+}
+.stat-label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.progress-bar {
+  background: #ecf0f1;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 5px 0;
+}
+.progress-fill {
+  background: #2ecc71;
+  height: 100%;
+  transition: width 0.3s;
+}
+.emoji {
+  font-size: 20px;
+}
+@media print {
+  body { background: white; }
+  .container { box-shadow: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>📊 RESUMEN DE ENTRENAMIENTO</h1>
+<p style="text-align:center; color:#7f8c8d;">
+  <strong>Usuario:</strong> Silvio<br>
+  <strong>Período:</strong> Septiembre 2026<br>
+  <strong>Fuente:</strong> Base de datos Supabase FitCheck
+</p>
+
+<div style="text-align:center; margin:30px 0;">
+  <div class="stat-box">
+    <div class="stat-value">11</div>
+    <div class="stat-label">Días Entrenados</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-value">63</div>
+    <div class="stat-label">Total Series</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-value">548</div>
+    <div class="stat-label">Repeticiones</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-value">20,425</div>
+    <div class="stat-label">Kg Levantados</div>
+  </div>
+</div>
+
+<h2>📅 Calendario de Entrenamientos</h2>
+<table>
+<tr>
+  <th>Fecha</th>
+  <th>Ejercicios</th>
+  <th>Series</th>
+  <th>Reps</th>
+  <th>Peso Prom (kg)</th>
+</tr>
+<tr><td>19 Sept</td><td>1</td><td>2</td><td>16</td><td>20.0</td></tr>
+<tr><td><strong>15 Sept - Pecho</strong></td><td>5</td><td>9</td><td>105</td><td>18.1</td></tr>
+<tr style="background:#e8f8f5"><td><strong>13 Sept - Femorales ⭐</strong></td><td>6</td><td><strong>13</strong></td><td><strong>157</strong></td><td>27.5</td></tr>
+<tr><td><strong>10 Sept - Piernas</strong></td><td>5</td><td>12</td><td>135</td><td>31.3</td></tr>
+<tr><td>09 Sept</td><td>5</td><td>10</td><td>92</td><td>28.3</td></tr>
+<tr style="background:#fff3cd"><td>08 Sept 💪</td><td>5</td><td>5</td><td>58</td><td><strong>54.0</strong></td></tr>
+<tr><td>07 Sept</td><td>1</td><td>3</td><td>24</td><td>26.7</td></tr>
+<tr><td>06 Sept</td><td>1</td><td>4</td><td>48</td><td>50.0</td></tr>
+<tr><td>05 Sept</td><td>2</td><td>3</td><td>26</td><td>28.3</td></tr>
+<tr><td><strong>04 Sept - Pierna + Glúteo</strong></td><td>2</td><td>2</td><td>20</td><td>35.0</td></tr>
+</table>
+<p><small>⭐ = Sesión más intensa | 💪 = Mayor carga promedio</small></p>
+
+<h2>🎯 Volumen por Grupo Muscular</h2>
+<table>
+<tr>
+  <th>Grupo Muscular</th>
+  <th>Series</th>
+  <th>Volumen (kg)</th>
+  <th>% Total</th>
+</tr>
+<tr>
+  <td><span class="emoji">🥇</span> Glúteo - Externo</td>
+  <td>7</td>
+  <td><strong>4,575</strong></td>
+  <td>22.4%<div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div></td>
+</tr>
+<tr>
+  <td><span class="emoji">🥈</span> Pecho superior</td>
+  <td>12</td>
+  <td><strong>3,255</strong></td>
+  <td>15.9%<div class="progress-bar"><div class="progress-fill" style="width:71%"></div></div></td>
+</tr>
+<tr>
+  <td><span class="emoji">🥉</span> Cuádriceps</td>
+  <td>7</td>
+  <td><strong>2,350</strong></td>
+  <td>11.5%<div class="progress-bar"><div class="progress-fill" style="width:51%"></div></div></td>
+</tr>
+<tr><td>Femorales</td><td>6</td><td>2,340</td><td>11.5%</td></tr>
+<tr><td>Pierna</td><td>8</td><td>1,645</td><td>8.1%</td></tr>
+<tr><td>Tríceps</td><td>4</td><td>1,440</td><td>7.1%</td></tr>
+<tr><td>Pecho medio</td><td>2</td><td>1,360</td><td>6.7%</td></tr>
+<tr><td>Espalda media</td><td>4</td><td>1,305</td><td>6.4%</td></tr>
+<tr><td>Aductores</td><td>3</td><td>1,210</td><td>5.9%</td></tr>
+<tr><td>Dorsal ancho</td><td>4</td><td>1,180</td><td>5.8%</td></tr>
+<tr><td>Glúteos</td><td>2</td><td>450</td><td>2.2%</td></tr>
+<tr><td>Zona lumbar</td><td>2</td><td>180</td><td>0.9%</td></tr>
+<tr><td>Bíceps</td><td>2</td><td>135</td><td>0.7%</td></tr>
+</table>
+
+<h2>💪 Top 10 Ejercicios</h2>
+<table>
+<tr>
+  <th>#</th>
+  <th>Ejercicio</th>
+  <th>Veces</th>
+  <th>Peso Min</th>
+  <th>Peso Max</th>
+  <th>Promedio</th>
+</tr>
+<tr><td>1</td><td>Sentadilla</td><td>6</td><td>20 kg</td><td>40 kg</td><td>26.7 kg × 8 reps</td></tr>
+<tr><td>2</td><td>Abducción</td><td>4</td><td>50 kg</td><td>50 kg</td><td>50.0 kg × 12 reps</td></tr>
+<tr><td>3</td><td>Cruce de poleas</td><td>4</td><td>5 kg</td><td>10 kg</td><td>7.5 kg × 13.5 reps</td></tr>
+<tr><td>4</td><td>Curl femoral tumbado</td><td>4</td><td>15 kg</td><td>37.5 kg</td><td>27.5 kg × 12 reps</td></tr>
+<tr><td>5</td><td>Press inclinado máquina</td><td>4</td><td>25 kg</td><td>40 kg</td><td>29.4 kg × 12 reps</td></tr>
+<tr><td>6</td><td>Aducción de cadera</td><td>3</td><td>40 kg</td><td>55 kg</td><td>48.3 kg × 15 reps</td></tr>
+<tr><td>7</td><td>Aducción en máquina</td><td>3</td><td>30 kg</td><td>35 kg</td><td>31.7 kg × 12.7 reps</td></tr>
+<tr><td>8</td><td>Dominadas supinas</td><td>3</td><td>42.5 kg</td><td>42.5 kg</td><td>42.5 kg × 8 reps</td></tr>
+<tr><td>9</td><td>Extensión cuádriceps</td><td>3</td><td>45 kg</td><td>60 kg</td><td>53.3 kg × 12 reps</td></tr>
+<tr><td>10</td><td>Curl femoral sentado</td><td>2</td><td>40 kg</td><td>45 kg</td><td>42.5 kg × 12 reps</td></tr>
+</table>
+
+<h2>📈 Progresiones Destacadas</h2>
+<table>
+<tr>
+  <th>Ejercicio</th>
+  <th>Inicio</th>
+  <th>Final</th>
+  <th>Mejora</th>
+</tr>
+<tr style="background:#d5f4e6">
+  <td><strong>Extensión cuádriceps</strong></td>
+  <td>45 kg</td>
+  <td>60 kg</td>
+  <td><strong>+15 kg (+33%) 🚀</strong></td>
+</tr>
+<tr style="background:#d5f4e6">
+  <td><strong>Aducción de cadera</strong></td>
+  <td>40 kg</td>
+  <td>55 kg</td>
+  <td><strong>+15 kg (+37%) 🚀</strong></td>
+</tr>
+<tr style="background:#d5f4e6">
+  <td><strong>Sentadilla</strong></td>
+  <td>20 kg</td>
+  <td>40 kg</td>
+  <td><strong>+20 kg (+100%) 🔥</strong></td>
+</tr>
+<tr>
+  <td>Curl femoral sentado</td>
+  <td>40 kg</td>
+  <td>45 kg</td>
+  <td>+5 kg (+12%)</td>
+</tr>
+</table>
+
+<h2>⚡ Técnicas Avanzadas Utilizadas</h2>
+<table>
+<tr>
+  <th>Técnica</th>
+  <th>Veces Usada</th>
+</tr>
+<tr><td>Con ayuda</td><td>6</td></tr>
+<tr><td>Rest-pause</td><td>3</td></tr>
+<tr><td>Dropset</td><td>2</td></tr>
+<tr><td>Fallo muscular</td><td>2</td></tr>
+<tr><td>Rest-pause + dropset</td><td>2</td></tr>
+</table>
+
+<h2>📆 Frecuencia Semanal</h2>
+<table>
+<tr>
+  <th>Semana</th>
+  <th>Entrenamientos</th>
+  <th>Visual</th>
+</tr>
+<tr>
+  <td>Semana 1 (1-7 Sep)</td>
+  <td>4</td>
+  <td>🟢🟢🟢🟢</td>
+</tr>
+<tr>
+  <td>Semana 2 (8-14 Sep)</td>
+  <td>4</td>
+  <td>🟢🟢🟢🟢</td>
+</tr>
+<tr>
+  <td>Semana 3 (15-21 Sep)</td>
+  <td>2</td>
+  <td>🟢🟢</td>
+</tr>
+<tr>
+  <td>Semana 4 (22-30 Sep)</td>
+  <td>1</td>
+  <td>🟢</td>
+</tr>
+<tr style="background:#ecf0f1">
+  <td><strong>Promedio</strong></td>
+  <td><strong>2.75/semana</strong></td>
+  <td></td>
+</tr>
+</table>
+
+<h2>💡 Conclusiones</h2>
+<div style="background:#e8f8f5; padding:15px; border-radius:8px; line-height:1.8;">
+  ✓ <strong>Enfoque principal:</strong> Glúteos y pecho (38% del volumen total)<br>
+  ✓ <strong>Progresión excelente</strong> en ejercicios de tren inferior<br>
+  ✓ <strong>Uso apropiado</strong> de técnicas avanzadas de intensificación<br>
+  ✓ <strong>Volumen ideal</strong> para hipertrofia (12-15 reps promedio)<br>
+  ✓ <strong>Consistencia buena</strong> en las primeras dos semanas
+</div>
+
+<hr style="margin:40px 0; border:none; border-top:2px solid #ecf0f1;">
+
+<p style="text-align:center; color:#95a5a6; font-size:12px;">
+  Extracción: 1 de Octubre, 2026<br>
+  Fuente: Base de datos Supabase - Proyecto FitCheck<br>
+  Usuario ID: 40210477-a76a-47d8-8293-cfef0171120d
+</p>
+
+</div>
+
+</body>
+</html>

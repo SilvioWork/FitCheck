@@ -1,0 +1,140 @@
+═══════════════════════════════════════
+ RESUMEN DE ENTRENAMIENTO
+ SILVIO - SEPTIEMBRE 2026
+═══════════════════════════════════════
+
+📊 ESTADÍSTICAS GENERALES
+──────────────────────────────────────
+✓ Días entrenados: 11 sesiones
+✓ Total series: 63
+✓ Total repeticiones: 548
+✓ Volumen total: 20,425 kg
+✓ Peso promedio: 30.3 kg
+
+═══════════════════════════════════════
+📅 CALENDARIO DE ENTRENAMIENTOS
+═══════════════════════════════════════
+
+19 Sept → 2 series (20 kg prom)
+15 Sept → 9 series (18 kg prom) - PECHO
+13 Sept → 13 series (27 kg prom) - FEMORALES ⭐
+10 Sept → 12 series (31 kg prom) - PIERNAS
+09 Sept → 10 series (28 kg prom)
+08 Sept → 5 series (54 kg prom) 💪
+07 Sept → 3 series (27 kg prom)
+06 Sept → 4 series (50 kg prom)
+05 Sept → 3 series (28 kg prom)
+04 Sept → 2 series (35 kg prom)
+
+⭐ = Sesión más intensa
+💪 = Mayor carga promedio
+
+═══════════════════════════════════════
+🎯 VOLUMEN POR MÚSCULO (kg levantados)
+═══════════════════════════════════════
+
+1. Glúteo - Externo ......... 4,575 kg 🥇
+2. Pecho superior ........... 3,255 kg 🥈
+3. Cuádriceps ............... 2,350 kg 🥉
+4. Femorales ................ 2,340 kg
+5. Pierna (general) ......... 1,645 kg
+6. Tríceps .................. 1,440 kg
+7. Pecho medio .............. 1,360 kg
+8. Espalda media ............ 1,305 kg
+9. Aductores ................ 1,210 kg
+10. Dorsal ancho ............. 1,180 kg
+
+═══════════════════════════════════════
+💪 TOP 5 EJERCICIOS
+═══════════════════════════════════════
+
+1️⃣ SENTADILLA
+   Frecuencia: 6 veces (3 días)
+   Peso: 20-40 kg
+   Promedio: 26.7 kg × 8 reps
+
+2️⃣ ABDUCCIÓN
+   Frecuencia: 4 veces (1 día)
+   Peso: 50 kg constante
+   Promedio: 50 kg × 12 reps
+
+3️⃣ CRUCE DE POLEAS
+   Frecuencia: 4 veces (2 días)
+   Peso: 5-10 kg
+   Promedio: 7.5 kg × 13.5 reps
+
+4️⃣ CURL FEMORAL TUMBADO
+   Frecuencia: 4 veces (2 días)
+   Peso: 15-37.5 kg
+   Promedio: 27.5 kg × 12 reps
+
+5️⃣ PRESS INCLINADO MÁQUINA
+   Frecuencia: 4 veces (2 días)
+   Peso: 25-40 kg
+   Promedio: 29.4 kg × 12 reps
+
+═══════════════════════════════════════
+📈 PROGRESIONES DESTACADAS
+═══════════════════════════════════════
+
+✅ Extensión cuádriceps
+   45 kg → 60 kg
+   Mejora: +15 kg (+33%) 🚀
+
+✅ Aducción de cadera
+   40 kg → 55 kg
+   Mejora: +15 kg (+37%) 🚀
+
+✅ Curl femoral sentado
+   40 kg → 45 kg
+   Mejora: +5 kg (+12%)
+
+✅ Sentadilla
+   20 kg → 40 kg
+   Mejora: +20 kg (+100%) 🔥
+
+═══════════════════════════════════════
+🏋️ EQUIPAMIENTO
+═══════════════════════════════════════
+
+Máquinas .............. 41 series (65%)
+Barra libre ............ 8 series (13%)
+Poleas ................. 7 series (11%)
+Máquina Smith .......... 4 series (6%)
+Aductores/Abductores ... 7 series (11%)
+
+═══════════════════════════════════════
+⚡ TÉCNICAS AVANZADAS
+═══════════════════════════════════════
+
+• Con ayuda ................ 6 veces
+• Rest-pause ............... 3 veces
+• Dropset .................. 2 veces
+• Fallo muscular ........... 2 veces
+• Rest-pause + dropset ..... 2 veces
+
+═══════════════════════════════════════
+📆 FRECUENCIA SEMANAL
+═══════════════════════════════════════
+
+Semana 1 (1-7 Sep) ...... 4 entrenamientos
+Semana 2 (8-14 Sep) ..... 4 entrenamientos
+Semana 3 (15-21 Sep) .... 2 entrenamientos
+Semana 4 (22-30 Sep) .... 1 entrenamiento
+
+PROMEDIO: 2.75 entrenamientos/semana
+
+═══════════════════════════════════════
+💡 CONCLUSIONES CLAVE
+═══════════════════════════════════════
+
+✓ Enfoque principal en glúteos y pecho
+✓ Excelente progresión en tren inferior
+✓ Uso apropiado de técnicas avanzadas
+✓ Volumen ideal para hipertrofia
+✓ Mayor actividad en primeras 2 semanas
+
+═══════════════════════════════════════
+Extracción: 1 Oct 2026
+Fuente: Base de datos Supabase FitCheck
+═══════════════════════════════════════
