@@ -1,0 +1,434 @@
+{
+  "usuario": {
+    "id": "40210477-a76a-47d8-8293-cfef0171120d",
+    "nombre": "Silvio",
+    "usuario": "silvio"
+  },
+  "periodo": {
+    "mes": "Septiembre",
+    "año": 2026,
+    "fecha_inicio": "2026-09-01",
+    "fecha_fin": "2026-09-30"
+  },
+  "estadisticas_generales": {
+    "total_sesiones": 11,
+    "total_series": 64,
+    "grupos_musculares_trabajados": [
+      "Piernas y Glúteos",
+      "Pecho",
+      "Espalda",
+      "Tríceps",
+      "Bíceps"
+    ]
+  },
+  "sesiones": [
+    {
+      "fecha": "2026-09-19",
+      "nota_sesion": null,
+      "grupo_principal": "Tríceps",
+      "ejercicios": [
+        {
+          "nombre": "Extensión de tríceps en máquina",
+          "grupo_muscular": "Triceps- Cabezas lateral y medial",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20},
+            {"numero": 2, "repeticiones": 8, "peso_kg": 20}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-15",
+      "nota_sesion": "Pecho",
+      "grupo_principal": "Pecho",
+      "ejercicios": [
+        {
+          "nombre": "Cruce de poleas de abajo hacia arriba",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 15, "peso_kg": 7.5},
+            {"numero": 2, "repeticiones": 10, "peso_kg": 10},
+            {"numero": 3, "repeticiones": 17, "peso_kg": 7.5}
+          ]
+        },
+        {
+          "nombre": "Press inclinado en Smith",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Máquina smith",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20}
+          ]
+        },
+        {
+          "nombre": "Press inclinado en máquina",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 15, "peso_kg": 25, "nota": "Con ayuda"},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 27.5, "nota": "Con ayuda"},
+            {"numero": 3, "repeticiones": 12, "peso_kg": 25, "nota": "Con ayuda · Rest-pause"}
+          ]
+        },
+        {
+          "nombre": "Press banca en máquina",
+          "grupo_muscular": "Pecho medio",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20}
+          ]
+        },
+        {
+          "nombre": "Patada de tríceps en polea",
+          "grupo_muscular": "Triceps- Cabezas lateral y medial",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-13",
+      "nota_sesion": "Femorales",
+      "grupo_principal": "Piernas - Femorales",
+      "ejercicios": [
+        {
+          "nombre": "Peso muerto rumano",
+          "grupo_muscular": "Zona lumbar / erectores",
+          "equipo": "Multipower / Smith",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 5},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 10}
+          ]
+        },
+        {
+          "nombre": "Curl femoral sentado",
+          "grupo_muscular": "FEMORALES / ISQUIOTIBIALES",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 40},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 45}
+          ]
+        },
+        {
+          "nombre": "Curl femoral tumbado",
+          "grupo_muscular": "FEMORALES / ISQUIOTIBIALES",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 15},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 20}
+          ]
+        },
+        {
+          "nombre": "Hip thrust",
+          "grupo_muscular": "GLÚTEOS",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 20},
+            {"numero": 2, "repeticiones": 10, "peso_kg": 25}
+          ]
+        },
+        {
+          "nombre": "Extensiones cuadricep",
+          "grupo_muscular": "Pierna",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 15},
+            {"numero": 2, "repeticiones": 10, "peso_kg": 17.5}
+          ]
+        },
+        {
+          "nombre": "Aducción de cadera",
+          "grupo_muscular": "Glúteo - Externo",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 15, "peso_kg": 40},
+            {"numero": 2, "repeticiones": 15, "peso_kg": 50},
+            {"numero": 3, "repeticiones": 15, "peso_kg": 55}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-10",
+      "nota_sesion": "Piernas",
+      "grupo_principal": "Piernas",
+      "ejercicios": [
+        {
+          "nombre": "Sentadilla Hack",
+          "grupo_muscular": "CUÁDRICEPS",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 0},
+            {"numero": 2, "repeticiones": 10, "peso_kg": 5}
+          ]
+        },
+        {
+          "nombre": "Sentadilla frontal en Smith",
+          "grupo_muscular": "CUÁDRICEPS",
+          "equipo": "Máquina smith",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20},
+            {"numero": 2, "repeticiones": 8, "peso_kg": 20}
+          ]
+        },
+        {
+          "nombre": "Extensión de cuádriceps",
+          "grupo_muscular": "CUÁDRICEPS",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 45},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 55},
+            {"numero": 3, "repeticiones": 13, "peso_kg": 60}
+          ]
+        },
+        {
+          "nombre": "Curl femoral tumbado",
+          "grupo_muscular": "FEMORALES / ISQUIOTIBIALES",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 37.5},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 37.5}
+          ]
+        },
+        {
+          "nombre": "Aducción en máquina",
+          "grupo_muscular": "ADUCTORES / PARTE INTERNA DEL MUSLO",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 30},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 30},
+            {"numero": 3, "repeticiones": 14, "peso_kg": 35}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-09",
+      "nota_sesion": null,
+      "grupo_principal": "Espalda y Bíceps",
+      "ejercicios": [
+        {
+          "nombre": "Remo unilateral en polea",
+          "grupo_muscular": "Espalda media / grosor",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 35},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 40}
+          ]
+        },
+        {
+          "nombre": "Remo T",
+          "grupo_muscular": "Espalda media / grosor",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 9, "peso_kg": 20},
+            {"numero": 2, "repeticiones": 9, "peso_kg": 25}
+          ]
+        },
+        {
+          "nombre": "Jalón al pecho Polea",
+          "grupo_muscular": "Dorsal ancho",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20}
+          ]
+        },
+        {
+          "nombre": "Dominadas supinas",
+          "grupo_muscular": "Dorsal ancho",
+          "equipo": "Maquina asistida",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 42.5},
+            {"numero": 2, "repeticiones": 8, "peso_kg": 42.5},
+            {"numero": 3, "repeticiones": 8, "peso_kg": 42.5}
+          ]
+        },
+        {
+          "nombre": "Curl bayesiano en polea",
+          "grupo_muscular": "Bíceps braquial",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 9, "peso_kg": 7.5},
+            {"numero": 2, "repeticiones": 9, "peso_kg": 7.5}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-08",
+      "nota_sesion": null,
+      "grupo_principal": "Pecho y Tríceps",
+      "ejercicios": [
+        {
+          "nombre": "Press inclinado en Smith",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Máquina smith",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 45}
+          ]
+        },
+        {
+          "nombre": "Press inclinado en máquina",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 40}
+          ]
+        },
+        {
+          "nombre": "Press banca en máquina",
+          "grupo_muscular": "Pecho medio",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 100}
+          ]
+        },
+        {
+          "nombre": "Fondos en máquina",
+          "grupo_muscular": "Triceps- Cabezas lateral y medial",
+          "equipo": "Maquina",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 80}
+          ]
+        },
+        {
+          "nombre": "Cruce de poleas de abajo hacia arriba",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Polea",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 5}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-07",
+      "nota_sesion": null,
+      "grupo_principal": "Piernas",
+      "ejercicios": [
+        {
+          "nombre": "Sentadilla",
+          "grupo_muscular": "Pierna",
+          "equipo": "Barra",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 20, "nota": "Con ayuda · Rest-pause + dropset"},
+            {"numero": 2, "repeticiones": 8, "peso_kg": 20, "nota": "Con ayuda · Rest-pause + dropset"},
+            {"numero": 3, "repeticiones": 8, "peso_kg": 40}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-06",
+      "nota_sesion": null,
+      "grupo_principal": "Glúteos",
+      "ejercicios": [
+        {
+          "nombre": "Abducción",
+          "grupo_muscular": "Glúteo - Externo",
+          "equipo": "Aductores",
+          "series": [
+            {"numero": 1, "repeticiones": 12, "peso_kg": 50},
+            {"numero": 2, "repeticiones": 12, "peso_kg": 50},
+            {"numero": 3, "repeticiones": 12, "peso_kg": 50},
+            {"numero": 4, "repeticiones": 12, "peso_kg": 50}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-05",
+      "nota_sesion": null,
+      "grupo_principal": "Piernas y Pecho",
+      "ejercicios": [
+        {
+          "nombre": "Sentadilla",
+          "grupo_muscular": "Pierna",
+          "equipo": "Barra",
+          "series": [
+            {"numero": 1, "repeticiones": 8, "peso_kg": 40},
+            {"numero": 2, "repeticiones": 8, "peso_kg": 20, "nota": "Con ayuda · Fallo muscular"}
+          ]
+        },
+        {
+          "nombre": "Press banca",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Barra",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 25}
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "2026-09-04",
+      "nota_sesion": "Pierna + Gluteo",
+      "grupo_principal": "Piernas y Pecho",
+      "ejercicios": [
+        {
+          "nombre": "Sentadilla",
+          "grupo_muscular": "Pierna",
+          "equipo": "Barra",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 20, "nota": "Con ayuda"}
+          ]
+        },
+        {
+          "nombre": "Press banca",
+          "grupo_muscular": "Pecho superior",
+          "equipo": "Barra",
+          "series": [
+            {"numero": 1, "repeticiones": 10, "peso_kg": 50, "nota": "Con ayuda · Fallo muscular"}
+          ]
+        }
+      ]
+    }
+  ],
+  "analisis_por_ejercicio": {
+    "piernas_gluteos": {
+      "Sentadilla": {"peso_min": 20, "peso_max": 40, "reps_promedio": 8.5},
+      "Sentadilla Hack": {"peso_min": 0, "peso_max": 5, "reps_promedio": 10},
+      "Sentadilla frontal en Smith": {"peso_min": 20, "peso_max": 20, "reps_promedio": 8},
+      "Extensión de cuádriceps": {"peso_min": 45, "peso_max": 60, "reps_promedio": 12.3, "progresion": "positiva"},
+      "Curl femoral sentado": {"peso_min": 40, "peso_max": 45, "reps_promedio": 12},
+      "Curl femoral tumbado": {"peso_min": 15, "peso_max": 37.5, "reps_promedio": 12},
+      "Peso muerto rumano": {"peso_min": 5, "peso_max": 10, "reps_promedio": 12},
+      "Hip thrust": {"peso_min": 20, "peso_max": 25, "reps_promedio": 10},
+      "Abducción": {"peso_min": 50, "peso_max": 50, "reps_promedio": 12},
+      "Aducción en máquina": {"peso_min": 30, "peso_max": 35, "reps_promedio": 12.7},
+      "Aducción de cadera": {"peso_min": 40, "peso_max": 55, "reps_promedio": 15, "progresion": "positiva"}
+    },
+    "pecho": {
+      "Press banca en máquina": {"peso_min": 20, "peso_max": 100, "reps_promedio": 10},
+      "Press inclinado en máquina": {"peso_min": 25, "peso_max": 40, "reps_promedio": 12.3},
+      "Press inclinado en Smith": {"peso_min": 20, "peso_max": 45, "reps_promedio": 10},
+      "Press banca con barra": {"peso_min": 25, "peso_max": 50, "reps_promedio": 10},
+      "Cruce de poleas de abajo hacia arriba": {"peso_min": 5, "peso_max": 10, "reps_promedio": 13.5},
+      "Fondos en máquina": {"peso_min": 80, "peso_max": 80, "reps_promedio": 12}
+    },
+    "espalda": {
+      "Remo unilateral en polea": {"peso_min": 35, "peso_max": 40, "reps_promedio": 12},
+      "Remo T": {"peso_min": 20, "peso_max": 25, "reps_promedio": 9},
+      "Jalón al pecho Polea": {"peso_min": 20, "peso_max": 20, "reps_promedio": 8},
+      "Dominadas supinas": {"peso_min": 42.5, "peso_max": 42.5, "reps_promedio": 8}
+    },
+    "triceps": {
+      "Extensión de tríceps en máquina": {"peso_min": 20, "peso_max": 20, "reps_promedio": 8},
+      "Patada de tríceps en polea": {"peso_min": 20, "peso_max": 20, "reps_promedio": 8},
+      "Fondos en máquina": {"peso_min": 80, "peso_max": 80, "reps_promedio": 12}
+    },
+    "biceps": {
+      "Curl bayesiano en polea": {"peso_min": 7.5, "peso_max": 7.5, "reps_promedio": 9}
+    }
+  },
+  "frecuencia_entrenamiento": {
+    "piernas_gluteos": 7,
+    "pecho": 4,
+    "espalda": 1,
+    "triceps": 3,
+    "biceps": 1
+  }
+}
