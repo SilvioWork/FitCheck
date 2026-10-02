@@ -2,7 +2,8 @@ import { computed, ref } from 'vue'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
-import { todayISO } from '@/lib/ids'
+import { ventanaDashboard, todayISO, type VentanaDashboard } from '@/lib/ids'
+import type { SerieVentana } from '@/lib/dashboard'
 import { agruparSeriesPorEjercicioEquipo } from '@/lib/seriesGrupos'
 import { emailDeUsuario, normalizarUsuario } from '@/lib/usuario'
 import { useAuthStore } from '@/stores/auth'
@@ -41,6 +42,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
   const historialFiltros = ref({ desde: '', hasta: '', grupoId: '' })
   const consultaSesiones = ref<Sesion[]>([])
   const fechaActiva = ref(todayISO())
+  const seriesVentana = ref<SerieVentana[]>([])
+  const ventanaActiva = ref<VentanaDashboard | null>(null)
   const error = ref('')
   const listo = ref(false)
   const enVivo = ref(false)
@@ -213,6 +216,65 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     await cargarSesion(row.id)
   }
 
+  function mapVentana(row: {
+    miembro_id: string
+    ejercicio_id: string
+    equipo_id: string
+    numero_serie: number
+    repeticiones: number
+    peso_kg: number | string
+    sesion_id: string
+    sesiones: { fecha: string; creado_en: string } | { fecha: string; creado_en: string }[]
+    ejercicios: { grupo_muscular_id: string } | { grupo_muscular_id: string }[]
+  }): SerieVentana {
+    const sesion = Array.isArray(row.sesiones) ? row.sesiones[0] : row.sesiones
+    const ejercicio = Array.isArray(row.ejercicios) ? row.ejercicios[0] : row.ejercicios
+    if (!sesion || !ejercicio) {
+      throw new Error('La serie de la ventana no trae sesión o ejercicio')
+    }
+    return {
+      miembroId: row.miembro_id,
+      ejercicioId: row.ejercicio_id,
+      equipoId: row.equipo_id,
+      grupoMuscularId: ejercicio.grupo_muscular_id,
+      numeroSerie: row.numero_serie,
+      repeticiones: row.repeticiones,
+      pesoKg: asNumber(row.peso_kg),
+      sesionId: row.sesion_id,
+      fecha: String(sesion.fecha).slice(0, 10),
+      creadoEn: sesion.creado_en,
+    }
+  }
+
+  async function cargarVentanaDashboard() {
+    const ventana = ventanaDashboard()
+    try {
+      const pageSize = 1000
+      const acumulado: SerieVentana[] = []
+      for (let from = 0; ; from += pageSize) {
+        const { data, error: err } = await supabase
+          .from('series')
+          .select(
+            'miembro_id, ejercicio_id, equipo_id, numero_serie, repeticiones, peso_kg, sesion_id, sesiones!inner(fecha, creado_en), ejercicios!inner(grupo_muscular_id)',
+          )
+          .gte('sesiones.fecha', ventana.desde)
+          .lte('sesiones.fecha', ventana.hasta)
+          .order('id', { ascending: true })
+          .range(from, from + pageSize - 1)
+        if (err) throw err
+        const rows = (data ?? []) as unknown as Parameters<typeof mapVentana>[0][]
+        for (const row of rows) acumulado.push(mapVentana(row))
+        if (rows.length < pageSize) break
+      }
+      seriesVentana.value = acumulado
+      ventanaActiva.value = ventana
+    } catch (err) {
+      seriesVentana.value = []
+      ventanaActiva.value = ventana
+      throw err
+    }
+  }
+
   async function seleccionarFecha(fecha: string) {
     const next = String(fecha).slice(0, 10)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(next)) return
@@ -308,6 +370,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     ])
     await cargarSesionPorFecha(fechaActiva.value)
     await Promise.all([...ids].map((id) => cargarSesion(id)))
+    await cargarVentanaDashboard()
     if (
       historialSesiones.value.length ||
       historialFiltros.value.grupoId ||
@@ -368,6 +431,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     historialFiltros.value = { desde: '', hasta: '', grupoId: '' }
     consultaSesiones.value = []
     fechaActiva.value = todayISO()
+    seriesVentana.value = []
+    ventanaActiva.value = null
     error.value = ''
     listo.value = false
   }
@@ -384,6 +449,7 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
       await seedCatalogIfEmpty()
       await refreshBase()
       await cargarSesionPorFecha(fechaActiva.value)
+      await cargarVentanaDashboard()
       listenRealtime()
     } catch (err) {
       fail(err instanceof Error ? err.message : 'No se pudo cargar FitCheck')
@@ -946,6 +1012,8 @@ export const useFitcheckStore = defineStore('fitcheck', () => {
     listo,
     enVivo,
     fechaActiva,
+    seriesVentana,
+    ventanaActiva,
     miembroActivoId,
     miembroActivo,
     sesionDeFecha,

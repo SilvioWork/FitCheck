@@ -20,12 +20,26 @@ async function esperarHoy(page: Page) {
   await expect(page.getByText(/Puedes anotar a cualquiera/)).toBeVisible()
 }
 
-async function entrar(page: Page, usuario: string, password: string) {
+async function esperarDashboard(page: Page) {
+  await expect(page.getByRole('heading', { name: 'Inicio', exact: true })).toBeVisible({
+    timeout: 20_000,
+  })
+  await expect(page.getByRole('button', { name: 'Anotar hoy' })).toBeVisible()
+  await expect(page.getByText('Sincronizando con Supabase')).toHaveCount(0, { timeout: 20_000 })
+}
+
+async function entrarEnDashboard(page: Page, usuario: string, password: string) {
   await page.goto('/entrar')
   await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible({ timeout: 20_000 })
   await page.getByLabel('Usuario').fill(usuario)
   await page.getByLabel('Contraseña').fill(password)
   await page.getByRole('button', { name: 'Entrar' }).click()
+  await esperarDashboard(page)
+}
+
+async function entrar(page: Page, usuario: string, password: string) {
+  await entrarEnDashboard(page, usuario, password)
+  await irA(page, 'Hoy')
   await esperarHoy(page)
 }
 
@@ -164,6 +178,8 @@ test.describe('FitCheck QA', () => {
   test('AUTH-04 guard sin sesión', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
+    await page.goto('/hoy')
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
     await page.goto('/historial')
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
     await page.goto('/ajustes')
@@ -189,12 +205,19 @@ test.describe('FitCheck QA', () => {
   })
 
   test('AUTH-01 login válido y AUTH-05 / AUTH-08 / AUTH-03', async ({ page }) => {
-    await entrar(page, USER, PASS)
-    await expect(page.getByText(/Entraste como /)).toBeVisible()
-    await expect(page.getByText('En vivo')).toBeVisible({ timeout: 20_000 })
+    await entrarEnDashboard(page, USER, PASS)
+    const nav = page.getByRole('navigation', { name: 'Principal' })
+    await expect(nav.getByRole('link', { name: 'Hoy' })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Historial' })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Ajustes' })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Hoy' })).not.toHaveAttribute('aria-current', 'page')
 
     await page.goto('/entrar')
+    await esperarDashboard(page)
+
+    await irA(page, 'Hoy')
     await esperarHoy(page)
+    await expect(page.getByText('En vivo')).toBeVisible({ timeout: 20_000 })
 
     await page.reload()
     await esperarHoy(page)
@@ -203,7 +226,7 @@ test.describe('FitCheck QA', () => {
     await page.getByRole('tab', { name: 'Users' }).click()
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
-    await entrar(page, USER, PASS)
+    await entrarEnDashboard(page, USER, PASS)
   })
 
   test('HOY asistencia, serie, chips, duplicar, editar, borrar, otro miembro', async ({ page }) => {
@@ -777,5 +800,78 @@ test.describe('FitCheck QA', () => {
     await expect(page.getByRole('heading', { name: 'Series de Silvio' })).toBeVisible()
     const setsDestino = bloqueSeries(page, 'Silvio').getByTestId('serie-set')
     await expect.poll(async () => setsDestino.count()).toBeGreaterThanOrEqual(nSilvio)
+  })
+
+  test('DASH-01/06/07/08 arranque, fijar y anotar hoy', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
+    await page.goto('/hoy')
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
+
+    await entrarEnDashboard(page, USER, PASS)
+    await expect(page).toHaveURL(/\/$/)
+    const nav = page.getByRole('navigation', { name: 'Principal' })
+    await expect(nav.getByRole('link', { name: 'Hoy' })).toHaveAttribute('href', '/hoy')
+    for (const destino of ['Hoy', 'Historial', 'Ajustes']) {
+      await expect(nav.getByRole('link', { name: destino })).not.toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+    }
+    const anotar = page.getByRole('button', { name: 'Anotar hoy' })
+    const caja = await anotar.boundingBox()
+    expect(caja).toBeTruthy()
+    expect(caja!.height).toBeGreaterThanOrEqual(44)
+    expect(caja!.width).toBeGreaterThanOrEqual(44)
+
+    await expect(page.getByRole('heading', { name: 'Progreso' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Volumen' })).toBeVisible()
+
+    const sinVolumen = page.getByText('Sin volumen en estas dos semanas.')
+    if (await sinVolumen.isVisible()) {
+      await expect(page.getByTestId('barra-volumen')).toHaveCount(0)
+      await expect(page.getByText('tenue = semana anterior, acento = esta semana')).toHaveCount(0)
+    } else {
+      await expect(page.getByText('tenue = semana anterior, acento = esta semana')).toBeVisible()
+      const grupos = page.getByTestId('volumen-grupo')
+      expect(await grupos.count()).toBeGreaterThan(0)
+      const primero = grupos.first()
+      await expect(primero.getByTestId('barra-volumen')).toHaveCount(2)
+    }
+
+    const select = page.getByLabel('Fijar ejercicio')
+    await expect(select.locator('option')).not.toHaveCount(0)
+    await select.selectOption({ label: 'Press banca' })
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('fitcheck-ejercicio-fijado')))
+      .not.toBeNull()
+    await page.reload()
+    await esperarDashboard(page)
+    await expect(select).not.toHaveValue('')
+    await expect(page.getByRole('heading', { name: 'Silvio' })).toBeVisible()
+
+    await page.evaluate(() =>
+      localStorage.setItem('fitcheck-ejercicio-fijado', '00000000-0000-0000-0000-000000000000'),
+    )
+    await page.reload()
+    await esperarDashboard(page)
+    await expect(select).toHaveValue('')
+    await expect(page.getByText('Sin datos de este ejercicio en estas dos semanas')).toHaveCount(0)
+
+    await select.selectOption({ label: 'Press banca' })
+    await select.selectOption({ label: 'Sin fijar' })
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('fitcheck-ejercicio-fijado')))
+      .toBeNull()
+
+    await irA(page, 'Hoy')
+    await irAFecha(page, fechasSandboxQA()[0])
+    await page.goto('/')
+    await esperarDashboard(page)
+    await anotar.click()
+    await expect(page).toHaveURL(/\/hoy$/)
+    await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue(todayISO())
+    await expect(page.getByRole('heading', { name: 'Hoy', exact: true })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Hoy' })).toHaveAttribute('aria-current', 'page')
   })
 })

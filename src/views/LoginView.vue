@@ -41,7 +41,7 @@ async function enviar() {
         })
       : await auth.signIn(usuario.value, password.value)
   enviando.value = false
-  if (ok) await router.replace({ name: 'hoy' })
+  if (ok) await router.replace({ name: 'inicio' })
 }
 </script>
 

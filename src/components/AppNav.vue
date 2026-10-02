@@ -7,13 +7,13 @@ import { cn } from '@/lib/cn'
 const route = useRoute()
 
 const tabs = [
-  { to: '/', label: 'Hoy', icon: CalendarDays },
+  { to: '/hoy', label: 'Hoy', icon: CalendarDays },
   { to: '/historial', label: 'Historial', icon: History },
   { to: '/ajustes', label: 'Ajustes', icon: Settings },
 ] as const
 
 function isActive(to: string) {
-  return to === '/' ? route.path === '/' : route.path.startsWith(to)
+  return route.path === to || route.path.startsWith(`${to}/`)
 }
 </script>
 

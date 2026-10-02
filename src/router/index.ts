@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import HoyView from '@/views/HoyView.vue'
+import InicioView from '@/views/InicioView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,7 +12,8 @@ const router = createRouter({
       component: () => import('@/views/LoginView.vue'),
       meta: { public: true },
     },
-    { path: '/', name: 'hoy', component: HoyView },
+    { path: '/', name: 'inicio', component: InicioView },
+    { path: '/hoy', name: 'hoy', component: HoyView },
     {
       path: '/historial',
       name: 'historial',
@@ -34,7 +36,7 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (!auth.ready) await auth.init()
   if (!to.meta.public && !auth.user) return { name: 'login' }
-  if (to.name === 'login' && auth.user) return { name: 'hoy' }
+  if (to.name === 'login' && auth.user) return { name: 'inicio' }
   return true
 })
 
